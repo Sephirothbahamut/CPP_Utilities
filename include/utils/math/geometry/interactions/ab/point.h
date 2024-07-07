@@ -4,6 +4,11 @@
 
 namespace utils::math::geometry::interactions
 	{
+	utils_gpu_available constexpr float closest_t(const shape::concepts::ab auto& ab, const vec2f& point, float t_min = 0.f, float t_max = 1.f) noexcept
+		{
+		return utils::math::clamp(ab.projected_percent(point), t_min, t_max);
+		}
+
 	template <bool clamp_a, bool clamp_b>
 	utils_gpu_available constexpr shape::point closest_point(const shape::concepts::ab auto& ab, const vec2f& point) noexcept
 		{

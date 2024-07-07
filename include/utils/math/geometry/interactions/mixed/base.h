@@ -1,12 +1,21 @@
 #pragma once
 
 #include "../base_types.h"
-#include "../../shape/polyline.h"
+#include "../../shape/mixed.h"
 
 namespace utils::math::geometry::interactions
 	{
-	utils_gpu_available constexpr return_types::bounding_box bounding_box(const shape::concepts::polyline auto& polyline) noexcept
+	utils_gpu_available constexpr return_types::bounding_box bounding_box(const shape::concepts::mixed auto& mixed) noexcept
 		{
-		return return_types::bounding_box::create::from_vertices(polyline);
+		const auto pieces{mixed.get_pieces()};
+		auto ret{return_types::bounding_box::create::infinite()};
+
+		pieces.for_each([&](const auto& piece)
+			{
+			const auto piece_bounding_box{interactions::bounding_box(piece)};
+			ret = return_types::bounding_box::create::bounding_rect(ret, piece_bounding_box);
+			});
+
+		return ret;
 		}
 	}

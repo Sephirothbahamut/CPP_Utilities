@@ -13,6 +13,15 @@ namespace utils::math
 	template <typename T>
 	concept vec_range = std::ranges::range<T> && utils::math::concepts::vec_size<typename T::value_type, 2> && utils::math::concepts::vec_compatible_type<typename T::value_type, float>;
 
+	template <typename T>
+	struct rect;
+
+	namespace concepts
+		{
+		template <typename T>
+		concept rect = std::derived_from<T, math::rect<typename T::value_type>>;
+		}
+
 	template <typename T = float>
 	struct utils_oop_empty_bases rect : utils::storage::multiple<T, 4, false>, utils::math::geometry::shape_flag
 		{
@@ -30,6 +39,11 @@ namespace utils::math
 
 		struct create : ::utils::oop::non_constructible
 			{
+			utils_gpu_available inline static constexpr self_t infinite() noexcept
+				{
+				return {utils::math::constants::finf, utils::math::constants::finf, -utils::math::constants::finf, -utils::math::constants::finf};
+				}
+
 			template <std::convertible_to<value_type> T_oth> requires (!utils::concepts::reference<value_type>)
 			utils_gpu_available inline static constexpr self_t from_possize(utils::math::vec2<T_oth> position, utils::math::vec2<T_oth> size) { return {position.x(), position.y(), position.x() + size.x(), position.y() + size.y()}; }
 			
@@ -81,7 +95,7 @@ namespace utils::math
 			utils_gpu_available inline static constexpr self_t from_vertices(vec_range auto range)
 				requires (storage_type.is_owner())
 				{
-				self_t ret{utils::math::constants::finf, utils::math::constants::finf, -utils::math::constants::finf, -utils::math::constants::finf};
+				self_t ret{create::infinite()};
 			
 				for (const auto& vertex : range)
 					{
@@ -91,6 +105,33 @@ namespace utils::math
 					if (vertex.y() > ret[3]) { ret[3] = vertex.y(); }
 					}
 			
+				return ret;
+				}
+
+			utils_gpu_available inline static constexpr self_t bounding_rect(self_t a, self_t b) noexcept
+				requires (storage_type.is_owner())
+				{
+				return
+					{
+					utils::math::min(a.ll(), b.ll()),
+					utils::math::min(a.up(), b.up()),
+					utils::math::max(a.rr(), b.rr()),
+					utils::math::max(a.dw(), b.dw())
+					};
+				}
+			utils_gpu_available inline static constexpr self_t bounding_rect(std::initializer_list<self_t> rects) noexcept
+				requires (storage_type.is_owner())
+				{
+				self_t ret{create::infinite()};
+
+				for (const auto& rect : rects)
+					{
+					ret.ll() = utils::math::min(ret.ll(), rect.ll());
+					ret.up() = utils::math::min(ret.up(), rect.up());
+					ret.rr() = utils::math::max(ret.rr(), rect.rr());
+					ret.dw() = utils::math::max(ret.dw(), rect.dw());
+					}
+
 				return ret;
 				}
 			};

@@ -44,7 +44,6 @@ namespace utils::math::geometry::shape
 						{
 						if (bezier_curve.size() == size_t{3})
 							{
-							//return 2.f * (bezier_curve[0] * (t - 1.f) + (1.f - 2.f * t) * bezier_curve[1] + bezier_curve[2] * t);
 							return ((bezier_curve[0] * (t - 1.f)) + (bezier_curve[1] * (1.f - 2.f * t)) + bezier_curve[2] * t) * 2.f;
 							}
 						}
@@ -182,6 +181,15 @@ namespace utils::math::geometry::shape
 			utils_gpu_available constexpr auto get_edges            (size_t divisions) const noexcept { return edges_view<false>{*this, divisions}; }
 			utils_gpu_available constexpr auto get_edges_equidistant(size_t divisions) const noexcept { return edges_view<true >{*this, divisions}; }
 
+
+			utils_gpu_available constexpr vec2f tangent_from() const noexcept
+				{
+				return at(0.f).tangent();
+				}
+			utils_gpu_available constexpr vec2f tangent_to() const noexcept
+				{
+				return at(1.f).tangent();
+				}
 			};
 		}
 

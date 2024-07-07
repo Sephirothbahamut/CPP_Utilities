@@ -17,7 +17,7 @@ namespace utils::math::geometry::shape
 		// TODO use extent for piece metadata's size, and calculate the vertices extent based on it
 
 		/// <summary> Only use dynamic extent, static extent not supported (yet)</summary>
-		template <storage::type storage_type, size_t extent = std::dynamic_extent>
+		template <storage::type storage_type, ends ENDS, size_t extent = std::dynamic_extent>
 		struct mixed : vertices<storage_type, ENDS, extent>
 			{
 			using vertices_t = vertices<storage_type, ENDS, extent>;
@@ -55,30 +55,109 @@ namespace utils::math::geometry::shape
 				using variant_t = std::variant<edge_t, bezier_3pt_t, bezier_4pt_t, bezier_t>;
 
 				template <typename callback_t>
-				call_at(size_t index_piece, callback) noexcept
+				utils_gpu_available constexpr void for_each(callback)
 					{
-					const piece_metadata_t piece_metadata{mixed_ref.pieces_metadata[index_piece]};
-					const size_t index_vertex_begin{piece_metadata.index};
-					const size_t index_vertex_end  {index_piece < (mixed_ref.pieces_metadata.size() - 1) ? mixed_ref.pieces_metadata[mixed_ref.pieces_metadata.size() - 1] : mixed_ref.size()};
-
-					switch (piece_metadata.type)
+					for (size_t index{0}; index < mixed_ref.pieces_metadata.size() - 1; index++)
 						{
-						case piece_metadata_t::type_t::segment   : call_segment   (index_vertex_begin, index_vertex_end, callback);
-						case piece_metadata_t::type_t::bezier_3pt: call_bezier_3pt(index_vertex_begin, index_vertex_end, callback);
-						case piece_metadata_t::type_t::bezier_4pt: call_bezier_4pt(index_vertex_begin, index_vertex_end, callback);
-						case piece_metadata_t::type_t::bezier    : call_bezier    (index_vertex_begin, index_vertex_end, callback);
+						call_at(index, callback);
 						}
 					}
 
 				template <typename callback_t>
-				void call_segments(size_t index_vertex_begin, size_t index_vertex_end, callback_t callback) noexcept
+				utils_gpu_available constexpr void call_at(size_t index_piece, callback)
 					{
-					for (size_t i = 0; i < length; i++)
+					const piece_metadata_t piece_metadata{mixed_ref.pieces_metadata[index_piece]};
+					const size_t index_vertex_begin{piece_metadata.index};
+					const size_t index_vertex_last  
 						{
+						index_piece < (mixed_ref.pieces_metadata.size() - 1) ?
+						mixed_ref.pieces_metadata[mixed_ref.pieces_metadata.size() - 1].index : 
+						mixed_ref.ends_aware_size() - 1
+						};
 
+					switch (piece_metadata.type)
+						{
+						case piece_metadata_t::type_t::segment   : call_segments   (index_vertex_begin, index_vertex_last, callback); break;
+						case piece_metadata_t::type_t::bezier_3pt: call_bezier_3pts(index_vertex_begin, index_vertex_last, callback); break;
+						case piece_metadata_t::type_t::bezier_4pt: call_bezier_4pts(index_vertex_begin, index_vertex_last, callback); break;
+						case piece_metadata_t::type_t::bezier    : call_bezier     (index_vertex_begin, index_vertex_last, callback); break;
+						default: break;
 						}
+					}
+				
+				template <typename callback_t>
+				utils_gpu_available constexpr void call_segments(size_t index_vertex_begin, size_t index_vertex_last, callback_t callback)
+					{
+					const size_t index_vertex_end{index_vertex_last + 1};
+					const size_t vertices_count{index_vertex_end - index_vertex_begin};
+					const size_t pieces_count{vertices_count - 1};
 
-					utils::math::geometry::shape::observer::segment segment{mixed_ref[index_vertex_begin]};
+					for (size_t i{0}; i < pieces_count; i++)
+						{
+						const size_t index_a{index_vertex_begin + i};
+						const size_t index_b{index_a + 1};
+						const auto vertex_a{mixed_ref.ends_aware_access(index_a)};
+						const auto vertex_b{mixed_ref.ends_aware_access(index_b)};
+						const shape::segment segment{vertex_a, vertex_b};
+						callback(segment);
+						}
+					}
+				
+				template <typename callback_t>
+				utils_gpu_available constexpr void call_bezier_3pts(size_t index_vertex_begin, size_t index_vertex_last, callback_t callback)
+					{
+					const size_t index_vertex_end{index_vertex_last + 1};
+					const size_t vertices_count{index_vertex_end - index_vertex_begin};
+					const size_t pieces_count{(vertices_count - 1) / 2};
+					assert((vertices_count - 1) % 2 == 0);
+
+					for (size_t i{index_vertex_begin}; i < index_vertex_end; i += 2)
+						{
+						const size_t index_a{i};
+						const size_t index_b{index_a + 1};
+						const size_t index_c{index_b + 1};
+						const auto vertex_a{mixed_ref.ends_aware_access(index_a)};
+						const auto vertex_b{mixed_ref.ends_aware_access(index_b)};
+						const auto vertex_c{mixed_ref.ends_aware_access(index_c)};
+						const shape::const_observer::bezier<3> piece{vertex_a, vertex_b, vertex_c};
+						callback(piece);
+						}
+					}
+
+				template <typename callback_t>
+				utils_gpu_available constexpr void call_bezier_4pts(size_t index_vertex_begin, size_t index_vertex_last, callback_t callback)
+					{
+					const size_t index_vertex_end{index_vertex_last + 1};
+					const size_t vertices_count{index_vertex_end - index_vertex_begin};
+					const size_t pieces_count{(vertices_count - 1) / 3};
+					assert((vertices_count - 1) % 2 == 0);
+
+					for (size_t i{index_vertex_begin}; i < index_vertex_end; i += 3)
+						{
+						const size_t index_a{index_vertex_begin + i};
+						const size_t index_b{index_a + 1};
+						const size_t index_c{index_c + 1};
+						const size_t index_d{index_b + 1};
+						const auto vertex_a{mixed_ref.ends_aware_access(index_a)};
+						const auto vertex_b{mixed_ref.ends_aware_access(index_b)};
+						const auto vertex_c{mixed_ref.ends_aware_access(index_c)};
+						const auto vertex_d{mixed_ref.ends_aware_access(index_c)};
+						const shape::const_observer::bezier<4> piece{vertex_a, vertex_b, vertex_c, vertex_d};
+						callback(piece);
+						}
+					}
+
+				template <typename callback_t>
+				utils_gpu_available constexpr void call_bezier(size_t index_vertex_begin, size_t index_vertex_last, callback_t callback)
+					{
+					//TODO asser: generic bezier cannot be last piece in a closed mixed, no ends_aware_access
+					const size_t index_vertex_end{index_vertex_last + 1};
+					const size_t vertices_count{index_vertex_end - index_vertex_begin};
+					
+					shape::const_observer::bezier<std::dynamic_extent> curve{mixed_ref.begin() + index_vertex_begin, vertices_count};
+
+					const shape::const_observer::bezier<4> piece{vertex_a, vertex_b, vertex_c, vertex_d};
+					callback(piece);
 					}
 				};
 
@@ -86,4 +165,11 @@ namespace utils::math::geometry::shape
 			utils_gpu_available constexpr auto get_pieces()       noexcept { return pieces_view<storage_type.is_const()>{vertices_t::storage.begin(), vertices_t::storage.size()}; }
 
 			};
+		}
+
+	namespace concepts
+		{
+		template <typename T>
+		concept mixed = std::derived_from<T, shape::generic::mixed<T::storage_type, T::ends, T::extent>>;
+		}
 	}

@@ -88,6 +88,15 @@ namespace utils::math::geometry::shape
 
 				return -ret;
 				}
+
+			utils_gpu_available constexpr vec2f tangent_from() const noexcept
+				{
+				return b_to_a().normalize();
+				}
+			utils_gpu_available constexpr vec2f tangent_to() const noexcept
+				{
+				return a_to_b().normalize();
+				}
 			};
 
 		template <storage::type storage_type> 
