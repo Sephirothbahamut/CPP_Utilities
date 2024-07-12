@@ -30,13 +30,14 @@ namespace utils::math::geometry::interactions
 		return a.forward().angle() != b.forward().angle();
 		}
 	
-	utils_gpu_available constexpr bool intersects(const shape::concepts::ab auto& a, const shape::concepts::ab auto& b) noexcept
+	template <shape::concepts::ab a_t, shape::concepts::ab b_t>
+	utils_gpu_available constexpr bool intersects(const a_t& a, const b_t& b) noexcept
 		{
 		const auto percents{percentages(a, b)};
-		if constexpr (decltype(a)::ends.is_a_finite()) { if (percents.a_to_reach_b < 0.f) { return false; } }
-		if constexpr (decltype(a)::ends.is_b_finite()) { if (percents.a_to_reach_b > 1.f) { return false; } }
-		if constexpr (decltype(b)::ends.is_a_finite()) { if (percents.b_to_reach_a < 0.f) { return false; } }
-		if constexpr (decltype(b)::ends.is_b_finite()) { if (percents.b_to_reach_a > 1.f) { return false; } }
+		if constexpr (a_t::ends.is_a_finite()) { if (percents.a_to_reach_b < 0.f) { return false; } }
+		if constexpr (a_t::ends.is_b_finite()) { if (percents.a_to_reach_b > 1.f) { return false; } }
+		if constexpr (b_t::ends.is_a_finite()) { if (percents.b_to_reach_a < 0.f) { return false; } }
+		if constexpr (b_t::ends.is_b_finite()) { if (percents.b_to_reach_a > 1.f) { return false; } }
 		return intersects(shape::line{a.a, a.b}, shape::line{b.a, b.b});
 		}
 

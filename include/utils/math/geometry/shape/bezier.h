@@ -14,18 +14,17 @@ namespace utils::math::geometry::shape
 	{
 	namespace generic
 		{
-		template <storage::type storage_type, size_t extent = std::dynamic_extent>
-		struct bezier : vertices<storage_type, geometry::ends::create::open(), extent>
+		template <storage::type STORAGE_TYPE, size_t EXTENT = std::dynamic_extent>
+		struct bezier : geometry::shape_flag
 			{
-			using vertices_t = vertices<storage_type, geometry::ends::create::open(), extent>;
-			using vertices_t::size;
-			using vertices_t::vertices;
-			using vertices_t::operator[];
-			using typename vertices_t::value_type;
-			using typename vertices_t::const_aware_value_type;
+			inline static constexpr storage::type storage_type{STORAGE_TYPE};
+			inline static constexpr size_t extent{EXTENT};
 
 			using self_t = bezier<storage_type, extent>;
 			using nonref_self_t = bezier<storage::type::create::owner(), extent>;
+
+			using vertices_t = geometry::vertices<storage_type, extent>;
+			vertices_t vertices;
 
 			struct at_proxy
 				{
@@ -34,17 +33,17 @@ namespace utils::math::geometry::shape
 				public:
 					utils_gpu_available constexpr vec2f point() const noexcept
 						{
-						if (bezier_curve.size() == size_t{3})
+						if (bezier_curve.vertices.size() == size_t{3})
 							{
 							float inverse_t{1.f - t};
-							return bezier_curve[0] * inverse_t * inverse_t + bezier_curve[1] * 2.f * t * inverse_t + bezier_curve[2] * t * t;
+							return bezier_curve.vertices[0] * inverse_t * inverse_t + bezier_curve.vertices[1] * 2.f * t * inverse_t + bezier_curve.vertices[2] * t * t;
 							}
 						}
 					utils_gpu_available constexpr vec2f tangent() const noexcept
 						{
-						if (bezier_curve.size() == size_t{3})
+						if (bezier_curve.vertices.size() == size_t{3})
 							{
-							return ((bezier_curve[0] * (t - 1.f)) + (bezier_curve[1] * (1.f - 2.f * t)) + bezier_curve[2] * t) * 2.f;
+							return (((bezier_curve.vertices[0] * (t - 1.f)) + (bezier_curve.vertices[1] * (1.f - 2.f * t)) + bezier_curve.vertices[2] * t) * 2.f).normalize();
 							}
 						}
 					utils_gpu_available constexpr vec2f normal() const noexcept
@@ -77,10 +76,10 @@ namespace utils::math::geometry::shape
 
 			utils_gpu_available constexpr float length(float t_min = 0.f, float t_max = 1.f) const noexcept
 				{
-				if (size() == 3)
+				if (vertices.size() == 3)
 					{
-					const utils::math::vec2f b_to_a{operator[](1) - operator[](0)};
-					const utils::math::vec2f c_to_b{operator[](2) - operator[](1)};
+					const utils::math::vec2f b_to_a{vertices[1] - vertices[0]};
+					const utils::math::vec2f c_to_b{vertices[2] - vertices[1]};
 					const utils::math::vec2f cb_to_ba = c_to_b - b_to_a;
 
 					const float a{utils::math::vec2f::dot(cb_to_ba, cb_to_ba)};
@@ -135,7 +134,7 @@ namespace utils::math::geometry::shape
 				//static_assert(std::random_access_iterator<iterator>);
 				//static_assert(std::condiguous_iterator   <iterator>);
 			
-				const self_t* bezier_curve_ptr;
+				const self_t& bezier_curve_ref;
 				size_t subdivisions{1};
 				
 				utils_gpu_available const float index_to_t(const size_t& index) const noexcept
@@ -143,7 +142,7 @@ namespace utils::math::geometry::shape
 					const float t{static_cast<float>(index) / static_cast<float>(subdivisions)};
 					if constexpr (equidistant) 
 						{
-						return bezier_curve_ptr->t_to_equidistant_t(t);
+						return bezier_curve_ref.t_to_equidistant_t(t);
 						}
 					return t;
 					}
@@ -152,7 +151,7 @@ namespace utils::math::geometry::shape
 					{
 					const float t_a{index_to_t(index)};
 					const float t_b{index_to_t(index + 1)};
-					return edge{bezier_curve_ptr->at(t_a).point(), bezier_curve_ptr->at(t_b).point()};
+					return edge{bezier_curve_ref.at(t_a).point(), bezier_curve_ref.at(t_b).point()};
 					}
 
 				utils_gpu_available constexpr auto begin() const noexcept { return iterator{this, 0     }; }
@@ -160,13 +159,13 @@ namespace utils::math::geometry::shape
 				utils_gpu_available constexpr auto end  () const noexcept { return iterator{this, size()}; }
 				utils_gpu_available constexpr auto end  ()       noexcept { return iterator{this, size()}; }
 			
-				utils_gpu_available constexpr bool   empty() const noexcept { return bezier_curve_ptr->size() <= 1; }
+				utils_gpu_available constexpr bool   empty() const noexcept { return bezier_curve_ref.size() <= 1; }
 				utils_gpu_available constexpr size_t size () const noexcept
 					{
 					return subdivisions;
 					}
 
-				utils_gpu_available constexpr edges_view(const self_t& bezier_curve, size_t subdivisions = 1) : bezier_curve_ptr{&bezier_curve}, subdivisions{subdivisions} {}
+				utils_gpu_available constexpr edges_view(const self_t& bezier_curve, size_t subdivisions = 1) : bezier_curve_ref{bezier_curve}, subdivisions{subdivisions} {}
 				};
 			
 			/// <summary> 
@@ -196,7 +195,8 @@ namespace utils::math::geometry::shape
 	
 	namespace concepts
 		{
-		template <typename T> concept bezier = std::derived_from<T, shape::generic::bezier<T::storage_type, T::extent>>;
+		template <typename T> 
+		concept bezier = std::derived_from<T, shape::generic::bezier<T::storage_type, T::extent>>;
 		}
 	
 	namespace owner 
@@ -215,3 +215,12 @@ namespace utils::math::geometry::shape
 		using bezier = shape::generic::bezier<storage::type::create::const_observer(), extent>;
 		}
 	}
+
+	static_assert(utils::math::geometry::shape::concepts::bezier
+		<
+		utils::math::geometry::shape::bezier<std::dynamic_extent>
+		>);
+	static_assert(utils::math::geometry::shape::concepts::has_vertices
+		<
+		utils::math::geometry::shape::bezier<std::dynamic_extent>
+		>);

@@ -108,7 +108,6 @@ namespace utils::storage
 	struct construct_flag_data {};
 	struct construct_flag_size {};
 
-
 	template <typename T, size_t EXTENT = std::dynamic_extent, bool SEQUENTIAL_OBSERVER = true>
 	struct multiple
 		{
@@ -118,7 +117,9 @@ namespace utils::storage
 		inline static constexpr type storage_type{utils::storage::type::create::from<T>()};
 		inline static constexpr bool sequential_observer{SEQUENTIAL_OBSERVER};
 		inline static constexpr size_t extent{EXTENT};
-		using self_t = multiple<T, extent, sequential_observer>;
+		using self_t          = multiple<T                      , extent, sequential_observer>;
+		using owner_self_t    = multiple<value_type             , extent, sequential_observer>;
+		using observer_self_t = multiple<const_aware_value_type&, extent, sequential_observer>;
 
 		template <typename T2>
 		using owner_storage_t = std::conditional_t<extent == std::dynamic_extent, std::vector<T2>, std::array<T2, extent>>;

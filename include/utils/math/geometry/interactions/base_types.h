@@ -185,20 +185,3 @@ namespace utils::math::geometry::interactions::return_types
 			}
 		};
 	}
-
-
-namespace utils::math::geometry::interactions
-	{
-	template <shape::concepts::any T> utils_gpu_available constexpr auto scale    (const T& shape, const float                    & scaling    ) noexcept { typename T::nonref_self_t ret{shape}; return ret.scale_self    (scaling    ); }
-	template <shape::concepts::any T> utils_gpu_available constexpr auto rotate   (const T& shape, const angle::base<float, 360.f>& rotation   ) noexcept { typename T::nonref_self_t ret{shape}; return ret.rotate_self   (rotation   ); }
-	template <shape::concepts::any T> utils_gpu_available constexpr auto translate(const T& shape, const vec2f                    & translation) noexcept { typename T::nonref_self_t ret{shape}; return ret.translate_self(translation); }
-	template <shape::concepts::any T> utils_gpu_available constexpr auto transform(const T& shape, const utils::math::transform2  & transform  ) noexcept 
-		{
-		return translate(rotate(scale(shape, transform.scaling), transform.rotation), transform.translation);
-		}
-	
-	utils_gpu_available constexpr auto& transform_self(shape::concepts::any auto& shape, const utils::math::transform2& transform) noexcept
-		{
-		return translate_self(rotate_self(scale_self(shape, transform.scaling), transform.rotation), transform.translation);
-		}
-	}

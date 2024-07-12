@@ -132,6 +132,22 @@ namespace utils::math::geometry::shape
 			};
 
 		template <storage::type storage_type> 
+		struct reverse_ray : ab<storage_type>
+			{
+			using ab<storage_type>::ab;
+			inline static constexpr geometry::ends ends{geometry::ends::create::open(true, false)};
+
+			utils_gpu_available constexpr float length2() const noexcept { return utils::math::constants::finf; }
+			utils_gpu_available constexpr float length () const noexcept { return utils::math::constants::finf; }
+
+			using ab<storage_type>::projected_percent;
+			utils_gpu_available constexpr float projected_percent(const concepts::point auto& point) const noexcept
+				{
+				return projected_percent<false, true>(point);
+				}
+			};
+
+		template <storage::type storage_type> 
 		struct segment : ab<storage_type>
 			{
 			using ab<storage_type>::ab;
@@ -147,31 +163,35 @@ namespace utils::math::geometry::shape
 
 	namespace concepts
 		{
-		template <typename T> concept ab      = std::derived_from    <T, shape::generic::ab     <T::storage_type>>;
-		template <typename T> concept line    = ab<T> && std::same_as<T, shape::generic::line   <T::storage_type>>;
-		template <typename T> concept ray     = ab<T> && std::same_as<T, shape::generic::ray    <T::storage_type>>;
-		template <typename T> concept segment = ab<T> && std::same_as<T, shape::generic::segment<T::storage_type>>;
+		template <typename T> concept ab          = std::derived_from    <T, shape::generic::ab         <T::storage_type>>;
+		template <typename T> concept line        = ab<T> && std::same_as<T, shape::generic::line       <T::storage_type>>;
+		template <typename T> concept ray         = ab<T> && std::same_as<T, shape::generic::ray        <T::storage_type>>;
+		template <typename T> concept reverse_ray = ab<T> && std::same_as<T, shape::generic::reverse_ray<T::storage_type>>;
+		template <typename T> concept segment     = ab<T> && std::same_as<T, shape::generic::segment    <T::storage_type>>;
 		}
 	
 	namespace owner 
 		{
-		using ab      = shape::generic::ab     <storage::type::create::owner()>;
-		using line    = shape::generic::line   <storage::type::create::owner()>;
-		using ray     = shape::generic::ray    <storage::type::create::owner()>;
-		using segment = shape::generic::segment<storage::type::create::owner()>;
+		using ab          = shape::generic::ab         <storage::type::create::owner()>;
+		using line        = shape::generic::line       <storage::type::create::owner()>;
+		using ray         = shape::generic::ray        <storage::type::create::owner()>;
+		using reverse_ray = shape::generic::reverse_ray<storage::type::create::owner()>;
+		using segment     = shape::generic::segment    <storage::type::create::owner()>;
 		}
 	namespace observer
 		{
-		using ab      = shape::generic::ab     <storage::type::create::observer()>;
-		using line    = shape::generic::line   <storage::type::create::observer()>;
-		using ray     = shape::generic::ray    <storage::type::create::observer()>;
-		using segment = shape::generic::segment<storage::type::create::observer()>;
+		using ab          = shape::generic::ab         <storage::type::create::observer()>;
+		using line        = shape::generic::line       <storage::type::create::observer()>;
+		using ray         = shape::generic::ray        <storage::type::create::observer()>;
+		using reverse_ray = shape::generic::reverse_ray<storage::type::create::observer()>;
+		using segment     = shape::generic::segment    <storage::type::create::observer()>;
 		}
 	namespace const_observer
 		{
-		using ab      = shape::generic::ab     <storage::type::create::const_observer()>;
-		using line    = shape::generic::line   <storage::type::create::const_observer()>;
-		using ray     = shape::generic::ray    <storage::type::create::const_observer()>;
-		using segment = shape::generic::segment<storage::type::create::const_observer()>;
+		using ab          = shape::generic::ab         <storage::type::create::const_observer()>;
+		using line        = shape::generic::line       <storage::type::create::const_observer()>;
+		using ray         = shape::generic::ray        <storage::type::create::const_observer()>;
+		using reverse_ray = shape::generic::reverse_ray<storage::type::create::const_observer()>;
+		using segment     = shape::generic::segment    <storage::type::create::const_observer()>;
 		}
 	}

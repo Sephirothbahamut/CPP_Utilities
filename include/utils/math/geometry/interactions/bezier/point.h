@@ -8,16 +8,16 @@ namespace utils::math::geometry::interactions
 	{
 	utils_gpu_available constexpr float closest_t(const shape::concepts::bezier auto& bezier, const vec2f& point, float t_min = 0.f, float t_max = 1.f) noexcept
 		{//https://www.shadertoy.com/view/NdfSDl
-		if (bezier.size())
+		if (bezier.vertices.size())
 			{
 			const auto dot2{[](utils::math::vec2f v) -> float
 				{
 				return utils::math::vec2f::dot(v, v); 
 				}};
 
-			utils::math::vec2f c1 = point - bezier[0];
-			utils::math::vec2f c2 = (bezier[1] * 2.f) - bezier[2] - bezier[0];
-			utils::math::vec2f c3 = bezier[0] - bezier[1];
+			utils::math::vec2f c1 = point - bezier.vertices[0];
+			utils::math::vec2f c2 = (bezier.vertices[1] * 2.f) - bezier.vertices[2] - bezier.vertices[0];
+			utils::math::vec2f c3 = bezier.vertices[0] - bezier.vertices[1];
 
 			// Cubic coefficients ---> t3*t^3 + t2*t^2 + t1*t + t0*t^0
 			float t3 = utils::math::vec2f::dot(c2, c2);
@@ -45,7 +45,7 @@ namespace utils::math::geometry::interactions
 				else root = std::sinh(std::asinh(r2) / 3.f);
 				root = -2.f * std::sqrt(p2 / 3.f) * root - t2 / 3.f;
 				root = clamp(root, t_min, t_max);
-				//return utils::math::vec2f(length(point - posBezier(bezier[0], bezier[1], bezier[2], root)), root);
+				//return utils::math::vec2f(length(point - posBezier(bezier.vertices[0], bezier.vertices[1], bezier.vertices[2], root)), root);
 				return root;
 				}
 			else 
