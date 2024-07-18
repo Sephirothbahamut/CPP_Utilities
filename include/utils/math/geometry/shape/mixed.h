@@ -70,8 +70,6 @@ namespace utils::math::geometry::shape
 					template <typename callback_t>
 					utils_gpu_available constexpr void for_each(callback)
 						{
-
-
 						const size_t iterate_from{         ends.is_a_infinite() ? 1 : 0};
 						const size_t iterate_to  {size() - ends.is_b_infinite() ? 1 : 0};
 

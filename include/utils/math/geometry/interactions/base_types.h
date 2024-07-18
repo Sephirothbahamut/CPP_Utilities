@@ -48,7 +48,7 @@ namespace utils::math::geometry::interactions::return_types
 			utils_gpu_available constexpr bool is_approx_inside  () const noexcept { return is_inside (utils::math::constants::epsilonf); }
 			utils_gpu_available constexpr bool is_approx_outside () const noexcept { return is_outside(utils::math::constants::epsilonf); }
 
-
+			
 			utils_gpu_available constexpr float value    () const noexcept { return   _value; }
 			/// <summary> Returns non-zero value.</summary>
 			utils_gpu_available constexpr float sign     () const noexcept { return _value < 0.f ? -1.f : 1.f; }
@@ -57,8 +57,8 @@ namespace utils::math::geometry::interactions::return_types
 		private:
 			float _value{0.f};
 		};
-	utils_gpu_available constexpr float  operator* (const float& f, const side& side) noexcept { return f * side.value(); }
-	utils_gpu_available constexpr float& operator*=(      float& f, const side& side) noexcept { return f = f * side.value(); }
+	utils_gpu_available constexpr float  operator* (const float& f, const side& side) noexcept { return f * side.sign(); }
+	utils_gpu_available constexpr float& operator*=(      float& f, const side& side) noexcept { return f = f * side.sign(); }
 	utils_gpu_available constexpr bool   operator==(const side & a, const side& b   ) noexcept { return (a.is_left() && b.is_left()) || (a.is_right() && b.is_right()) || (a.is_approx_coincident() && b.is_approx_coincident()); }
 	utils_gpu_available constexpr bool   operator==(const float& f, const side& side) noexcept { return (math::sign(f) == math::sign(side.value())) || (f == 0.f && side.value() == 0.f); }
 

@@ -9,6 +9,14 @@
 #include "../../../math/constants.h"
 #include "../../../oop/disable_move_copy.h"
 
+namespace utils::math
+	{
+	template <typename T, size_t size>
+	struct vec;
+
+	using vec2f = vec<float, 2>;
+	}
+
 namespace utils::math::geometry
 	{
 	struct ends
@@ -36,43 +44,31 @@ namespace utils::math::geometry
 		utils_gpu_available inline consteval bool is_infinite  () const noexcept { return !is_finite(); }
 		};
 
-	enum class shape_id
-		{
-		point,
-		aabb,
-
-		circle,
-		capsule,
-
-		ab,
-		line,    //ab specialization
-		ray,     //ab specialization
-		segment, //ab specialization
-
-		polyline,
-		polygon, //polyline specialization
-
-		bezier,
-		spline,
-
-		polycurve,
-		polycurve_closed //polycurve specialization
-		};
-
 	struct shape_flag {};
+	struct piece_flag {};
+
+	namespace shape::concepts
+		{
+		template <typename T>
+		concept shape = std::derived_from<T, shape_flag>;
+
+		template <typename T>
+		concept piece = shape<T> && requires(T t)
+			{
+					{ t.begin_point  () } -> std::same_as<utils::math::vec2f>;
+					{ t.begin_tangent() } -> std::same_as<utils::math::vec2f>;
+					{ t.end_point    () } -> std::same_as<utils::math::vec2f>;
+					{ t.end_tangent  () } -> std::same_as<utils::math::vec2f>;
+			};
+
+
+		}
 
 	namespace shape
 		{
-		namespace concepts
-			{
-			template <typename T>
-			concept any = std::derived_from<std::remove_cvref_t<T>, shape_flag>;
-			}
-
-		namespace details {}
-		namespace generic {}
-		namespace owner   {}
-		namespace view    {}
+		namespace owner         {}
+		namespace observer      {}
+		namespace const_observer{}
 
 		using namespace owner;
 		}

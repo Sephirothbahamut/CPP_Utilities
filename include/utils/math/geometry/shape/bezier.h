@@ -15,7 +15,7 @@ namespace utils::math::geometry::shape
 	namespace generic
 		{
 		template <storage::type STORAGE_TYPE, size_t EXTENT = std::dynamic_extent>
-		struct bezier : geometry::shape_flag
+		struct utils_oop_empty_bases bezier : geometry::piece_flag, geometry::shape_flag
 			{
 			inline static constexpr storage::type storage_type{STORAGE_TYPE};
 			inline static constexpr size_t extent{EXTENT};
@@ -38,6 +38,7 @@ namespace utils::math::geometry::shape
 							float inverse_t{1.f - t};
 							return bezier_curve.vertices[0] * inverse_t * inverse_t + bezier_curve.vertices[1] * 2.f * t * inverse_t + bezier_curve.vertices[2] * t * t;
 							}
+						throw std::runtime_error{"Unsupported amount of control points."};
 						}
 					utils_gpu_available constexpr vec2f tangent() const noexcept
 						{
@@ -45,6 +46,7 @@ namespace utils::math::geometry::shape
 							{
 							return (((bezier_curve.vertices[0] * (t - 1.f)) + (bezier_curve.vertices[1] * (1.f - 2.f * t)) + bezier_curve.vertices[2] * t) * 2.f).normalize();
 							}
+						throw std::runtime_error{"Unsupported amount of control points."};
 						}
 					utils_gpu_available constexpr vec2f normal() const noexcept
 						{
@@ -189,6 +191,11 @@ namespace utils::math::geometry::shape
 				{
 				return at(1.f).tangent();
 				}
+			
+			utils_gpu_available constexpr vec2f begin_point  () const noexcept { return vertices[0                  ]; }
+			utils_gpu_available constexpr vec2f end_point    () const noexcept { return vertices[vertices.size() - 1]; }
+			utils_gpu_available constexpr vec2f begin_tangent() const noexcept { return at(0).tangent(); }
+			utils_gpu_available constexpr vec2f end_tangent  () const noexcept { return at(1).tangent(); }
 			};
 		}
 
@@ -221,6 +228,10 @@ namespace utils::math::geometry::shape
 		utils::math::geometry::shape::bezier<std::dynamic_extent>
 		>);
 	static_assert(utils::math::geometry::shape::concepts::has_vertices
+		<
+		utils::math::geometry::shape::bezier<std::dynamic_extent>
+		>);
+	static_assert(utils::math::geometry::shape::concepts::piece
 		<
 		utils::math::geometry::shape::bezier<std::dynamic_extent>
 		>);

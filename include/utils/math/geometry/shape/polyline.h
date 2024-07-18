@@ -14,6 +14,16 @@ namespace utils::math::geometry::shape
 	{
 	namespace generic
 		{
+		namespace details
+			{
+			template <typename T>
+			concept edges_callable_without_index = requires(T t, shape::segment edge, size_t index) { t(edge); };
+			template <typename T>
+			concept edges_callable_with_index = requires(T t, shape::segment edge, size_t index) { t(edge, index); };
+			template <typename T>
+			concept edges_callable = edges_callable_without_index<T> || edges_callable_with_index<T>;
+			}
+
 		template <storage::type STORAGE_TYPE, geometry::ends ENDS = ends::create::open(), size_t EXTENT = std::dynamic_extent>
 		struct polyline : utils::math::geometry::shape_flag
 			{
@@ -76,10 +86,12 @@ namespace utils::math::geometry::shape
 				//static_assert(std::bidirectional_iterator<iterator<true>>); //TODO check why non copy constructible if storage inner container is span?
 				//static_assert(std::random_access_iterator<iterator>);
 				//static_assert(std::condiguous_iterator   <iterator>);
+
+				template <bool ends_aware = true> utils_gpu_available constexpr auto ends_aware_access(size_t index) const noexcept                          { return edge<true         >{polyline_ref.vertices.ends_aware_access<ends_aware>(index), polyline_ref.vertices.ends_aware_access<ends_aware>(index + 1)}; }
+				template <bool ends_aware = true> utils_gpu_available constexpr auto ends_aware_access(size_t index)       noexcept requires(!is_view_const) { return edge<is_view_const>{polyline_ref.vertices.ends_aware_access<ends_aware>(index), polyline_ref.vertices.ends_aware_access<ends_aware>(index + 1)}; }
 			
-			
-				utils_gpu_available constexpr auto operator[](const size_t& index) const noexcept                          { return edge<true         >{polyline_ref.vertices.ends_aware_access(index), polyline_ref.ends_aware_access(index + 1)}; }
-				utils_gpu_available constexpr auto operator[](const size_t& index)       noexcept requires(!is_view_const) { return edge<is_view_const>{polyline_ref.vertices.ends_aware_access(index), polyline_ref.ends_aware_access(index + 1)}; }
+				utils_gpu_available constexpr auto operator[](size_t index) const noexcept                          { return ends_aware_access<true>(); }
+				utils_gpu_available constexpr auto operator[](size_t index)       noexcept requires(!is_view_const) { return ends_aware_access<true>(); }
 
 				utils_gpu_available constexpr auto begin() const noexcept { return iterator<true         >{&polyline_ref, 0     }; }
 				utils_gpu_available constexpr auto begin()       noexcept { return iterator<is_view_const>{&polyline_ref, 0     }; }
@@ -87,86 +99,82 @@ namespace utils::math::geometry::shape
 				utils_gpu_available constexpr auto end  ()       noexcept { return iterator<is_view_const>{&polyline_ref, size()}; }
 			
 				utils_gpu_available constexpr bool   empty() const noexcept { return polyline_ref.empty() || polyline_ref.size() == 1; }
-				utils_gpu_available constexpr size_t size () const noexcept { return polyline_ref.ends_aware_size() - 1; }
-
-				template <typename callback_t>
-				utils_gpu_available constexpr void for_each(callback_t callback) const noexcept
+				utils_gpu_available constexpr size_t size () const noexcept { return polyline_ref.vertices.ends_aware_size() - 1; }
+				
+				template <bool include_last_if_closed = true>
+				utils_gpu_available constexpr void for_each(details::edges_callable auto callback) const noexcept
 					{
+					if (size() == 0) { return; }
+
+					using callback_t = decltype(callback);
+					const auto call{[]<details::edges_callable callback_t, typename edge_t>(callback_t callback, const edge_t & edge, size_t index)
+						{
+						if constexpr (details::edges_callable_with_index<callback_t>)
+							{
+							callback(edge, index);
+							}
+						else if constexpr (details::edges_callable_without_index<callback_t>) 
+							{
+							callback(edge); 
+							}
+						}};
+
 					if constexpr (polyline_t::ends.is_a_infinite())
 						{
-						if (size() == 0) { return; }
-
-						if(polyline::ends.is_b_infinite() && size() == 1)
+						if constexpr (polyline::ends.is_b_infinite())
 							{
-							const shape::line line{polyline_ref.vertices[0], polyline_ref.vertices[1]};
-							callback(line);
-							return;
+							if (size() == 1)
+								{
+								const shape::line line{polyline_ref.vertices[0], polyline_ref.vertices[1]};
+								call(callback, line, size_t{0});
+								return;
+								}
 							}
-						else
-							{
-							const shape::reverse_ray ray{polyline_ref.vertices[0], polyline_ref.vertices[1]};
-							callback(ray);
-							}
+						
+						const shape::reverse_ray ray{polyline_ref.vertices[0], polyline_ref.vertices[1]};
+						call(callback, ray, size_t{0});
 						}
 
 					const size_t index_begin{polyline_t::ends.is_a_infinite() ? 1 : 0};
-					const size_t index_end  {polyline_ref.vertices.size() - 1 - ((polyline_t::ends.is_b_infinite() || polyline_t::ends.is_closed()) ? 1 : 0)};
+					const size_t index_end  {polyline_ref.vertices.size() - 1 - (polyline_t::ends.is_b_infinite() ? 1 : 0)};
 
 					for (size_t i{index_begin}; i < index_end; i++)
 						{
 						const shape::segment segment{polyline_ref.vertices[i], polyline_ref.vertices[i + 1]};
+						call(callback, segment, i);
 						}
 
 					if constexpr (polyline_t::ends.is_b_infinite())
 						{
 						const shape::ray ray{polyline_ref.vertices[index_end], polyline_ref.vertices[index_end + 1]};
-						callback(ray);
+						call(callback, ray, index_end);
 						}
-					else if constexpr (polyline_t::ends.is_closed())
+					else if constexpr (polyline_t::ends.is_closed() && include_last_if_closed)
 						{
-						const shape::segment ray{polyline_ref.vertices[index_end], polyline_ref.vertices.ends_aware_access(index_end + 1)};
-						callback(ray);
+						const shape::segment segment{polyline_ref.vertices[index_end], polyline_ref.vertices[0]};
+						call(callback, segment, index_end);
 						}
 					}
 
-				template <typename callback_t>
-				utils_gpu_available constexpr void for_each(callback_t callback) noexcept
-					requires(!is_view_const)
+				template <bool ends_aware = true>
+				utils_gpu_available constexpr shape::point first_point_at(size_t index) const noexcept
 					{
-					if constexpr (polyline_t::ends.is_a_infinite())
-						{
-						if (size() == 0) { return; }
-
-						if(polyline::ends.is_b_infinite() && size() == 1)
-							{
-							shape::observer::line line{polyline_ref.vertices[0], polyline_ref.vertices[1]};
-							callback(line);
-							}
-						else
-							{
-							shape::observer::reverse_ray ray{polyline_ref.vertices[0], polyline_ref.vertices[1]};
-							callback(ray);
-							}
-						}
-
-					const size_t index_begin{polyline_t::ends.is_a_infinite() ? 1 : 0};
-					const size_t index_end  {polyline_ref.vertices.size() - 1 - ((polyline_t::ends.is_b_infinite() || polyline_t::ends.is_closed()) ? 1 : 0)};
-
-					for (size_t i{index_begin}; i < index_end; i++)
-						{
-						shape::observer::segment segment{polyline_ref.vertices[i], polyline_ref.vertices[i + 1]};
-						}
-
-					if constexpr (polyline_t::ends.is_b_infinite())
-						{
-						shape::observer::ray ray{polyline_ref.vertices[index_end], polyline_ref.vertices[index_end + 1]};
-						callback(ray);
-						}
-					else if constexpr (polyline_t::ends.is_closed())
-						{
-						shape::observer::segment ray{polyline_ref.vertices[index_end], polyline_ref.vertices.ends_aware_access(index_end + 1)};
-						callback(ray);
-						}
+					return polyline_ref.vertices.ends_aware_access<ends_aware>(index);
+					}
+				template <bool ends_aware = true>
+				utils_gpu_available constexpr shape::point second_point_at(size_t index) const noexcept
+					{
+					return polyline_ref.vertices.ends_aware_access<ends_aware>(index + 1);
+					}
+				template <bool ends_aware = true>
+				utils_gpu_available constexpr shape::point last_point_at(size_t index) const noexcept
+					{
+					return polyline_ref.vertices.ends_aware_access<ends_aware>(index + 1);
+					}
+				template <bool ends_aware = true>
+				utils_gpu_available constexpr shape::point second_last_point_at(size_t index) const noexcept
+					{
+					return polyline_ref.vertices.ends_aware_access<ends_aware>(index);
 					}
 				};
 			

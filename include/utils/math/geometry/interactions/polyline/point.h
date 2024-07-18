@@ -33,48 +33,157 @@ namespace utils::math::geometry::interactions
 		return ret;
 		}
 
-	utils_gpu_available constexpr return_types::side side(const shape::concepts::polyline auto& polyline, const vec2f& point) noexcept
-		requires(polyline.ends.is_closed())
+	utils_gpu_available constexpr utils::math::vec2f vertex_at(const shape::concepts::polyline auto& polyline, size_t index)
 		{
-		const shape::ray ray{point, utils::math::vec2f{point.x() + 1.f, point.y()}};
-		float side{0.f};
-		polyline.get_edges().for_each([&ray, &side](const auto& edge)
+		return polyline.vertices[index];
+		}
+	utils_gpu_available constexpr utils::math::vec2f tanget_at(const shape::concepts::polyline auto& polyline, size_t index)
+		{
+		const auto a{polyline.vertices[index    ]};
+		const auto b{polyline.vertices[index + 1]};
+		return b - a;
+		}
+
+	utils_gpu_available constexpr return_types::closest_point_with_signed_distance closest_with_signed_distance(const shape::concepts::polyline auto& polyline, const vec2f& point) noexcept
+		{
+		float current_distance{utils::math::constants::finf};
+		size_t current_index{0};
+		float current_t{0.f};
+
+		const auto edges{polyline.get_edges()};
+
+		const size_t segments_index_start{polyline.ends.is_a_infinite() ? 1 : 0};
+		const size_t segments_index_end  {edges.size() - ((polyline.ends.is_b_infinite() || polyline.ends.is_b_infinite()) ? 1 : 0)};
+
+		edges.for_each([&](const auto& candidate, size_t index)
 			{
-			if (interactions::intersects(ray, edge))
+			const float candidate_t       {interactions::closest_t       (candidate, point)};
+			const float candidate_distance{interactions::minimum_distance(candidate, point)};
+			if (candidate_distance < current_distance)
 				{
-				side += interactions::side(edge, ray.a).value();
+				current_t        = candidate_t;
+				current_distance = candidate_distance;
+				current_index    = index;
 				}
 			});
-		return side;
+
+		if constexpr (polyline.ends.is_closed())
+			{
+			if (current_index == 0 && current_t == 0.f)
+				{
+				current_index = edges.size() - 1; 
+				current_t     = 1.f;
+				}
+			}
+
+		const bool closed_or_not_last{polyline.ends.is_closed() || (current_index < edges.size() - 1)};
+		if (current_t >= 1.f && closed_or_not_last)
+			{
+			const shape::point point_a{edges.second_last_point_at<true>(current_index)};
+			const shape::point point_b{edges.last_point_at       <true>(current_index)};
+			const shape::point point_c{edges.second_point_at     <true>(current_index + 1)};
+		
+			const shape::line line_a{point_a, point_b};
+			const shape::line line_b{point_b, point_c};
+		
+			const float distance_a{interactions::minimum_distance(line_a, point)};
+			const float distance_b{interactions::minimum_distance(line_b, point)};
+		
+			const bool               return_first{distance_a > distance_b};
+			const return_types::side side{interactions::side(return_first ? line_a : line_b, point)};
+			const shape::point       closest{line_a.value_at(current_t)};
+
+			const return_types::closest_point_with_signed_distance ret{closest, return_types::signed_distance{current_distance * side}};
+
+			return ret;
+			}
+
+		const shape::line        edge   {edges.ends_aware_access(current_index)};
+		const shape::point       closest{edge.value_at          (current_t    )};
+		const return_types::side side   {interactions::side     (edge, point  )};
+		const return_types::closest_point_with_signed_distance ret{closest, current_distance * side};
+		return ret;
 		}
 
-	utils_gpu_available constexpr return_types::signed_distance signed_distance(const shape::concepts::polyline auto& polyline, const vec2f& point) noexcept
-		requires(polyline.ends.is_closed())
-		{
-		const auto dist{interactions::minimum_distance(polyline, point)};
-		const auto side{interactions::side(polyline, point)};
-		return dist * side;
-		}
 
-	utils_gpu_available constexpr return_types::closest_point_with_signed_distance closest_with_signed_distance(const shape::concepts::polyline auto& polyline, const vec2f& point) noexcept
-		requires(polyline.ends.is_closed())
-		{
-		const auto closest_with_distance{interactions::closest_with_distance(polyline, point)};
-		const auto side{interactions::side(polyline, point)};
-		const auto signed_distance{closest_with_distance.distance * side};
-		return return_types::closest_point_with_signed_distance{closest_with_distance.closest, signed_distance};
-		}
+	//utils_gpu_available constexpr return_types::closest_point_with_signed_distance closest_with_signed_distance(const shape::concepts::polyline auto& polyline, const vec2f& point) noexcept
+	//	//requires(polyline.ends.is_closed())
+	//	{
+	//	float current_distance{utils::math::constants::finf};
+	//	float current_t{0.f};
+	//	size_t current_index{0};
+	//
+	//
+	//	const size_t segments_index_start{                               polyline.ends.is_a_infinite() ? 1 : 0};
+	//	const size_t segments_index_end  {polyline.vertices.size() - 1 - polyline.ends.is_b_infinite() ? 1 : 0};
+	//
+	//	for (size_t index{segments_index_start}; index < segments_index_end; index++)
+	//		{
+	//		const shape::segment candidate{polyline.vertices[index], polyline.vertices[index + 1]};
+	//		float candidate_t{interactions::closest_t(candidate, point)};
+	//		float candidate_distance{interactions::minimum_distance(candidate, point)};
+	//		if (candidate_distance < current_distance)
+	//			{
+	//			current_t = candidate_t;
+	//			current_distance = candidate_distance;
+	//			current_index = index;
+	//			}
+	//		}
+	//
+	//	if constexpr (polyline.ends.is_closed())
+	//		{
+	//		const size_t index{polyline.vertices.size() - 1};
+	//		const shape::segment candidate{polyline.vertices[index], polyline.vertices[0]};
+	//		float candidate_t{interactions::closest_t(candidate, point)};
+	//		float candidate_distance{interactions::minimum_distance(candidate, point)};
+	//		if (candidate_distance < current_distance || (candidate_distance == current_distance && current_index == 0))
+	//			{
+	//			current_t = candidate_t;
+	//			current_distance = candidate_distance;
+	//			current_index = index;
+	//			}
+	//		}
+	//
+	//	assert(current_t >= 0.f);
+	//	if (current_t < 1.f || (polyline.ends.is_open() && current_index == polyline.vertices.size() - 1))
+	//		{
+	//		const size_t index_b{polyline.ends.is_closed() ? polyline.vertices.ends_aware_index(current_index + 1) : (current_index + 1)};
+	//		const shape::segment piece{polyline.vertices[current_index], polyline.vertices[index_b]};
+	//		const auto ret{interactions::closest_with_signed_distance(piece, point)};
+	//		return ret;
+	//		}
+	//	else
+	//		{
+	//		const size_t       index_a {polyline.ends.is_closed() ? polyline.vertices.ends_aware_index(current_index    ) : (current_index    )};
+	//		const size_t       index_b {polyline.ends.is_closed() ? polyline.vertices.ends_aware_index(current_index + 1) : (current_index + 1)};
+	//		const size_t       index_c {polyline.ends.is_closed() ? polyline.vertices.ends_aware_index(current_index + 2) : (current_index + 2)};
+	//		const shape::point vertex_a{polyline.vertices[index_a]};
+	//		const shape::point vertex_b{polyline.vertices[index_b]};
+	//		const shape::point vertex_c{polyline.vertices[index_c]};
+	//
+	//		const shape::line first {vertex_a, vertex_b};
+	//		const shape::line second{vertex_b, vertex_c};
+	//
+	//		const return_types::signed_distance signed_distance_first {interactions::signed_distance(first , point)};
+	//		const return_types::signed_distance signed_distance_second{interactions::signed_distance(second, point)};
+	//
+	//		const bool return_first{signed_distance_first.absolute() > signed_distance_second.absolute()};
+	//		const auto side{return_first ? signed_distance_first.side() : signed_distance_second.side()};
+	//		return return_types::closest_point_with_signed_distance{vertex_b, return_types::signed_distance{current_distance * side}};
+	//		}
+	//	}
 
-	utils_gpu_available constexpr return_types::closest_point_with_signed_distance closest_with_signed_distance(const shape::concepts::polyline auto& polyline, const vec2f& point) noexcept
+/*	utils_gpu_available constexpr return_types::closest_point_with_signed_distance closest_with_signed_distance(const shape::concepts::polyline auto& polyline, const vec2f& point) noexcept
 		requires(polyline.ends.is_open())
 		{
 		return_types::closest_point_with_signed_distance ret;
 
-		size_t closest_index{0};
 		bool closest_is_piece_end{false};
+		size_t closest_index{0};
 
 		const auto pieces{polyline.get_edges()};
 
+		size_t index{0};
 		pieces.for_each([&](const auto& piece)
 			{
 			const auto candidate{closest_with_signed_distance(piece, point)};
@@ -82,10 +191,18 @@ namespace utils::math::geometry::interactions
 			const auto current_distance{ret.distance.absolute()};
 			if (candidate_distance < current_distance)
 				{
+				closest_index = index;
 				closest_is_piece_end = candidate == piece.end_vertex();
 				ret = candidate;
 				}
+
+			index++;
 			});
+
+		if (closest_is_piece_end)
+			{
+
+			}
 
 		//if constexpr (polyline.ends.is_closed())
 		//	{
@@ -196,7 +313,7 @@ namespace utils::math::geometry::interactions
 		//		}
 		//	}
 		// return ret;
-		}
+		}*/
 
 	utils_gpu_available constexpr return_types::side side(const shape::concepts::polyline auto& polyline, const vec2f& point) noexcept
 		requires(polyline.ends.is_open())

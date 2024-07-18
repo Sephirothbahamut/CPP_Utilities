@@ -23,24 +23,38 @@ namespace utils::math::geometry
 		public:
 			using multiple_t::multiple;
 
-			const auto& ends_aware_access(const size_t index) const noexcept
+			template <bool ends_aware = true>
+			utils_gpu_available constexpr const auto& ends_aware_access(const size_t index) const noexcept
 				{
-				const size_t remapped_index{ends_aware_index(index)};
+				const size_t remapped_index{ends_aware_index<ends_aware>(index)};
 				return multiple_t::operator[](remapped_index);
 				}
 
-			auto& ends_aware_access(const size_t index) noexcept
+			template <bool ends_aware = true>
+			utils_gpu_available constexpr auto& ends_aware_access(const size_t index) noexcept
 				{
-				const size_t remapped_index{ends_aware_index(index)};
+				const size_t remapped_index{ends_aware_index<ends_aware>(index)};
 				return multiple_t::operator[](remapped_index);
 				}
 
-			size_t ends_aware_index(const size_t index) const noexcept
+			template <bool ends_aware = true>
+			utils_gpu_available constexpr size_t ends_aware_index(const size_t index) const noexcept
 				{
-				if constexpr (ends.is_closed())
+				if constexpr (ends_aware && ends.is_closed())
 					{
 					return index % multiple_t::size();
 					}
+				else { return index; }
+				}
+
+			template <bool ends_aware = true>
+			utils_gpu_available constexpr size_t ends_aware_size() const noexcept
+				{
+				if constexpr (ends_aware && ends.is_closed())
+					{
+					return multiple_t::size() + 1;
+					}
+				else { return multiple_t::size(); }
 				}
 		};
 

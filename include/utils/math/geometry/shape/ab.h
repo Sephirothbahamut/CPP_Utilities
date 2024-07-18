@@ -9,7 +9,7 @@ namespace utils::math::geometry::shape
 	namespace generic
 		{
 		template <storage::type STORAGE_TYPE>
-		struct ab : geometry::shape_flag
+		struct utils_oop_empty_bases ab : geometry::piece_flag, geometry::shape_flag
 			{
 			inline static constexpr storage::type storage_type = STORAGE_TYPE;
 
@@ -88,15 +88,12 @@ namespace utils::math::geometry::shape
 
 				return -ret;
 				}
+			utils_gpu_available constexpr vec2f value_at(float t) const noexcept { return utils::math::lerp(a, b, t); }
 
-			utils_gpu_available constexpr vec2f tangent_from() const noexcept
-				{
-				return b_to_a().normalize();
-				}
-			utils_gpu_available constexpr vec2f tangent_to() const noexcept
-				{
-				return a_to_b().normalize();
-				}
+			utils_gpu_available constexpr vec2f begin_point  () const noexcept { return a; }
+			utils_gpu_available constexpr vec2f end_point    () const noexcept { return b; }
+			utils_gpu_available constexpr vec2f begin_tangent() const noexcept { return a_to_b().normalize(); }
+			utils_gpu_available constexpr vec2f end_tangent  () const noexcept { return a_to_b().normalize(); }
 			};
 
 		template <storage::type storage_type> 
@@ -195,3 +192,12 @@ namespace utils::math::geometry::shape
 		using segment     = shape::generic::segment    <storage::type::create::const_observer()>;
 		}
 	}
+
+	static_assert(utils::math::geometry::shape::concepts::ab
+		<
+		utils::math::geometry::shape::ab
+		>);
+	static_assert(utils::math::geometry::shape::concepts::piece
+		<
+		utils::math::geometry::shape::ab
+		>);
