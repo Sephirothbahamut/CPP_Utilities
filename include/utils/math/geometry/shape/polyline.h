@@ -235,6 +235,10 @@ namespace utils::math::geometry::shape
 		}
 	}
 
+	static_assert(utils::math::geometry::shape::concepts::shape
+		<
+		utils::math::geometry::shape::polyline<>
+		>);
 	static_assert(utils::math::geometry::shape::concepts::polyline
 		<
 		utils::math::geometry::shape::polyline<>

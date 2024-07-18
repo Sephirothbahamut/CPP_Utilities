@@ -5,4 +5,4 @@
 #include "bezier.h  "
 //#include "circle.h  "
 //#include "capsule.h "
-//#include "mixed.h   "
+#include "mixed.h   "
