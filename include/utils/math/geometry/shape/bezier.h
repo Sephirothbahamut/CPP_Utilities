@@ -14,25 +14,29 @@ namespace utils::math::geometry::shape
 	{
 	namespace generic
 		{
-		template <storage::type STORAGE_TYPE, size_t EXTENT = std::dynamic_extent>
+		template<storage::type STORAGE_TYPE, size_t EXTENT, geometry::ends::optional_ab OPTIONAL_ENDS>
 		struct utils_oop_empty_bases bezier : geometry::piece_flag, geometry::shape_flag
 			{
-			inline static constexpr storage::type storage_type{STORAGE_TYPE};
-			inline static constexpr size_t extent{EXTENT};
+			inline static constexpr auto storage_type {STORAGE_TYPE};
+			inline static constexpr auto extent       {EXTENT};
+			inline static constexpr auto optional_ends{OPTIONAL_ENDS};
 
-			using self_t = bezier<storage_type, extent>;
-			using nonref_self_t = bezier<storage::type::create::owner(), extent>;
+			using self_t = bezier<storage_type, extent, optional_ends>;
+			using nonref_self_t = bezier<storage::type::create::owner(), extent, optional_ends>;
 
 			using vertices_t = geometry::vertices<storage_type, extent>;
 			vertices_t vertices;
 
 			struct at_proxy
 				{
-				template <storage::type storage_type, size_t extent>
+				template<storage::type STORAGE_TYPE, size_t EXTENT, geometry::ends::optional_ab OPTIONAL_ENDS>
 				friend struct bezier;
 				public:
 					utils_gpu_available constexpr vec2f point() const noexcept
 						{
+						if (t == 0.f) { return bezier_curve.vertices[0]; }
+						if (t == 1.f) { return bezier_curve.vertices[bezier_curve.vertices.size() - 1]; };
+
 						if (bezier_curve.vertices.size() == size_t{3})
 							{
 							float inverse_t{1.f - t};
@@ -42,6 +46,9 @@ namespace utils::math::geometry::shape
 						}
 					utils_gpu_available constexpr vec2f tangent() const noexcept
 						{
+						if (t == 0.f) { return bezier_curve.vertices[1] - bezier_curve.vertices[0]; }
+						if (t == 1.f) { return bezier_curve.vertices[bezier_curve.vertices.size() - 1] - bezier_curve.vertices[bezier_curve.vertices.size() - 2]; };
+
 						if (bezier_curve.vertices.size() == size_t{3})
 							{
 							return (((bezier_curve.vertices[0] * (t - 1.f)) + (bezier_curve.vertices[1] * (1.f - 2.f * t)) + bezier_curve.vertices[2] * t) * 2.f).normalize();
@@ -181,45 +188,37 @@ namespace utils::math::geometry::shape
 			/// </summary>
 			utils_gpu_available constexpr auto get_edges            (size_t divisions) const noexcept { return edges_view<false>{*this, divisions}; }
 			utils_gpu_available constexpr auto get_edges_equidistant(size_t divisions) const noexcept { return edges_view<true >{*this, divisions}; }
-
-
-			utils_gpu_available constexpr vec2f tangent_from() const noexcept
-				{
-				return at(0.f).tangent();
-				}
-			utils_gpu_available constexpr vec2f tangent_to() const noexcept
-				{
-				return at(1.f).tangent();
-				}
 			
 			utils_gpu_available constexpr vec2f begin_point  () const noexcept { return vertices[0                  ]; }
 			utils_gpu_available constexpr vec2f end_point    () const noexcept { return vertices[vertices.size() - 1]; }
-			utils_gpu_available constexpr vec2f begin_tangent() const noexcept { return at(0).tangent(); }
-			utils_gpu_available constexpr vec2f end_tangent  () const noexcept { return at(1).tangent(); }
+			utils_gpu_available constexpr vec2f begin_tangent() const noexcept { return at(0.f).tangent(); }
+			utils_gpu_available constexpr vec2f end_tangent  () const noexcept { return at(1.f).tangent(); }
 			};
 		}
 
 	
 	namespace concepts
 		{
-		template <typename T> 
-		concept bezier = std::derived_from<T, shape::generic::bezier<T::storage_type, T::extent>>;
+		template <typename T>
+		concept bezier = std::derived_from<T, shape::generic::bezier<T::storage_type, T::extent, T::optional_ends>>;
+		template <typename T>
+		concept bezier_ends_aware = bezier<T> && T::optional_ends.has_value();
 		}
 	
 	namespace owner 
 		{
-		template <size_t extent = std::dynamic_extent>
-		using bezier = shape::generic::bezier<storage::type::create::owner(), extent>;
+		template <size_t extent = std::dynamic_extent, geometry::ends::optional_ab optional_ends = ends::optional_ab::create::value(ends::ab::create::finite())>
+		using bezier = shape::generic::bezier<storage::type::create::owner(), extent, optional_ends>;
 		}
 	namespace observer
 		{
-		template <size_t extent = std::dynamic_extent>
-		using bezier = shape::generic::bezier<storage::type::create::observer(), extent>;
+		template <size_t extent = std::dynamic_extent, geometry::ends::optional_ab optional_ends = ends::optional_ab::create::value(ends::ab::create::finite())>
+		using bezier = shape::generic::bezier<storage::type::create::observer(), extent, optional_ends>;
 		}
 	namespace const_observer
 		{
-		template <size_t extent = std::dynamic_extent>
-		using bezier = shape::generic::bezier<storage::type::create::const_observer(), extent>;
+		template <size_t extent = std::dynamic_extent, geometry::ends::optional_ab optional_ends = ends::optional_ab::create::value(ends::ab::create::finite())>
+		using bezier = shape::generic::bezier<storage::type::create::const_observer(), extent, optional_ends>;
 		}
 	}
 

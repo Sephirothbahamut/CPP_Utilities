@@ -6,11 +6,10 @@
 #include <variant> //Angle class
 #include <concepts>
 
-#include "../compilation/gpu.h"
-#include "constants.h"
 #include "math.h"
-#include "../template_wrappers.h"
+#include "constants.h"
 #include "../memory.h"
+#include "../compilation/gpu.h"
 
 //TODO write test cases
 

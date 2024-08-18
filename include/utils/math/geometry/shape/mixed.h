@@ -18,17 +18,17 @@ namespace utils::math::geometry::shape
 		/// <summary> 
 		/// Only use finite or closed ends, infinite ends not supported (yet)
 		/// </summary>
-		template <storage::type STORAGE_TYPE, ends ENDS>
+		template <storage::type STORAGE_TYPE, ends::closeable ENDS>
 		struct mixed : utils::math::geometry::shape_flag
 			{
 			public:
-				inline static constexpr storage::type storage_type{STORAGE_TYPE};
-				inline static constexpr geometry::ends ends       {ENDS};
+				inline static constexpr auto storage_type{STORAGE_TYPE};
+				inline static constexpr auto ends        {ENDS};
 
 				using self_t        = mixed<storage_type, ends>;
 				using nonref_self_t = mixed<storage::type::create::owner(), ends>;
 
-				using vertices_t = geometry::ends_aware_vertices<storage_type, ends>;
+				using vertices_t = geometry::ends_aware_vertices<storage_type, ends.is_closed()>;
 				vertices_t vertices;
 
 				struct piece_metadata_t
@@ -53,7 +53,7 @@ namespace utils::math::geometry::shape
 					}
 
 			public:
-				mixed(const shape::point& first_point) noexcept : vertices{first_point} {}
+				mixed(const shape::point& first_point) noexcept { vertices.storage.emplace_back(first_point); }
 				mixed() noexcept = default;
 
 				void clear(const shape::point& first_point) noexcept
@@ -170,12 +170,12 @@ namespace utils::math::geometry::shape
 									case piece_metadata_t::type_t::bezier_4pt: call_bezier_4pts(index_vertex, metadata.end_index, callback); break;
 									case piece_metadata_t::type_t::bezier    : call_bezier     (index_vertex, metadata.end_index, callback); break;
 									}
-								index_vertex = metadata.end_index;
+								index_vertex = metadata.end_index - 1;
 								}
 							if (mixed_ref.ends.is_closed())
 								{
-								const shape::segment piece{mixed_ref.vertices[index_vertex - 1], mixed_ref.vertices[0]};
-								call(callback, piece, index_vertex - 1);
+								const shape::segment piece{mixed_ref.vertices[index_vertex], mixed_ref.vertices[0]};
+								call(callback, piece, index_vertex);
 								}
 							}
 
@@ -206,7 +206,7 @@ namespace utils::math::geometry::shape
 								const auto vertex_a{mixed_ref.vertices[index_a]};
 								const auto vertex_b{mixed_ref.vertices[index_b]};
 								const shape::segment piece{vertex_a, vertex_b};
-								call(callback, piece, i);
+								call(callback, piece, index_vertex_begin + i);
 								}
 							}
 				
@@ -217,7 +217,7 @@ namespace utils::math::geometry::shape
 							const size_t pieces_count{(vertices_count - 1) / 2};
 							assert((vertices_count - 1) % 2 == 0);
 
-							for (size_t i{index_vertex_begin}; i < index_vertex_end; i += 2)
+							for (size_t i{index_vertex_begin}; i < index_vertex_end - 1; i += 2)
 								{
 								const size_t index_a{i};
 								const size_t index_b{index_a + 1};
@@ -241,8 +241,8 @@ namespace utils::math::geometry::shape
 								{
 								const size_t index_a{index_vertex_begin + i};
 								const size_t index_b{index_a + 1};
-								const size_t index_c{index_c + 1};
-								const size_t index_d{index_b + 1};
+								const size_t index_c{index_b + 1};
+								const size_t index_d{index_c + 1};
 								const auto vertex_a{mixed_ref.vertices[index_a]};
 								const auto vertex_b{mixed_ref.vertices[index_b]};
 								const auto vertex_c{mixed_ref.vertices[index_c]};
@@ -258,7 +258,9 @@ namespace utils::math::geometry::shape
 							const size_t index_vertex_end{index_vertex_last + 1};
 							const size_t vertices_count{index_vertex_end - index_vertex_begin};
 					
-							shape::const_observer::bezier<std::dynamic_extent> piece{.vertices{mixed_ref.vertices.begin() + index_vertex_begin, vertices_count}};
+							//Note: Not "vertices.begin()" because my own iterator can't build a span
+							//TODO check why, it's 6 am and i'm too tired to check now.
+							shape::const_observer::bezier<std::dynamic_extent> piece{.vertices{mixed_ref.vertices.storage.begin() + index_vertex_begin, vertices_count}};
 							call(callback, piece, index_vertex_begin);
 							}
 					};
@@ -276,17 +278,17 @@ namespace utils::math::geometry::shape
 
 	namespace owner 
 		{
-		template <geometry::ends ends = geometry::ends::create::closed()>
+		template <geometry::ends::closeable ends = geometry::ends::closeable::create::closed()>
 		using mixed = shape::generic::mixed<storage::type::create::owner(), ends>;
 		}
 	namespace observer
 		{
-		template <geometry::ends ends = geometry::ends::create::closed()>
+		template <geometry::ends::closeable ends = geometry::ends::closeable::create::closed()>
 		using mixed = shape::generic::mixed<storage::type::create::observer(), ends>;
 		}
 	namespace const_observer
 		{
-		template <geometry::ends ends = geometry::ends::create::closed()>
+		template <geometry::ends::closeable ends = geometry::ends::closeable::create::closed()>
 		using mixed = shape::generic::mixed<storage::type::create::const_observer(), ends>;
 		}
 	}

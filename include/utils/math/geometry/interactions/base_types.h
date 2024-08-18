@@ -147,10 +147,14 @@ namespace utils::math::geometry::interactions::return_types
 			{
 			return a.distance.absolute() < b.distance.absolute() ? a : b;
 			}
-		utils_gpu_available constexpr closest_point_with_signed_distance& set_to_closest(const closest_point_with_signed_distance& other) noexcept
+		utils_gpu_available constexpr bool set_to_closest(const closest_point_with_signed_distance& other) noexcept
 			{
-			if (other.distance.absolute() < distance.absolute()) { (*this) = other; }
-			return *this;
+			if (other.distance.absolute() < distance.absolute()) 
+				{
+				(*this) = other;
+				return true;
+				}
+			return false;
 			}
 
 		utils_gpu_available static constexpr closest_point_with_signed_distance merge(const closest_point_with_signed_distance& a, const closest_point_with_signed_distance& b) noexcept

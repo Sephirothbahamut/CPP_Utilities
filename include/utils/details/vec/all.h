@@ -8,22 +8,23 @@
 
 namespace utils::details::vector
 	{
-	template<typename T, size_t size, template <typename, size_t> class unspecialized_derived_t, const char* name>
+	template<typename T, size_t SIZE, template <typename, size_t> class unspecialized_derived_t, const char* name>
 	struct utils_oop_empty_bases base :
 		concept_common_flag_type,
-		definitions<T, size, unspecialized_derived_t>,
-		utils::storage::multiple<T, size, false>,
-		memberwise_operators<definitions<T, size, unspecialized_derived_t>>,
+		definitions<T, SIZE, unspecialized_derived_t>,
+		utils::storage::multiple<T, SIZE, false>,
+		memberwise_operators<definitions<T, SIZE, unspecialized_derived_t>>,
 		output<name>
 		{
-		using typename definitions<T, size, unspecialized_derived_t>::self_t       ;
-		using typename definitions<T, size, unspecialized_derived_t>::nonref_self_t;
-		using typename definitions<T, size, unspecialized_derived_t>::storage_t    ;
+		using typename definitions<T, SIZE, unspecialized_derived_t>::self_t       ;
+		using typename definitions<T, SIZE, unspecialized_derived_t>::nonref_self_t;
+		using typename definitions<T, SIZE, unspecialized_derived_t>::storage_t    ;
 
 		using storage_t::multiple;
 		using storage_t::extent;
+		using storage_t::size;
 		using storage_t::storage_type;
-		using memberwise_operators<definitions<T, size, unspecialized_derived_t>>::operator=;
+		using memberwise_operators<definitions<T, SIZE, unspecialized_derived_t>>::operator=;
 		
 		using typename storage_t::value_type            ;
 		using typename storage_t::const_aware_value_type;

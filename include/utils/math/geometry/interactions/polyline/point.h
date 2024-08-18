@@ -52,7 +52,7 @@ namespace utils::math::geometry::interactions
 
 		const auto edges{polyline.get_edges()};
 
-		edges.for_each([&](const auto& candidate, size_t index)
+		edges.for_each([&point, &current_distance, &current_index, &current_t](const auto& candidate, size_t index)
 			{
 			const float candidate_t       {interactions::closest_t       (candidate, point)};
 			const float candidate_distance{interactions::minimum_distance(candidate, point)};
@@ -72,7 +72,6 @@ namespace utils::math::geometry::interactions
 				current_t     = 1.f;
 				}
 			}
-
 		const bool closed_or_not_last{polyline.ends.is_closed() || (current_index < edges.size() - 1)};
 		if (current_t >= 1.f && closed_or_not_last)
 			{
@@ -95,9 +94,9 @@ namespace utils::math::geometry::interactions
 			return ret;
 			}
 
-		const shape::line        edge   {edges.ends_aware_access(current_index)};
+		const shape::segment     edge   {edges.ends_aware_access(current_index)};
 		const shape::point       closest{edge.value_at          (current_t    )};
-		const return_types::side side   {interactions::side     (edge, point  )};
+		const return_types::side side   {interactions::side(edge, point  )};
 		const return_types::closest_point_with_signed_distance ret{closest, current_distance * side};
 		return ret;
 		}

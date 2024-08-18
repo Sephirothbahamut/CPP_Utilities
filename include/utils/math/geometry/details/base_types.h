@@ -5,8 +5,9 @@
 #include "../../../memory.h"
 #include "../../../storage.h"
 #include "../../../math/math.h"
-#include "../../../compilation/gpu.h"
 #include "../../../math/constants.h"
+#include "../../../compilation/gpu.h"
+#include "../../../template/optional.h"
 #include "../../../oop/disable_move_copy.h"
 
 namespace utils::math
@@ -19,30 +20,58 @@ namespace utils::math
 
 namespace utils::math::geometry
 	{
-	struct ends
+	namespace ends
 		{
-		struct create : ::utils::oop::non_constructible
+		struct ab
 			{
-			utils_gpu_available static consteval ends open    (bool finite_a = false, bool finite_b = false) noexcept { return ends{.finite_a{finite_a}, .finite_b{finite_b}, .open{true }}; }
-			utils_gpu_available static consteval ends infinite(                                            ) noexcept { return ends{.finite_a{false   }, .finite_b{false   }, .open{true }}; }
-			utils_gpu_available static consteval ends closed  (                                            ) noexcept { return ends{.finite_a{true    }, .finite_b{true    }, .open{false}}; }
+			struct create : ::utils::oop::non_constructible
+				{
+				//TODO when C++23 static operator() is supported replace the "default_" constructor with that
+
+				utils_gpu_available static consteval ab default_(bool a, bool b) noexcept { return ab{.finite_a{a    }, .finite_b{b    }}; }
+				utils_gpu_available static consteval ab infinite(              ) noexcept { return ab{.finite_a{false}, .finite_b{false}}; }
+				utils_gpu_available static consteval ab finite  (              ) noexcept { return ab{.finite_a{true }, .finite_b{true }}; }
+				};
+
+			bool finite_a;
+			bool finite_b;
+
+			utils_gpu_available inline consteval bool is_a_infinite() const noexcept { return !finite_a; }
+			utils_gpu_available inline consteval bool is_b_infinite() const noexcept { return !finite_b; }
+			utils_gpu_available inline consteval bool is_a_finite  () const noexcept { return  finite_a; }
+			utils_gpu_available inline consteval bool is_b_finite  () const noexcept { return  finite_b; }
+			utils_gpu_available inline consteval bool is_finite    () const noexcept { return  finite_a && finite_b; }
+			utils_gpu_available inline consteval bool is_infinite  () const noexcept { return !is_finite(); }
+
+			utils_gpu_available inline consteval bool operator==(const ab& other) const noexcept = default;
 			};
 
-		bool finite_a;
-		bool finite_b;
-		bool open;
+		struct closeable
+			{
+			struct create : ::utils::oop::non_constructible
+				{
+				utils_gpu_available static consteval closeable open    (bool finite_a = false, bool finite_b = false) noexcept { return closeable{.open{true}, .ab{.finite_a{finite_a}, .finite_b{finite_b}}}; }
+				utils_gpu_available static consteval closeable infinite(                                            ) noexcept { return closeable{.open{true}, .ab{.finite_a{false   }, .finite_b{false   }}}; }
+				utils_gpu_available static consteval closeable closed  (                                            ) noexcept { return closeable{.open{false}}; }
+				};
 
-		utils_gpu_available inline consteval bool operator==(const ends& other) const noexcept = default;
+			bool open;
+			ab ab;
 
-		utils_gpu_available inline consteval bool is_open      () const noexcept { return open; }
-		utils_gpu_available inline consteval bool is_closed    () const noexcept { return !is_open(); }
-		utils_gpu_available inline consteval bool is_a_infinite() const noexcept { return is_open() && !finite_a; }
-		utils_gpu_available inline consteval bool is_b_infinite() const noexcept { return is_open() && !finite_b; }
-		utils_gpu_available inline consteval bool is_a_finite  () const noexcept { return is_open() &&  finite_a; }
-		utils_gpu_available inline consteval bool is_b_finite  () const noexcept { return is_open() &&  finite_b; }
-		utils_gpu_available inline consteval bool is_finite    () const noexcept { return is_closed() || (finite_a && finite_b); }
-		utils_gpu_available inline consteval bool is_infinite  () const noexcept { return !is_finite(); }
-		};
+			utils_gpu_available inline consteval bool operator==(const closeable& other) const noexcept = default;
+
+			utils_gpu_available inline consteval bool is_open      () const noexcept { return open; }
+			utils_gpu_available inline consteval bool is_closed    () const noexcept { return !is_open(); }
+			utils_gpu_available inline consteval bool is_a_infinite() const noexcept { return  is_open  () && ab.is_a_infinite(); }
+			utils_gpu_available inline consteval bool is_b_infinite() const noexcept { return  is_open  () && ab.is_b_infinite(); }
+			utils_gpu_available inline consteval bool is_a_finite  () const noexcept { return  is_open  () && ab.is_a_finite  (); }
+			utils_gpu_available inline consteval bool is_b_finite  () const noexcept { return  is_open  () && ab.is_b_finite  (); }
+			utils_gpu_available inline consteval bool is_finite    () const noexcept { return  is_closed() || ab.is_finite    (); }
+			utils_gpu_available inline consteval bool is_infinite  () const noexcept { return !is_finite(); }
+			};
+
+		using optional_ab = utils::template_wrapper::optional<ab>;
+		}
 
 	struct shape_flag {};
 	struct piece_flag {};

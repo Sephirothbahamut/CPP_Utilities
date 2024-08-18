@@ -9,7 +9,6 @@
 #include "../compilation/gpu.h"
 #include "../math/math.h"
 #include "../math/angle.h"
-#include "../template_wrappers.h"
 #include "../oop/conditional_inheritance.h"
 
 #include "../details/vec/all.h"

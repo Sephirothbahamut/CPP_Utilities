@@ -6,10 +6,14 @@
 
 namespace utils::math::geometry::interactions
 	{
-	utils_gpu_available constexpr float closest_t(const shape::concepts::bezier auto& bezier, const vec2f& point, float t_min = 0.f, float t_max = 1.f) noexcept
+	template <ends::ab ends>
+	utils_gpu_available constexpr float closest_t(const shape::concepts::bezier auto& bezier, const vec2f& point) noexcept
 		{//https://www.shadertoy.com/view/NdfSDl
 		if (bezier.vertices.size())
 			{
+			const float t_min{ends.is_a_finite() ? 0.f : -utils::math::constants::finf};
+			const float t_max{ends.is_b_finite() ? 1.f :  utils::math::constants::finf};
+
 			const auto dot2{[](utils::math::vec2f v) -> float
 				{
 				return utils::math::vec2f::dot(v, v); 
@@ -17,7 +21,7 @@ namespace utils::math::geometry::interactions
 
 			utils::math::vec2f c1 = point - bezier.vertices[0];
 			utils::math::vec2f c2 = (bezier.vertices[1] * 2.f) - bezier.vertices[2] - bezier.vertices[0];
-			utils::math::vec2f c3 = bezier.vertices[0] - bezier.vertices[1];
+			utils::math::vec2f c3 =  bezier.vertices[0]        - bezier.vertices[1];
 
 			// Cubic coefficients ---> t3*t^3 + t2*t^2 + t1*t + t0*t^0
 			float t3 = utils::math::vec2f::dot(c2, c2);
@@ -44,7 +48,7 @@ namespace utils::math::geometry::interactions
 				if (pq.x() < 0.f) root = utils::math::sign(pq.y()) * std::cosh(std::acosh(r2 * -utils::math::sign(pq.y())) / 3.f);
 				else root = std::sinh(std::asinh(r2) / 3.f);
 				root = -2.f * std::sqrt(p2 / 3.f) * root - t2 / 3.f;
-				root = clamp(root, t_min, t_max);
+				root = utils::math::clamp(root, t_min, t_max);
 				//return utils::math::vec2f(length(point - posBezier(bezier.vertices[0], bezier.vertices[1], bezier.vertices[2], root)), root);
 				return root;
 				}
@@ -53,7 +57,7 @@ namespace utils::math::geometry::interactions
 				float ac = std::acos(r1 * std::sqrt(-3.f / pq.x())) / 3.f; // 4pi/3 goes here --v
 				//utils::math::vec2f roots = 2.f * std::sqrt(-pq.x() / 3.f) * std::cos(utils::math::vec2f(ac, ac - 4.18879020479f)) - t2 / 3.f;
 				utils::math::vec2f roots = (utils::math::vec2f{float{std::cos(ac)}, float{std::cos(ac - 4.18879020479f)}} * 2.f * float{std::sqrt(-pq.x() / 3.f)}) - t2 / 3.f;
-				roots = clamp(roots, t_min, t_max);
+				roots = utils::math::clamp(roots, t_min, t_max);
 				float d1 = dot2(point - bezier.at(roots.x()).point());
 				float d2 = dot2(point - bezier.at(roots.y()).point());
 				//return d1 < d2 ? utils::math::vec2f(sqrt(d1), roots.x()) : utils::math::vec2f(sqrt(d2), roots.t);
@@ -61,62 +65,103 @@ namespace utils::math::geometry::interactions
 				}
 			}
 		}
+	
+	utils_gpu_available constexpr float closest_t(const shape::concepts::bezier_ends_aware auto& bezier, const vec2f& point)
+		{
+		return closest_t<bezier.optional_ends.value()>(bezier, point);
+		}
 
+	template <ends::ab ends>
 	utils_gpu_available constexpr auto closest_proxy(const shape::concepts::bezier auto& bezier, const vec2f& point) noexcept
 		{
-		const float t{closest_t(bezier, point)};
+		const float t{closest_t<ends>(bezier, point)};
 		const auto proxy{bezier.at(t)};
 		return proxy;
 		}
+	utils_gpu_available constexpr auto closest_proxy(const shape::concepts::bezier_ends_aware auto& bezier, const vec2f& point) noexcept
+		{
+		return closest_proxy<bezier.optional_ends.value()>(bezier, point);
+		}
 
+	template <ends::ab ends>
 	utils_gpu_available constexpr shape::point closest_point(const shape::concepts::bezier auto& bezier, const vec2f& point) noexcept
 		{
-		const auto proxy{closest_proxy(bezier, point)};
+		const auto proxy{closest_proxy<ends>(bezier, point)};
 		return proxy.point();
 		}
-	
+	utils_gpu_available constexpr shape::point closest_point(const shape::concepts::bezier_ends_aware auto& bezier, const vec2f& point) noexcept
+		{
+		return closest_point<bezier.optional_ends.value()>(bezier, point);
+		}
+
+	template <ends::ab ends>
 	utils_gpu_available constexpr float minimum_distance(const shape::concepts::bezier auto& bezier, const vec2f& point) noexcept
 		{
-		const auto proxy{closest_proxy(bezier, point)};
+		const auto proxy{closest_proxy<ends>(bezier, point)};
 		return minimum_distance(proxy.point(), point);
 		}
-	
+	utils_gpu_available constexpr float minimum_distance(const shape::concepts::bezier_ends_aware auto& bezier, const vec2f& point) noexcept
+		{
+		return minimum_distance<bezier.optional_ends.value()>(bezier, point);
+		}
+
+	template <ends::ab ends>
 	utils_gpu_available constexpr return_types::closest_point_with_distance closest_with_distance(const shape::concepts::bezier auto& bezier, const vec2f& point) noexcept
 		{
-		const auto proxy{closest_proxy(bezier, point)};
+		const auto proxy{closest_proxy<ends>(bezier, point)};
 		const float distance{minimum_distance(proxy.point(), point)};
 		return {proxy.point(), distance};
 		}
-	
-	utils_gpu_available constexpr return_types::side side(const shape::concepts::bezier auto& bezier, const vec2f& point) noexcept
+	utils_gpu_available constexpr return_types::closest_point_with_distance closest_with_distance(const shape::concepts::bezier_ends_aware auto& bezier, const vec2f& point) noexcept
 		{
-		const auto proxy{closest_proxy(bezier, point)};
-		const auto left{proxy.normal()};
-		const auto a_to_point{point - proxy.point()};
-		const return_types::side ret{utils::math::vec2f::dot(left, a_to_point)};
-		return ret;
+		return closest_with_distance<bezier.optional_ends.value()>(bezier, point);
 		}
 
+	template <ends::ab ends>
+	utils_gpu_available constexpr return_types::side side(const shape::concepts::bezier auto& bezier, const vec2f& point) noexcept
+		{
+		const auto proxy{closest_proxy<ends>(bezier, point)};
+		const auto left{proxy.normal()};
+		const auto a_to_point{point - proxy.point()};
+		//TODO not sure why needs inverting. Normal is left which is outside and should lead to positive result already :shrugs:
+		const return_types::side ret{-utils::math::vec2f::dot(left, a_to_point)}; 
+		return ret;
+		}
+	utils_gpu_available constexpr return_types::side side(const shape::concepts::bezier_ends_aware auto& bezier, const vec2f& point) noexcept
+		{
+		return side<bezier.optional_ends.value()>(bezier, point);
+		}
+
+	template <ends::ab ends>
 	utils_gpu_available constexpr return_types::signed_distance signed_distance(const shape::concepts::bezier auto& bezier, const vec2f& point) noexcept
 		{
-		const auto distance{minimum_distance(bezier, point)};
-		const auto side{interactions::side(bezier, point)};
+		const auto distance{minimum_distance<ends>(bezier, point)};
+		const auto side{interactions::side<ends>(bezier, point)};
 		return {distance * side.value()};
 		}
-	
+	utils_gpu_available constexpr return_types::signed_distance signed_distance(const shape::concepts::bezier_ends_aware auto& bezier, const vec2f& point) noexcept
+		{
+		return signed_distance<bezier.optional_ends.value()>(bezier, point);
+		}
+
+	template <ends::ab ends>
 	utils_gpu_available constexpr return_types::closest_point_with_signed_distance closest_with_signed_distance(const shape::concepts::bezier auto& bezier, const vec2f& point) noexcept
 		{
-		const auto proxy{closest_proxy(bezier, point)};
+		const auto proxy{closest_proxy<ends>(bezier, point)};
 		const auto closest{proxy.point()};
 		const float distance{minimum_distance(closest, point)};
 
 		const auto left{proxy.normal()};
 		const auto a_to_point{point - closest};
-		const return_types::side side{utils::math::vec2f::dot(left, a_to_point)};
+		const return_types::side side{-utils::math::vec2f::dot(left, a_to_point)};
 
 		const return_types::signed_distance signed_distance{distance * side};
 		const return_types::closest_point_with_signed_distance ret{closest, signed_distance};
 		return ret;
+		}
+	utils_gpu_available constexpr return_types::closest_point_with_signed_distance closest_with_signed_distance(const shape::concepts::bezier_ends_aware auto& bezier, const vec2f& point) noexcept
+		{
+		return closest_with_signed_distance<bezier.optional_ends.value()>(bezier, point);
 		}
 	
 	}

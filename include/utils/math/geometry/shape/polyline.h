@@ -24,17 +24,17 @@ namespace utils::math::geometry::shape
 			concept edges_callable = edges_callable_without_index<T> || edges_callable_with_index<T>;
 			}
 
-		template <storage::type STORAGE_TYPE, geometry::ends ENDS = ends::create::open(), size_t EXTENT = std::dynamic_extent>
+		template <storage::type STORAGE_TYPE, geometry::ends::closeable ENDS = ends::closeable::create::open(), size_t EXTENT = std::dynamic_extent>
 		struct polyline : utils::math::geometry::shape_flag
 			{
-			inline static constexpr storage::type storage_type{STORAGE_TYPE};
-			inline static constexpr geometry::ends ends       {ENDS};
-			inline static constexpr size_t         extent     {EXTENT};
+			inline static constexpr auto storage_type{STORAGE_TYPE};
+			inline static constexpr auto ends        {ENDS};
+			inline static constexpr auto extent      {EXTENT};
 
 			using self_t        = polyline<storage_type, ends, extent>;
 			using nonref_self_t = polyline<storage::type::create::owner(), ends, extent>;
 
-			using vertices_t = geometry::ends_aware_vertices<storage_type, ends, extent>;
+			using vertices_t = geometry::ends_aware_vertices<storage_type, ends.is_closed(), extent>;
 			vertices_t vertices;
 
 
@@ -87,9 +87,12 @@ namespace utils::math::geometry::shape
 				//static_assert(std::random_access_iterator<iterator>);
 				//static_assert(std::condiguous_iterator   <iterator>);
 
-				template <bool ends_aware = true> utils_gpu_available constexpr auto ends_aware_access(size_t index) const noexcept                          { return edge<true         >{polyline_ref.vertices.ends_aware_access<ends_aware>(index), polyline_ref.vertices.ends_aware_access<ends_aware>(index + 1)}; }
-				template <bool ends_aware = true> utils_gpu_available constexpr auto ends_aware_access(size_t index)       noexcept requires(!is_view_const) { return edge<is_view_const>{polyline_ref.vertices.ends_aware_access<ends_aware>(index), polyline_ref.vertices.ends_aware_access<ends_aware>(index + 1)}; }
-			
+				template <bool closed> utils_gpu_available constexpr auto ends_aware_access(size_t index) const noexcept                          { return edge<true         >{polyline_ref.vertices.ends_aware_access<closed>(index), polyline_ref.vertices.ends_aware_access<closed>(index + 1)}; }
+				template <bool closed> utils_gpu_available constexpr auto ends_aware_access(size_t index)       noexcept requires(!is_view_const) { return edge<is_view_const>{polyline_ref.vertices.ends_aware_access<closed>(index), polyline_ref.vertices.ends_aware_access<closed>(index + 1)}; }
+				utils_gpu_available constexpr auto ends_aware_access(size_t index) const noexcept                          { return ends_aware_access<polyline_ref.vertices.closed>(index); }
+				utils_gpu_available constexpr auto ends_aware_access(size_t index)       noexcept requires(!is_view_const) { return ends_aware_access<polyline_ref.vertices.closed>(index); }
+
+
 				utils_gpu_available constexpr auto operator[](size_t index) const noexcept                          { return ends_aware_access<true>(); }
 				utils_gpu_available constexpr auto operator[](size_t index)       noexcept requires(!is_view_const) { return ends_aware_access<true>(); }
 
@@ -99,7 +102,15 @@ namespace utils::math::geometry::shape
 				utils_gpu_available constexpr auto end  ()       noexcept { return iterator<is_view_const>{&polyline_ref, size()}; }
 			
 				utils_gpu_available constexpr bool   empty() const noexcept { return polyline_ref.empty() || polyline_ref.size() == 1; }
-				utils_gpu_available constexpr size_t size () const noexcept { return polyline_ref.vertices.ends_aware_size() - 1; }
+
+				template <bool closed> 
+				utils_gpu_available constexpr size_t size() const noexcept
+					{
+					const auto eas{polyline_ref.vertices.size()};
+					if constexpr (closed) { return eas; }
+					return eas - 1; 
+					}
+				utils_gpu_available constexpr size_t size() const noexcept { return size<polyline_ref.vertices.closed>(); }
 				
 				template <bool include_last_if_closed = true>
 				utils_gpu_available constexpr void for_each(details::edges_callable auto callback) const noexcept
@@ -202,33 +213,33 @@ namespace utils::math::geometry::shape
 			};
 
 		template <storage::type storage_type, size_t extent = std::dynamic_extent>
-		using polygon = polyline<storage_type, ends::create::closed(), extent>;
+		using polygon = polyline<storage_type, ends::closeable::create::closed(), extent>;
 		}
 
 	
 	namespace concepts
 		{
 		template <typename T> concept polyline = std::derived_from<T, shape::generic::polyline<T::storage_type, T::ends, T::extent>>;
-		template <typename T> concept polygon  = polyline<T> && T::ends == ends::create::closed();
+		template <typename T> concept polygon  = polyline<T> && T::ends == ends::closeable::create::closed();
 		}
 	
 	namespace owner 
 		{
-		template <geometry::ends ends = geometry::ends::create::open(), size_t extent = std::dynamic_extent>
+		template <geometry::ends::closeable ends = geometry::ends::closeable::create::open(), size_t extent = std::dynamic_extent>
 		using polyline = shape::generic::polyline<storage::type::create::owner(), ends, extent>;
 		template <size_t extent = std::dynamic_extent>
 		using polygon = shape::generic::polygon<storage::type::create::owner(), extent>;
 		}
 	namespace observer
 		{
-		template <geometry::ends ends = geometry::ends::create::open(), size_t extent = std::dynamic_extent>
+		template <geometry::ends::closeable ends = geometry::ends::closeable::create::open(), size_t extent = std::dynamic_extent>
 		using polyline = shape::generic::polyline<storage::type::create::observer(), ends, extent>;
 		template <size_t extent = std::dynamic_extent>
 		using polygon = shape::generic::polygon<storage::type::create::observer(), extent>;
 		}
 	namespace const_observer
 		{
-		template <geometry::ends ends = geometry::ends::create::open(), size_t extent = std::dynamic_extent>
+		template <geometry::ends::closeable ends = geometry::ends::closeable::create::open(), size_t extent = std::dynamic_extent>
 		using polyline = shape::generic::polyline<storage::type::create::const_observer(), ends, extent>;
 		template <size_t extent = std::dynamic_extent>
 		using polygon = shape::generic::polygon<storage::type::create::const_observer(), extent>;

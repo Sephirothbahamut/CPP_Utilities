@@ -14,7 +14,7 @@ namespace utils::math::geometry
 	template <storage::type storage_type, size_t extent = std::dynamic_extent>
 	using vertices = utils::storage::multiple<storage::storage_type_for<geometry::shape::point, storage_type>, extent, true>;
 
-	template <storage::type storage_type, geometry::ends ends = geometry::ends::create::open(), size_t extent = std::dynamic_extent>
+	template <storage::type storage_type, bool CLOSED, size_t extent = std::dynamic_extent>
 	struct ends_aware_vertices : utils::storage::multiple<storage::storage_type_for<geometry::shape::point, storage_type>, extent, true>
 		{
 		private:
@@ -22,40 +22,34 @@ namespace utils::math::geometry
 
 		public:
 			using multiple_t::multiple;
+			inline static constexpr auto closed{CLOSED};
 
-			template <bool ends_aware = true>
+			template <bool closed>
 			utils_gpu_available constexpr const auto& ends_aware_access(const size_t index) const noexcept
 				{
-				const size_t remapped_index{ends_aware_index<ends_aware>(index)};
+				const size_t remapped_index{ends_aware_index<closed>(index)};
 				return multiple_t::operator[](remapped_index);
 				}
+			utils_gpu_available constexpr const auto& ends_aware_access(const size_t index) const noexcept { return ends_aware_access<closed>(index); }
 
-			template <bool ends_aware = true>
+			template <bool closed = true>
 			utils_gpu_available constexpr auto& ends_aware_access(const size_t index) noexcept
 				{
-				const size_t remapped_index{ends_aware_index<ends_aware>(index)};
+				const size_t remapped_index{ends_aware_index<closed>(index)};
 				return multiple_t::operator[](remapped_index);
 				}
+			utils_gpu_available constexpr auto& ends_aware_access(const size_t index) noexcept { return ends_aware_access<closed>(index); }
 
-			template <bool ends_aware = true>
+			template <bool closed = true>
 			utils_gpu_available constexpr size_t ends_aware_index(const size_t index) const noexcept
 				{
-				if constexpr (ends_aware && ends.is_closed())
+				if constexpr (closed)
 					{
 					return index % multiple_t::size();
 					}
 				else { return index; }
 				}
-
-			template <bool ends_aware = true>
-			utils_gpu_available constexpr size_t ends_aware_size() const noexcept
-				{
-				if constexpr (ends_aware && ends.is_closed())
-					{
-					return multiple_t::size() + 1;
-					}
-				else { return multiple_t::size(); }
-				}
+			utils_gpu_available constexpr size_t ends_aware_index(const size_t index) const noexcept { return ends_aware_index<closed>(index); }
 		};
 
 
@@ -63,6 +57,8 @@ namespace utils::math::geometry
 		{
 		template <typename T>
 		concept vertices = std::derived_from<std::remove_cvref_t<T>, geometry::vertices<std::remove_cvref_t<T>::storage_type, std::remove_cvref_t<T>::extent>>;
+		template <typename T>
+		concept ends_aware_vertices = std::derived_from<std::remove_cvref_t<T>, geometry::ends_aware_vertices<std::remove_cvref_t<T>::storage_type, std::remove_cvref_t<T>::closed, std::remove_cvref_t<T>::extent>>;
 		}
 
 	namespace shape
