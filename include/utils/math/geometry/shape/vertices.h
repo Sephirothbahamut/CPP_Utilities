@@ -66,7 +66,7 @@ namespace utils::math::geometry
 		namespace concepts
 			{
 			template <typename T>
-			concept has_vertices = 
+			concept has_vertices = shape<T> &&
 				requires(T t)
 					{
 						{ t.vertices } -> geometry::concepts::vertices;

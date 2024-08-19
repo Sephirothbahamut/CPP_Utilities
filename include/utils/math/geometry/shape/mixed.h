@@ -15,6 +15,16 @@ namespace utils::math::geometry::shape
 	{
 	namespace generic
 		{
+		namespace details
+			{
+			template <typename T>
+			concept pieces_callable_without_index = requires(T t, shape::segment edge, size_t first, size_t last) { t(edge); };
+			template <typename T>
+			concept pieces_callable_with_index = requires(T t, shape::segment edge, size_t first, size_t last) { t(edge, first, last); };
+			template <typename T>
+			concept pieces_callable = pieces_callable_without_index<T> || pieces_callable_with_index<T>;
+			}
+
 		/// <summary> 
 		/// Only use finite or closed ends, infinite ends not supported (yet)
 		/// </summary>
@@ -91,6 +101,8 @@ namespace utils::math::geometry::shape
 				void add_bezier_3pt(const std::initializer_list<shape::point>& points) noexcept
 					requires(storage_type.is_owner())
 					{
+					const auto qwe{points.size()};
+					const auto rty{qwe % 2};
 					assert((points.size() % 2) == 0);
 					vertices.storage.reserve(vertices.storage.size() + points.size());
 					for (const auto& point : points)
@@ -154,7 +166,7 @@ namespace utils::math::geometry::shape
 							return mixed_ref.pieces_metadata.empty();
 							}
 
-						utils_gpu_available constexpr void for_each(details::edges_callable auto callback) noexcept
+						utils_gpu_available constexpr void for_each(details::pieces_callable auto callback) noexcept
 							{
 							if (metadata_size() == 0) { return; }
 
@@ -175,19 +187,19 @@ namespace utils::math::geometry::shape
 							if (mixed_ref.ends.is_closed())
 								{
 								const shape::segment piece{mixed_ref.vertices[index_vertex], mixed_ref.vertices[0]};
-								call(callback, piece, index_vertex);
+								call(callback, piece, index_vertex, 0);
 								}
 							}
 
 					private:
-						template <details::edges_callable callback_t>
-						void call(callback_t callback, const auto& piece, size_t index) noexcept
+						template <details::pieces_callable callback_t>
+						void call(callback_t callback, const auto& piece, size_t first, size_t last) noexcept
 							{
-							if constexpr (details::edges_callable_with_index<callback_t>)
+							if constexpr (details::pieces_callable_with_index<callback_t>)
 								{
-								callback(piece, index);
+								callback(piece, first, last);
 								}
-							else if constexpr (details::edges_callable_without_index<callback_t>)
+							else if constexpr (details::pieces_callable_without_index<callback_t>)
 								{
 								callback(piece);
 								}
@@ -206,7 +218,7 @@ namespace utils::math::geometry::shape
 								const auto vertex_a{mixed_ref.vertices[index_a]};
 								const auto vertex_b{mixed_ref.vertices[index_b]};
 								const shape::segment piece{vertex_a, vertex_b};
-								call(callback, piece, index_vertex_begin + i);
+								call(callback, piece, index_a, index_b);
 								}
 							}
 				
@@ -226,7 +238,7 @@ namespace utils::math::geometry::shape
 								const auto vertex_b{mixed_ref.vertices[index_b]};
 								const auto vertex_c{mixed_ref.vertices[index_c]};
 								const shape::bezier<3> piece{.vertices{vertex_a, vertex_b, vertex_c}};
-								call(callback, piece, i);
+								call(callback, piece, index_a, index_c);
 								}
 							}
 
@@ -248,7 +260,7 @@ namespace utils::math::geometry::shape
 								const auto vertex_c{mixed_ref.vertices[index_c]};
 								const auto vertex_d{mixed_ref.vertices[index_d]};
 								const shape::bezier<4> piece{.vertices{vertex_a, vertex_b, vertex_c, vertex_d}};
-								call(callback, piece, i);
+								call(callback, piece, index_a, index_d);
 								}
 							}
 
@@ -261,7 +273,7 @@ namespace utils::math::geometry::shape
 							//Note: Not "vertices.begin()" because my own iterator can't build a span
 							//TODO check why, it's 6 am and i'm too tired to check now.
 							shape::const_observer::bezier<std::dynamic_extent> piece{.vertices{mixed_ref.vertices.storage.begin() + index_vertex_begin, vertices_count}};
-							call(callback, piece, index_vertex_begin);
+							call(callback, piece, index_vertex_begin, index_vertex_last);
 							}
 					};
 

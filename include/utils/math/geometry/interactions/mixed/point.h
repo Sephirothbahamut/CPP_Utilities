@@ -38,23 +38,45 @@ namespace utils::math::geometry::interactions
 	utils_gpu_available constexpr return_types::closest_point_with_signed_distance closest_with_signed_distance(const shape::concepts::mixed auto& mixed, const vec2f& point) noexcept
 		{
 		return_types::closest_point_with_signed_distance current{};
+		bool current_is_vertex{false};
 		size_t current_index{0};
 
-		mixed.get_pieces().for_each([&](const auto& candidate, size_t index)
+		mixed.get_pieces().for_each([&](const auto& candidate, size_t first_index, size_t last_index)
 			{
 			const auto candidate_values{interactions::closest_with_signed_distance(candidate, point)};
-			if(candidate_values.distance.absolute() <= current.distance.absolute())
+			if(candidate_values.distance.absolute() < current.distance.absolute())
 				{
 				current = candidate_values;
-				current_index = index;
+				if (current.closest == mixed.vertices[first_index])
+					{
+					current_is_vertex = true;
+					current_index = first_index;
+					}
+				else if (current.closest == mixed.vertices.ends_aware_access(last_index))
+					{
+					current_is_vertex = true;
+					current_index = last_index;
+					}
+				else
+					{
+					current_is_vertex = false;
+					}
 				}
 			});
 
-		const bool closed_or_not_last_nor_first{mixed.ends.is_closed() || (current_index < mixed.vertices.size() - 1 && current_index > 0)};
-		const bool closest_matches_vertex{current.closest == mixed.vertices.ends_aware_access(current_index)};
-		if (closest_matches_vertex && closed_or_not_last_nor_first)
+		if constexpr (mixed.ends.is_closed())
 			{
-			const shape::point point_a{mixed.vertices.ends_aware_access(current_index - 1)};
+			const auto end_index{mixed.pieces_metadata[mixed.pieces_metadata.size() - 1].end_index};
+			if (current.closest == mixed.vertices[0] && current_index == end_index - 1)
+				{
+				current_index = 0;
+				}
+			}
+
+		const bool closed_or_not_last_nor_first{mixed.ends.is_closed() || (current_index < mixed.vertices.size() - 1 && current_index > 0)};
+		if (closed_or_not_last_nor_first && current_is_vertex)
+			{
+			const shape::point point_a{mixed.vertices.ends_aware_access(current_index > 0 ? current_index - 1 : mixed.vertices.size() - 1)};
 			const shape::point point_b{mixed.vertices.ends_aware_access(current_index    )};
 			const shape::point point_c{mixed.vertices.ends_aware_access(current_index + 1)};
 		
