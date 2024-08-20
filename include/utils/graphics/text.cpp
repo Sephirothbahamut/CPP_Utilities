@@ -351,7 +351,8 @@ namespace utils::graphics::text
 
 		for (auto& glyph : geometry_sink->glyphs)
 			{
-			utils::math::transform2 transform{.translation{baselineOriginX, baselineOriginY}};
+			//? Sometimes the transform has wrong values
+			utils::math::transform2 transform{.translation{baselineOriginX, baselineOriginY}}; 
 			utils::math::geometry::interactions::transform_self(glyph, transform);
 			}
 
@@ -494,7 +495,6 @@ namespace utils::graphics::text
 
 		//glyphs_converter converter;
 		//text_layout->Draw(&glyphs, &converter, 0.f, 0.f);
-		
 		glyphs_converter* converter{new glyphs_converter()};
 		text_layout->Draw(&glyphs, converter, 0.f, 0.f);
 
