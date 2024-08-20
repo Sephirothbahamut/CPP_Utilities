@@ -10,7 +10,7 @@ namespace utils::math::geometry::interactions
 		const auto pieces{mixed.get_pieces()};
 		auto ret{return_types::bounding_box::create::infinite()};
 
-		pieces.for_each([&](const auto& piece)
+		pieces.for_each([&ret](const auto& piece)
 			{
 			const auto piece_bounding_box{interactions::bounding_box(piece)};
 			ret = return_types::bounding_box::create::bounding_rect(ret, piece_bounding_box);

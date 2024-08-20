@@ -8,6 +8,7 @@
 #include "../compilation/OS.h"
 #include "../math/transform2.h"
 #include "../math/geometry/shape/mixed.h"
+#include "../math/geometry/interactions/mixed.h"
 
 //TODO remove Utilities_MS dependency
 #include "../../../../../CPP_Utilities_MS/include/utils/MS/graphics/d2d.h"
@@ -155,17 +156,20 @@ namespace utils::graphics::text
 		public:
 			utils::math::transform2 transform;
 
-			IFACEMETHOD(IsPixelSnappingDisabled)(
+			IFACEMETHOD(IsPixelSnappingDisabled)
+				(
 				__maybenull void* clientDrawingContext,
 				__out BOOL* isDisabled
 				);
 
-			IFACEMETHOD(GetCurrentTransform)(
+			IFACEMETHOD(GetCurrentTransform)
+				(
 				__maybenull void* clientDrawingContext,
 				__out DWRITE_MATRIX* transform
 				);
 
-			IFACEMETHOD(DrawGlyphRun)(
+			IFACEMETHOD(DrawGlyphRun)
+				(
 				__maybenull void* clientDrawingContext,
 				FLOAT baselineOriginX,
 				FLOAT baselineOriginY,
@@ -175,12 +179,14 @@ namespace utils::graphics::text
 				IUnknown* clientDrawingEffect
 				);
 
-			IFACEMETHOD(GetPixelsPerDip)(
+			IFACEMETHOD(GetPixelsPerDip)
+				(
 				__maybenull void* clientDrawingContext,
 				__out FLOAT* pixelsPerDip
 				);
 
-			IFACEMETHOD(DrawUnderline)(
+			IFACEMETHOD(DrawUnderline)
+				(
 				__maybenull void* clientDrawingContext,
 				FLOAT baselineOriginX,
 				FLOAT baselineOriginY,
@@ -188,7 +194,8 @@ namespace utils::graphics::text
 				IUnknown* clientDrawingEffect
 				);
 
-			IFACEMETHOD(DrawStrikethrough)(
+			IFACEMETHOD(DrawStrikethrough)
+				(
 				__maybenull void* clientDrawingContext,
 				FLOAT baselineOriginX,
 				FLOAT baselineOriginY,
@@ -196,7 +203,8 @@ namespace utils::graphics::text
 				IUnknown* clientDrawingEffect
 				);
 
-			IFACEMETHOD(DrawInlineObject)(
+			IFACEMETHOD(DrawInlineObject)
+				(
 				__maybenull void* clientDrawingContext,
 				FLOAT originX,
 				FLOAT originY,
@@ -206,12 +214,11 @@ namespace utils::graphics::text
 				IUnknown* clientDrawingEffect
 				);
 
-			std::vector<glyph_t> glyphs;
-
 		public:
 			IFACEMETHOD_(unsigned long, AddRef) ();
 			IFACEMETHOD_(unsigned long, Release) ();
-			IFACEMETHOD(QueryInterface) (
+			IFACEMETHOD(QueryInterface)
+				(
 				IID const& riid,
 				void** ppvObject
 				);
@@ -251,7 +258,8 @@ namespace utils::graphics::text
 
 
 
-	IFACEMETHODIMP glyphs_converter::DrawGlyphRun(
+	IFACEMETHODIMP glyphs_converter::DrawGlyphRun
+		(
 		__maybenull void* clientDrawingContext,
 		FLOAT baselineOriginX,
 		FLOAT baselineOriginY,
@@ -259,7 +267,7 @@ namespace utils::graphics::text
 		__in DWRITE_GLYPH_RUN const* glyphRun,
 		__in DWRITE_GLYPH_RUN_DESCRIPTION const* glyphRunDescription,
 		IUnknown* clientDrawingEffect
-	)
+		)
 		{
 		HRESULT hr = S_OK;
 
@@ -274,6 +282,10 @@ namespace utils::graphics::text
 		if (SUCCEEDED(hr))
 			{
 			hr = pPathGeometry->Open(&pSink);
+			}
+		else
+			{
+			throw std::runtime_error{"idk directx stuff"};
 			}
 
 		// Get the glyph run outline geometries back from DirectWrite and place them within the
@@ -292,11 +304,19 @@ namespace utils::graphics::text
 				pSink
 				);
 			}
+		else
+			{
+			throw std::runtime_error{"idk directx stuff"};
+			}
 
 			// Close the geometry sink
 		if (SUCCEEDED(hr))
 			{
 			hr = pSink->Close();
+			}
+		else
+			{
+			throw std::runtime_error{"idk directx stuff"};
 			}
 
 			// Initialize a matrix to translate the origin of the glyph run.
@@ -312,19 +332,49 @@ namespace utils::graphics::text
 			{
 			hr = d2d_factory->CreateTransformedGeometry(pPathGeometry, &matrix, &pTransformedGeometry);
 			}
+		else
+			{
+			throw std::runtime_error{"idk directx stuff"};
+			}
+		//Cannot use transformed geometry->Stream ???
 
-		geometry_sink geometry_sink;
-		pPathGeometry->Stream(&geometry_sink);
+		geometry_sink* geometry_sink{new utils::graphics::text::geometry_sink()};
+		pPathGeometry->Stream(geometry_sink);
 
-		glyphs = std::move(geometry_sink.glyphs);
+		//Since we're not using transformed geometry stream we need to transform manually
+		//TODO understand why
 
-		//SafeRelease(&pPathGeometry);
-		//SafeRelease(&pSink);
-		//SafeRelease(&pTransformedGeometry);
+		struct teststruct { int i{0}; float f{1.f}; double d{2.}; };
 
-		pPathGeometry->Release();
-		pSink->Release();
+		teststruct testinstance{.f{2.f}};
+		utils::math::transform2 testtransform{.translation{1.f, 1.f}, .rotation{0.f}, .scaling{1.f}};
+
+		for (auto& glyph : geometry_sink->glyphs)
+			{
+			utils::math::transform2 transform{.translation{baselineOriginX, baselineOriginY}};
+			utils::math::geometry::interactions::transform_self(glyph, transform);
+			}
+
+		//Emplace because this function may be called multiple times
+
+		std::vector<glyph_t>& glyphs{*reinterpret_cast<std::vector<glyph_t>*>(clientDrawingContext)};
+		
+		if (geometry_sink->glyphs.size())
+			{
+			glyphs.reserve(glyphs.size() + geometry_sink->glyphs.size());
+			//std::move(geometry_sink->glyphs.begin(), geometry_sink->glyphs.end(), std::back_inserter(glyphs));
+
+			for (size_t i = 0; i < geometry_sink->glyphs.size(); i++)
+				{
+				const auto glyph{geometry_sink->glyphs[i]};
+				glyphs.push_back(glyph);
+				}
+			}
+
+		geometry_sink       ->Release();
 		pTransformedGeometry->Release();
+		pPathGeometry       ->Release();
+		pSink               ->Release();
 
 		return hr;
 		}
@@ -396,20 +446,14 @@ namespace utils::graphics::text
 		return S_OK;
 		}
 
-
-
-
-
-
-
-
-	std::wstring widen(std::string const& in)
+	std::wstring widen(const std::string& in)
 		{//https://stackoverflow.com/questions/14184709/is-this-code-safe-using-wstring-with-multibytetowidechar
 		std::wstring out{};
 
 		if (in.length() > 0)
 			{
 			// Calculate target buffer size (not including the zero terminator).
+			//CP_UTF8 fails cause reasons i guess
 			int len = MultiByteToWideChar(CP_UTF8, MB_ERR_INVALID_CHARS, in.c_str(), in.size(), NULL, 0);
 			if (len == 0)
 				{
@@ -424,9 +468,7 @@ namespace utils::graphics::text
 		return out;
 		}
 
-
-
-	std::vector<glyph_t> glyphs_from_string(const std::string& text)
+	std::vector<glyph_t> glyphs_from_string(const std::string& text, const std::wstring& font)
 		{
 		//std::wstring_convert<std::codecvt_utf8_utf16<wchar_t>> string_converter;
 		//std::wstring wide{string_converter.from_bytes(text)};
@@ -437,25 +479,28 @@ namespace utils::graphics::text
 		dw::factory dw_factory;
 		dw::text_format text_format{dw_factory, dw::text_format::create_info
 			{
-			.name{L"Gabriola"},
+			.name{font},
 			.size{36.f}
 			}};
 
 		D2D1_RECT_F layoutRect{0.f, 0.f, 1024.f, 500.f};
 
-		dw::text_layout text_layout{dw_factory, wide, text_format, utils::math::vec2f{1024.f, 768.f}};
+		dw::text_layout text_layout{dw_factory, wide, text_format, utils::math::vec2f{2048.f, 2048.f}};
 
 		//Bypassed destructor cause I don't have brainpower to deal with COM's weirdnesses right now
 		//TODO understand why crash on glyphs_converter destructor
 
+		std::vector<glyph_t> glyphs;
+
 		//glyphs_converter converter;
-		//text_layout->Draw(nullptr, &converter, 0.f, 0.f);
-		//auto ret{converter.glyphs};
+		//text_layout->Draw(&glyphs, &converter, 0.f, 0.f);
 		
 		glyphs_converter* converter{new glyphs_converter()};
-		text_layout->Draw(nullptr, converter, 0.f, 0.f);
-		auto ret{converter->glyphs};
+		text_layout->Draw(&glyphs, converter, 0.f, 0.f);
 
-		return ret;
+		converter->Release();
+
+
+		return glyphs;
 		}
 	}

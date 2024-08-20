@@ -166,7 +166,7 @@ namespace utils::math::geometry::shape
 							return mixed_ref.pieces_metadata.empty();
 							}
 
-						utils_gpu_available constexpr void for_each(details::pieces_callable auto callback) noexcept
+						utils_gpu_available constexpr void for_each(details::pieces_callable auto callback) const noexcept
 							{
 							if (metadata_size() == 0) { return; }
 
@@ -193,7 +193,7 @@ namespace utils::math::geometry::shape
 
 					private:
 						template <details::pieces_callable callback_t>
-						void call(callback_t callback, const auto& piece, size_t first, size_t last) noexcept
+						void call(callback_t callback, const auto& piece, size_t first, size_t last) const noexcept
 							{
 							if constexpr (details::pieces_callable_with_index<callback_t>)
 								{
@@ -206,7 +206,7 @@ namespace utils::math::geometry::shape
 							};
 
 						template <typename callback_t>
-						utils_gpu_available constexpr void call_segments(size_t index_vertex_begin, size_t index_vertex_end, callback_t callback) noexcept
+						utils_gpu_available constexpr void call_segments(size_t index_vertex_begin, size_t index_vertex_end, callback_t callback) const noexcept
 							{
 							const size_t vertices_count{index_vertex_end - index_vertex_begin};
 							const size_t pieces_count{vertices_count - 1};
@@ -223,7 +223,7 @@ namespace utils::math::geometry::shape
 							}
 				
 						template <typename callback_t>
-						utils_gpu_available constexpr void call_bezier_3pts(size_t index_vertex_begin, size_t index_vertex_end, callback_t callback) noexcept
+						utils_gpu_available constexpr void call_bezier_3pts(size_t index_vertex_begin, size_t index_vertex_end, callback_t callback) const noexcept
 							{
 							const size_t vertices_count{index_vertex_end - index_vertex_begin};
 							const size_t pieces_count{(vertices_count - 1) / 2};
@@ -243,7 +243,7 @@ namespace utils::math::geometry::shape
 							}
 
 						template <typename callback_t>
-						utils_gpu_available constexpr void call_bezier_4pts(size_t index_vertex_begin, size_t index_vertex_end, callback_t callback)
+						utils_gpu_available constexpr void call_bezier_4pts(size_t index_vertex_begin, size_t index_vertex_end, callback_t callback) const noexcept
 							{
 							const size_t vertices_count{index_vertex_end - index_vertex_begin};
 							const size_t pieces_count{(vertices_count - 1) / 3};
@@ -265,7 +265,7 @@ namespace utils::math::geometry::shape
 							}
 
 						template <typename callback_t>
-						utils_gpu_available constexpr void call_bezier(size_t index_vertex_begin, size_t index_vertex_last, callback_t callback)
+						utils_gpu_available constexpr void call_bezier(size_t index_vertex_begin, size_t index_vertex_last, callback_t callback) const noexcept
 							{
 							const size_t index_vertex_end{index_vertex_last + 1};
 							const size_t vertices_count{index_vertex_end - index_vertex_begin};

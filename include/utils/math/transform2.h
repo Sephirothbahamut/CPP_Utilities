@@ -9,10 +9,10 @@ namespace utils::math
 	{
 	struct transform2
 		{
-		static transform2 zero() noexcept { return {{}, {}, 0.f}; }
+		static transform2 zero() noexcept { return {{}, {}, 1.f}; }
 
-		vec2f translation{};
-		utils::math::angle::radf rotation{};
+		vec2f translation{0.f, 0.f};
+		utils::math::angle::radf rotation{0.f};
 		float scaling{1.f};
 
 		transform2  operator+ (const transform2& oth) const noexcept 
