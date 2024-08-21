@@ -78,11 +78,22 @@ namespace utils::math
 				
 				utils_gpu_available constexpr nonref_self_t operator+ (const math::angle::concepts::angle auto& angle) const noexcept
 					{
-					return
-						{
-						self().x() * angle.cos() - self().y() * angle.sin(),
-						self().x() * angle.sin() + self().y() * angle.cos()
-						};
+					const auto a0{self()};
+					const auto a1{a0.x()};
+					const auto a2{angle.cos()};
+					const auto a{a1 * a2};
+					const auto b{self().y() * angle.sin()};
+					const auto c{a - b};
+					const auto d{self().x() * angle.sin()};
+					const auto e{self().y() * angle.cos()};
+					const auto f{d + e};
+					const nonref_self_t ret{c, f};
+					//return
+					//	{
+					//	self().x() * angle.cos() - self().y() * angle.sin(),
+					//	self().x() * angle.sin() + self().y() * angle.cos()
+					//	};
+					return ret;
 					}
 				utils_gpu_available constexpr nonref_self_t operator- (const math::angle::concepts::angle auto& angle) const noexcept
 					{
@@ -94,7 +105,11 @@ namespace utils::math
 						};
 					}
 
-				utils_gpu_available constexpr self_t& operator+=(const math::angle::concepts::angle auto& angle) noexcept { return self() = self() + angle; }
+				utils_gpu_available constexpr self_t& operator+=(const math::angle::concepts::angle auto& angle) noexcept 
+					{
+					assert(this == &self());
+					return self() = self() + angle; 
+					}
 				utils_gpu_available constexpr self_t& operator-=(const math::angle::concepts::angle auto& angle) noexcept { return self() = self() - angle; }
 				utils_gpu_available constexpr self_t& operator= (const math::angle::concepts::angle auto& angle) noexcept
 					{

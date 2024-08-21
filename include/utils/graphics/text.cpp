@@ -255,7 +255,15 @@ namespace utils::graphics::text
 		return S_OK;
 		}
 
-
+	void print(const std::array<float, 20>& arr)
+		{
+		for (size_t i{0}; i < arr.size(); i++)
+			{
+			const float& f{arr[i]};
+			std::cout << f << " ";
+			}
+		std::cout << std::endl;
+		}
 
 
 	IFACEMETHODIMP glyphs_converter::DrawGlyphRun
@@ -271,12 +279,34 @@ namespace utils::graphics::text
 		{
 		HRESULT hr = S_OK;
 
-		utils::MS::graphics::d2d::factory d2d_factory;
+		for (size_t i = 0; i < 200; i++)
+			{
+			std::vector<utils::graphics::text::glyph_t> vec;
+		
+			for (size_t i = 0; i < 200; i++)
+				{
+				utils::graphics::text::glyph_t glyph{utils::math::vec2f{10.f, 10.f}};
+				glyph.add_segments({utils::math::vec2f{20.f, 20.f}, utils::math::vec2f{30.f, 30.f}, utils::math::vec2f{40.f, 40.f}});
+				glyph.add_bezier_3pt({utils::math::vec2f{50.f, 50.f}, utils::math::vec2f{60.f, 60.f}, utils::math::vec2f{70.f, 70.f}, utils::math::vec2f{80.f, 80.f}});
+		
+				const utils::math::transform2 transform
+					{
+					.translation{1.f, 1.f}
+					};
+				utils::math::geometry::interactions::transform_self(glyph, transform);
+		
+				if (glyph.vertices[0].x() != 11.f) { throw std::runtime_error{"Corrupted memory"}; }
+		
+				vec.emplace_back(std::move(glyph));
+				}
+			}
 
+		utils::MS::graphics::d2d::factory d2d_factory;
+		
 		// Create the path geometry.
 		ID2D1PathGeometry* pPathGeometry = NULL;
 		hr = d2d_factory->CreatePathGeometry(&pPathGeometry);
-
+		
 		// Write to the path geometry using the geometry sink.
 		ID2D1GeometrySink* pSink = NULL;
 		if (SUCCEEDED(hr))
@@ -287,7 +317,7 @@ namespace utils::graphics::text
 			{
 			throw std::runtime_error{"idk directx stuff"};
 			}
-
+		
 		// Get the glyph run outline geometries back from DirectWrite and place them within the
 		// geometry sink.
 		if (SUCCEEDED(hr))
@@ -308,7 +338,7 @@ namespace utils::graphics::text
 			{
 			throw std::runtime_error{"idk directx stuff"};
 			}
-
+		
 			// Close the geometry sink
 		if (SUCCEEDED(hr))
 			{
@@ -318,14 +348,14 @@ namespace utils::graphics::text
 			{
 			throw std::runtime_error{"idk directx stuff"};
 			}
-
+		
 			// Initialize a matrix to translate the origin of the glyph run.
 		D2D1::Matrix3x2F const matrix = D2D1::Matrix3x2F(
 			1.0f, 0.0f,
 			0.0f, 1.0f,
 			baselineOriginX, baselineOriginY
 		);
-
+		
 		// Create the transformed geometry
 		ID2D1TransformedGeometry* pTransformedGeometry = NULL;
 		if (SUCCEEDED(hr))
@@ -337,42 +367,34 @@ namespace utils::graphics::text
 			throw std::runtime_error{"idk directx stuff"};
 			}
 		//Cannot use transformed geometry->Stream ???
-
-		geometry_sink* geometry_sink{new utils::graphics::text::geometry_sink()};
-		pPathGeometry->Stream(geometry_sink);
-
-		//Since we're not using transformed geometry stream we need to transform manually
+		
+		geometry_sink geometry_sink;
+		pPathGeometry->Stream(&geometry_sink);
+		
+		//Since we're not using transformed geometry->Stream we need to transform manually
 		//TODO understand why
-
+		
 		struct teststruct { int i{0}; float f{1.f}; double d{2.}; };
-
+		
 		teststruct testinstance{.f{2.f}};
 		utils::math::transform2 testtransform{.translation{1.f, 1.f}, .rotation{0.f}, .scaling{1.f}};
-
-		for (auto& glyph : geometry_sink->glyphs)
+		
+		for (auto& glyph : geometry_sink.glyphs)
 			{
-			//? Sometimes the transform has wrong values
 			utils::math::transform2 transform{.translation{baselineOriginX, baselineOriginY}}; 
 			utils::math::geometry::interactions::transform_self(glyph, transform);
 			}
-
+		
 		//Emplace because this function may be called multiple times
-
+		
 		std::vector<glyph_t>& glyphs{*reinterpret_cast<std::vector<glyph_t>*>(clientDrawingContext)};
 		
-		if (geometry_sink->glyphs.size())
+		if (geometry_sink.glyphs.size())
 			{
-			glyphs.reserve(glyphs.size() + geometry_sink->glyphs.size());
-			//std::move(geometry_sink->glyphs.begin(), geometry_sink->glyphs.end(), std::back_inserter(glyphs));
-
-			for (size_t i = 0; i < geometry_sink->glyphs.size(); i++)
-				{
-				const auto glyph{geometry_sink->glyphs[i]};
-				glyphs.push_back(glyph);
-				}
+			glyphs.reserve(glyphs.size() + geometry_sink.glyphs.size());
+			std::move(geometry_sink.glyphs.begin(), geometry_sink.glyphs.end(), std::back_inserter(glyphs));
 			}
-
-		geometry_sink       ->Release();
+		
 		pTransformedGeometry->Release();
 		pPathGeometry       ->Release();
 		pSink               ->Release();
@@ -481,9 +503,9 @@ namespace utils::graphics::text
 		dw::text_format text_format{dw_factory, dw::text_format::create_info
 			{
 			.name{font},
-			.size{36.f}
+			.size{128.f}
 			}};
-
+		
 		D2D1_RECT_F layoutRect{0.f, 0.f, 1024.f, 500.f};
 
 		dw::text_layout text_layout{dw_factory, wide, text_format, utils::math::vec2f{2048.f, 2048.f}};
@@ -493,12 +515,8 @@ namespace utils::graphics::text
 
 		std::vector<glyph_t> glyphs;
 
-		//glyphs_converter converter;
-		//text_layout->Draw(&glyphs, &converter, 0.f, 0.f);
-		glyphs_converter* converter{new glyphs_converter()};
-		text_layout->Draw(&glyphs, converter, 0.f, 0.f);
-
-		converter->Release();
+		glyphs_converter converter;
+		text_layout->Draw(&glyphs, &converter, 0.f, 0.f);
 
 
 		return glyphs;

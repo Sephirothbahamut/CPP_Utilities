@@ -68,9 +68,9 @@ namespace utils::math
 		inline extern constexpr const char name_vec[]{"vec"};
 
 		template<typename T, size_t size, template <typename, size_t> class unspecialized_derived_T>
-		class vec_sized_specialization {};
+		class utils_oop_empty_bases vec_sized_specialization {};
 		template<typename T, size_t size, template <typename, size_t> class unspecialized_derived_T>
-		class vec_typed_specialization {};
+		class utils_oop_empty_bases vec_typed_specialization {};
 
 		//Forward declare the type/size based extensions, so an error appears if the respective headers weren't included
 		//Otherwise this is an ODR violation, or IFNDR, I don't remember, since the same specialization risks not being available in all .cpps
@@ -117,11 +117,6 @@ namespace utils::math
 		details::vec_sized_specialization<T, SIZE, vec>,
 		details::vec_typed_specialization<T, SIZE, vec>
 		{
-		template<typename T, size_t SIZE, template <typename, size_t> class unspecialized_derived_T>
-		friend class details::vec_sized_specialization;
-		template<typename T, size_t SIZE, template <typename, size_t> class unspecialized_derived_T>
-		friend class details::vec_typed_specialization;
-
 		using base_t = ::utils::details::vector::base<T, SIZE, vec, details::name_vec>;
 
 		using base_t::size;
