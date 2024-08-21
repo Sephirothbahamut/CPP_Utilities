@@ -278,29 +278,6 @@ namespace utils::graphics::text
 		)
 		{
 		HRESULT hr = S_OK;
-
-		for (size_t i = 0; i < 200; i++)
-			{
-			std::vector<utils::graphics::text::glyph_t> vec;
-		
-			for (size_t i = 0; i < 200; i++)
-				{
-				utils::graphics::text::glyph_t glyph{utils::math::vec2f{10.f, 10.f}};
-				glyph.add_segments({utils::math::vec2f{20.f, 20.f}, utils::math::vec2f{30.f, 30.f}, utils::math::vec2f{40.f, 40.f}});
-				glyph.add_bezier_3pt({utils::math::vec2f{50.f, 50.f}, utils::math::vec2f{60.f, 60.f}, utils::math::vec2f{70.f, 70.f}, utils::math::vec2f{80.f, 80.f}});
-		
-				const utils::math::transform2 transform
-					{
-					.translation{1.f, 1.f}
-					};
-				utils::math::geometry::interactions::transform_self(glyph, transform);
-		
-				if (glyph.vertices[0].x() != 11.f) { throw std::runtime_error{"Corrupted memory"}; }
-		
-				vec.emplace_back(std::move(glyph));
-				}
-			}
-
 		utils::MS::graphics::d2d::factory d2d_factory;
 		
 		// Create the path geometry.

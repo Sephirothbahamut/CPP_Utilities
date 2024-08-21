@@ -2,6 +2,9 @@
 
 #include <vector>
 
+#include "../math/vec2.h"
+#include "../math/vec3.h"
+#include "../math/vec_s.h"
 #include "../math/geometry/shape/mixed.h"
 
 namespace utils::graphics::text
