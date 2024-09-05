@@ -115,11 +115,6 @@ namespace utils::math::geometry::shape
 				{
 				return closest_point_at<optional_ends.value()>(t); 
 				}
-			
-			utils_gpu_available constexpr vec2f begin_point  () const noexcept { return a; }
-			utils_gpu_available constexpr vec2f end_point    () const noexcept { return b; }
-			utils_gpu_available constexpr vec2f begin_tangent() const noexcept { return b - a; }
-			utils_gpu_available constexpr vec2f end_tangent  () const noexcept { return b - a; }
 			};
 
 		template <storage::type storage_type, ends::ab ends>
@@ -180,10 +175,6 @@ namespace utils::math::geometry::shape
 		utils::math::geometry::shape::ab<>
 		>);
 	static_assert(utils::math::geometry::shape::concepts::shape
-		<
-		utils::math::geometry::shape::ab<>
-		>);
-	static_assert(utils::math::geometry::shape::concepts::piece
 		<
 		utils::math::geometry::shape::ab<>
 		>);

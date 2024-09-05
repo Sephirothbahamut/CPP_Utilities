@@ -6,11 +6,13 @@
 
 namespace utils::math::geometry::interactions
 	{
+	inline static constexpr float bezier_stepping_t{0.02f};
+
 	template <ends::ab ends>
 	utils_gpu_available constexpr float closest_t(const shape::concepts::bezier auto& bezier, const vec2f& point) noexcept
-		{//https://www.shadertoy.com/view/NdfSDl
-		if (bezier.vertices.size())
-			{
+		{
+		if (bezier.vertices.size() == 3)
+			{//https://www.shadertoy.com/view/NdfSDl
 			const float t_min{ends.is_a_finite() ? 0.f : -utils::math::constants::finf};
 			const float t_max{ends.is_b_finite() ? 1.f :  utils::math::constants::finf};
 
@@ -63,6 +65,44 @@ namespace utils::math::geometry::interactions
 				//return d1 < d2 ? utils::math::vec2f(sqrt(d1), roots.x()) : utils::math::vec2f(sqrt(d2), roots.t);
 				return d1 < d2 ? roots.x() : roots.y();
 				}
+			}
+		else if (bezier.vertices.size() == 4)
+			{
+			float found_t;
+			float min_distance2{utils::math::constants::finf};
+
+			if (true)
+				{
+				const auto candidate{bezier.vertices[0]};
+				const auto distance2{utils::math::vec2f::distance2(candidate, point)};
+				if (distance2 < min_distance2)
+					{
+					found_t = 0.f;
+					min_distance2 = distance2;
+					}
+				}
+			for (float t{bezier_stepping_t}; t < (1.f - bezier_stepping_t); t += bezier_stepping_t)
+				{
+				const auto candidate{bezier.at(t).point()};
+				const auto distance2{utils::math::vec2f::distance2(candidate, point)};
+				if (distance2 < min_distance2)
+					{
+					found_t = t;
+					min_distance2 = distance2;
+					}
+				}
+			if (true)
+				{
+				const auto candidate{bezier.vertices[3]};
+				const auto distance2{utils::math::vec2f::distance2(candidate, point)};
+				if (distance2 < min_distance2)
+					{
+					found_t = 1.f;
+					min_distance2 = distance2;
+					}
+				}
+
+			return found_t;
 			}
 		}
 	
@@ -147,6 +187,15 @@ namespace utils::math::geometry::interactions
 	template <ends::ab ends>
 	utils_gpu_available constexpr return_types::closest_point_with_signed_distance closest_with_signed_distance(const shape::concepts::bezier auto& bezier, const vec2f& point) noexcept
 		{
+		if (bezier.vertices.size() == 4)
+			{//special case for segmented workaround to my proper math ignorance
+			const float t_mid{closest_t<ends>(bezier, point)};
+			const float t_a{std::max(0.f, t_mid - bezier_stepping_t / 2.f)};
+			const float t_b{std::min(1.f, t_mid + bezier_stepping_t / 2.f)};
+			const shape::segment edge{bezier.at(t_a).point(), bezier.at(t_b).point()};
+			return closest_with_signed_distance(edge, point);
+			}
+
 		const auto proxy{closest_proxy<ends>(bezier, point)};
 		const auto closest{proxy.point()};
 		const float distance{minimum_distance(closest, point)};

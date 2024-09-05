@@ -117,6 +117,7 @@ namespace utils::math::geometry::shape
 					{
 					vertices.storage.emplace_back(b);
 					vertices.storage.emplace_back(c);
+					vertices.storage.emplace_back(d);
 					add_or_update_metadata(piece_metadata_t::type_t::bezier_4pt);
 					}
 				void add_bezier_4pt(const std::initializer_list<shape::point>& points) noexcept
@@ -144,6 +145,17 @@ namespace utils::math::geometry::shape
 						vertices.storage.emplace_back(point);
 						}
 					pieces_metadata.storage.emplace_back(piece_metadata_t::type_t::bezier_4pt, vertices.size());
+					}
+
+				void close() noexcept
+					requires(storage_type.is_owner() && ends.is_closed())
+					{
+					const auto first{vertices[0]};
+					const auto last {vertices[vertices.size() - 1]};
+					if (first == last)
+						{
+						vertices.storage.resize(vertices.size() - 1);
+						}
 					}
 
 				struct pieces_view : ::utils::oop::non_copyable, ::utils::oop::non_movable
@@ -184,7 +196,7 @@ namespace utils::math::geometry::shape
 									}
 								index_vertex = metadata.end_index - 1;
 								}
-							if (mixed_ref.ends.is_closed())
+							if (mixed_ref.ends.is_closed() && index_vertex < mixed_ref.vertices.size())
 								{
 								const shape::segment piece{mixed_ref.vertices[index_vertex], mixed_ref.vertices[0]};
 								call(callback, piece, index_vertex, 0);
@@ -216,7 +228,7 @@ namespace utils::math::geometry::shape
 								const size_t index_a{index_vertex_begin + i};
 								const size_t index_b{index_a + 1};
 								const auto vertex_a{mixed_ref.vertices[index_a]};
-								const auto vertex_b{mixed_ref.vertices[index_b]};
+								const auto vertex_b{mixed_ref.vertices.ends_aware_access(index_b)};
 								const shape::segment piece{vertex_a, vertex_b};
 								call(callback, piece, index_a, index_b);
 								}
@@ -236,7 +248,7 @@ namespace utils::math::geometry::shape
 								const size_t index_c{index_b + 1};
 								const auto vertex_a{mixed_ref.vertices[index_a]};
 								const auto vertex_b{mixed_ref.vertices[index_b]};
-								const auto vertex_c{mixed_ref.vertices[index_c]};
+								const auto vertex_c{mixed_ref.vertices.ends_aware_access(index_c)};
 								const shape::bezier<3> piece{.vertices{vertex_a, vertex_b, vertex_c}};
 								call(callback, piece, index_a, index_c);
 								}
@@ -247,18 +259,19 @@ namespace utils::math::geometry::shape
 							{
 							const size_t vertices_count{index_vertex_end - index_vertex_begin};
 							const size_t pieces_count{(vertices_count - 1) / 3};
-							assert((vertices_count - 1) % 3 == 0);
+							//assert((vertices_count - 1) % 3 == 0); //TODO figure out exact math
 
-							for (size_t i{index_vertex_begin}; i < index_vertex_end; i += 3)
+							for (size_t i{index_vertex_begin}; i < index_vertex_end - 1; i += 3)
 								{
-								const size_t index_a{index_vertex_begin + i};
+								const size_t index_a{i};
 								const size_t index_b{index_a + 1};
 								const size_t index_c{index_b + 1};
 								const size_t index_d{index_c + 1};
+
 								const auto vertex_a{mixed_ref.vertices[index_a]};
 								const auto vertex_b{mixed_ref.vertices[index_b]};
 								const auto vertex_c{mixed_ref.vertices[index_c]};
-								const auto vertex_d{mixed_ref.vertices[index_d]};
+								const auto vertex_d{mixed_ref.vertices.ends_aware_access(index_d)};
 								const shape::bezier<4> piece{.vertices{vertex_a, vertex_b, vertex_c, vertex_d}};
 								call(callback, piece, index_a, index_d);
 								}

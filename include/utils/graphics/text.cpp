@@ -75,7 +75,7 @@ namespace utils::graphics::text
 			unsigned long cRefCount_{0};
 		};
 
-	IFACEMETHODIMP_(void) geometry_sink::SetFillMode(D2D1_FILL_MODE fillMode) {}
+	IFACEMETHODIMP_(void) geometry_sink::SetFillMode    (D2D1_FILL_MODE    fillMode   ) {}
 	IFACEMETHODIMP_(void) geometry_sink::SetSegmentFlags(D2D1_PATH_SEGMENT vertexFlags) {}
 	IFACEMETHODIMP_(HRESULT) geometry_sink::Close()
 		{
@@ -88,6 +88,7 @@ namespace utils::graphics::text
 		}
 	IFACEMETHODIMP_(void) geometry_sink::EndFigure(D2D1_FIGURE_END figureEnd)
 		{
+		current_glyph.close();
 		glyphs.emplace_back(std::move(current_glyph));
 		}
 
@@ -112,27 +113,18 @@ namespace utils::graphics::text
 	IFACEMETHODIMP_(void) geometry_sink::AddBezier(_In_ CONST D2D1_BEZIER_SEGMENT* bezier) { AddBezier(*bezier); }
 	IFACEMETHODIMP_(void) geometry_sink::AddBezier(_In_ CONST D2D1_BEZIER_SEGMENT& bezier)
 		{
-		//std::initializer_list points
-		//	{
-		//	utils::math::vec2f{bezier.point1.x, bezier.point1.y},
-		//	utils::math::vec2f{bezier.point2.x, bezier.point2.y},
-		//	utils::math::vec2f{bezier.point3.x, bezier.point3.y}
-		//	};
-		//
-		//current_glyph.add_bezier_4pt(points);
-
-		std::initializer_list points
-			{
-			(utils::math::vec2f{bezier.point1.x, bezier.point1.y} + utils::math::vec2f{bezier.point2.x, bezier.point2.y}) / 2.f,
-			utils::math::vec2f{bezier.point3.x, bezier.point3.y}
-			};
-
-		//current_glyph.add_bezier_3pt(points);
-		current_glyph.add_bezier_3pt
+		current_glyph.add_bezier_4pt
 			(
-			(utils::math::vec2f{bezier.point1.x, bezier.point1.y} + utils::math::vec2f{bezier.point2.x, bezier.point2.y}) / 2.f,
+			utils::math::vec2f{bezier.point1.x, bezier.point1.y},
+			utils::math::vec2f{bezier.point2.x, bezier.point2.y},
 			utils::math::vec2f{bezier.point3.x, bezier.point3.y}
 			);
+
+		//current_glyph.add_bezier_3pt
+		//	(
+		//	(utils::math::vec2f{bezier.point1.x, bezier.point1.y} + utils::math::vec2f{bezier.point2.x, bezier.point2.y}) / 2.f,
+		//	utils::math::vec2f{bezier.point3.x, bezier.point3.y}
+		//	);
 		}
 
 	IFACEMETHODIMP_(void) geometry_sink::AddQuadraticBezier(_In_ CONST D2D1_QUADRATIC_BEZIER_SEGMENT* bezier) { AddQuadraticBezier(*bezier); }
@@ -286,6 +278,7 @@ namespace utils::graphics::text
 		
 		// Write to the path geometry using the geometry sink.
 		ID2D1GeometrySink* pSink = NULL;
+
 		if (SUCCEEDED(hr))
 			{
 			hr = pPathGeometry->Open(&pSink);
@@ -334,15 +327,15 @@ namespace utils::graphics::text
 		);
 		
 		// Create the transformed geometry
-		ID2D1TransformedGeometry* pTransformedGeometry = NULL;
-		if (SUCCEEDED(hr))
-			{
-			hr = d2d_factory->CreateTransformedGeometry(pPathGeometry, &matrix, &pTransformedGeometry);
-			}
-		else
-			{
-			throw std::runtime_error{"idk directx stuff"};
-			}
+		//ID2D1TransformedGeometry* pTransformedGeometry = NULL;
+		//if (SUCCEEDED(hr))
+		//	{
+		//	hr = d2d_factory->CreateTransformedGeometry(pPathGeometry, &matrix, &pTransformedGeometry);
+		//	}
+		//else
+		//	{
+		//	throw std::runtime_error{"idk directx stuff"};
+		//	}
 		//Cannot use transformed geometry->Stream ???
 		
 		geometry_sink geometry_sink;
@@ -372,7 +365,7 @@ namespace utils::graphics::text
 			std::move(geometry_sink.glyphs.begin(), geometry_sink.glyphs.end(), std::back_inserter(glyphs));
 			}
 		
-		pTransformedGeometry->Release();
+		//pTransformedGeometry->Release();
 		pPathGeometry       ->Release();
 		pSink               ->Release();
 
@@ -486,9 +479,6 @@ namespace utils::graphics::text
 		D2D1_RECT_F layoutRect{0.f, 0.f, 1024.f, 500.f};
 
 		dw::text_layout text_layout{dw_factory, wide, text_format, utils::math::vec2f{2048.f, 2048.f}};
-
-		//Bypassed destructor cause I don't have brainpower to deal with COM's weirdnesses right now
-		//TODO understand why crash on glyphs_converter destructor
 
 		std::vector<glyph_t> glyphs;
 

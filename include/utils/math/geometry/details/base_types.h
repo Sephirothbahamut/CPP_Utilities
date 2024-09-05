@@ -80,17 +80,6 @@ namespace utils::math::geometry
 		{
 		template <typename T>
 		concept shape = std::derived_from<T, shape_flag>;
-
-		template <typename T>
-		concept piece = shape<T> && requires(T t)
-			{
-					{ t.begin_point  () } -> std::same_as<utils::math::vec2f>;
-					{ t.begin_tangent() } -> std::same_as<utils::math::vec2f>;
-					{ t.end_point    () } -> std::same_as<utils::math::vec2f>;
-					{ t.end_tangent  () } -> std::same_as<utils::math::vec2f>;
-			};
-
-
 		}
 
 	namespace shape

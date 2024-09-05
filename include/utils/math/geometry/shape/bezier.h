@@ -10,6 +10,10 @@
 #include "point.h"
 #include "vertices.h"
 
+// Note: exact distance for 4 control points here: https://github.com/nrtaylor/CubicSplineClosestPoint/tree/master
+// TODO: understand math and get exact t parameter instead of just distance so we can get tangent and normal as well
+// The current 4 control points solution is approximated and slow.
+
 namespace utils::math::geometry::shape
 	{
 	namespace generic
@@ -34,25 +38,65 @@ namespace utils::math::geometry::shape
 				public:
 					utils_gpu_available constexpr vec2f point() const noexcept
 						{
-						if (t == 0.f) { return bezier_curve.vertices[0]; }
-						if (t == 1.f) { return bezier_curve.vertices[bezier_curve.vertices.size() - 1]; };
+						const auto& vertices{bezier_curve.vertices};
+						if (t == 0.f) { return vertices[0]; }
+						if (t == 1.f) { return vertices[vertices.size() - 1]; };
 
-						if (bezier_curve.vertices.size() == size_t{3})
+						if (vertices.size() == size_t{3})
 							{
-							float inverse_t{1.f - t};
-							return bezier_curve.vertices[0] * inverse_t * inverse_t + bezier_curve.vertices[1] * 2.f * t * inverse_t + bezier_curve.vertices[2] * t * t;
+							const float inverse_t{1.f - t};
+							return vertices[0] * inverse_t * inverse_t + vertices[1] * 2.f * t * inverse_t + vertices[2] * t * t;
 							}
+						else if (vertices.size() == size_t{4})
+							{
+							const float inverse_t{1.f - t};
+							return vertices[0] * std::pow(inverse_t, 3.f) + vertices[1] * 3.f * t * std::pow(inverse_t, 2.f) + vertices[2] * 3.f * std::pow(t, 2.f) * inverse_t + vertices[3] * std::pow(t, 3.f);
+							const auto coefficients{bezier_curve.coefficients()};
+							//return (coefficients[0] * t * t * t + coefficients[1] * t * t + coefficients[2] * t + coefficients[3]);
+							}
+						else
+							{
+							using tmp_t = std::conditional_t<EXTENT == std::dynamic_extent, std::vector<utils::math::vec2f>, std::array<utils::math::vec2f, EXTENT>>;
+							tmp_t tmp;
+							if constexpr (EXTENT == std::dynamic_extent)
+								{
+								tmp.resize(vertices.size());
+								}
+							for (size_t i{0}; i < vertices.size(); i++)
+								{
+								tmp[i] = vertices[i];
+								}
+
+							size_t i{vertices.size() - 1};
+							while (i > 0)
+								{
+								for (size_t k{0}; k < i; k++)
+									{
+									tmp[k] = tmp[k] + ((tmp[k + 1] - tmp[k]) * t);
+									}
+								i--;
+								}
+							return tmp[0];
+							}
+
 						throw std::runtime_error{"Unsupported amount of control points."};
 						}
 					utils_gpu_available constexpr vec2f tangent() const noexcept
 						{
-						if (t == 0.f) { return bezier_curve.vertices[1] - bezier_curve.vertices[0]; }
-						if (t == 1.f) { return bezier_curve.vertices[bezier_curve.vertices.size() - 1] - bezier_curve.vertices[bezier_curve.vertices.size() - 2]; };
+						const auto& vertices{bezier_curve.vertices};
+						if (t == 0.f) { return vertices[1] - vertices[0]; }
+						if (t == 1.f) { return vertices[vertices.size() - 1] - vertices[vertices.size() - 2]; };
 
-						if (bezier_curve.vertices.size() == size_t{3})
+						if (vertices.size() == size_t{3})
 							{
-							return (((bezier_curve.vertices[0] * (t - 1.f)) + (bezier_curve.vertices[1] * (1.f - 2.f * t)) + bezier_curve.vertices[2] * t) * 2.f).normalize();
+							return (((vertices[0] * (t - 1.f)) + (vertices[1] * (1.f - 2.f * t)) + vertices[2] * t) * 2.f).normalize();
 							}
+						else if (vertices.size() == size_t{4})
+							{
+							const auto coefficients{bezier_curve.coefficients()};
+							return ((coefficients[0] * 3.0f * t * t) + (coefficients[1] * 2.0f * t) + coefficients[2]);
+							}
+
 						throw std::runtime_error{"Unsupported amount of control points."};
 						}
 					utils_gpu_available constexpr vec2f normal() const noexcept
@@ -67,6 +111,31 @@ namespace utils::math::geometry::shape
 					const self_t& bezier_curve;
 					const float t;
 				};
+
+			using coefficients_t = utils::storage::multiple<storage::storage_type_for<geometry::shape::point, utils::storage::type::create::owner()>, extent, true>;
+			//using coefficients_t = utils::storage::multiple<storage::storage_type_for<geometry::shape::point, storage_type>, extent, true>;
+			//using coefficients_t = std::array<geometry::shape::point, 4>;
+			utils_gpu_available constexpr coefficients_t coefficients() const noexcept
+				{
+				coefficients_t ret{utils::storage::construct_flag_size, vertices.size()};
+
+				if (vertices.size() == size_t{3})
+					{
+					}
+				else if (vertices.size() == size_t{4})
+					{
+					ret[0] =  vertices[3]         - (vertices[2] * 3.0f) + (vertices[1] * 3.0f) - vertices[0];
+					ret[1] = (vertices[2] * 3.0f) - (vertices[1] * 6.0f) + (vertices[0] * 3.0f);
+					ret[2] = (vertices[1] * 3.0f) - (vertices[0] * 3.0f);
+					ret[3] =  vertices[0];
+					}
+				else
+					{
+					throw std::runtime_error{"Unsupported amount of control points."};
+					}
+
+				return ret;
+				}
 
 			utils_gpu_available constexpr const at_proxy at(float t) const noexcept
 				{
@@ -189,10 +258,9 @@ namespace utils::math::geometry::shape
 			utils_gpu_available constexpr auto get_edges            (size_t divisions) const noexcept { return edges_view<false>{*this, divisions}; }
 			utils_gpu_available constexpr auto get_edges_equidistant(size_t divisions) const noexcept { return edges_view<true >{*this, divisions}; }
 			
-			utils_gpu_available constexpr vec2f begin_point  () const noexcept { return vertices[0                  ]; }
-			utils_gpu_available constexpr vec2f end_point    () const noexcept { return vertices[vertices.size() - 1]; }
-			utils_gpu_available constexpr vec2f begin_tangent() const noexcept { return at(0.f).tangent(); }
-			utils_gpu_available constexpr vec2f end_tangent  () const noexcept { return at(1.f).tangent(); }
+
+
+
 			};
 		}
 
@@ -227,10 +295,6 @@ namespace utils::math::geometry::shape
 		utils::math::geometry::shape::bezier<std::dynamic_extent>
 		>);
 	static_assert(utils::math::geometry::shape::concepts::has_vertices
-		<
-		utils::math::geometry::shape::bezier<std::dynamic_extent>
-		>);
-	static_assert(utils::math::geometry::shape::concepts::piece
 		<
 		utils::math::geometry::shape::bezier<std::dynamic_extent>
 		>);

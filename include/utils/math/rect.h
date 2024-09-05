@@ -41,6 +41,12 @@ namespace utils::math
 			{
 			utils_gpu_available inline static constexpr self_t infinite() noexcept
 				{
+				return {-utils::math::constants::finf, -utils::math::constants::finf, utils::math::constants::finf, utils::math::constants::finf};
+				}
+
+			/// <summary> Use as starting point when doing operations such as merging on iteration.</summary>
+			utils_gpu_available inline static constexpr self_t inverse_infinite() noexcept
+				{
 				return {utils::math::constants::finf, utils::math::constants::finf, -utils::math::constants::finf, -utils::math::constants::finf};
 				}
 
@@ -135,7 +141,18 @@ namespace utils::math
 				return ret;
 				}
 			};
-		
+
+		self_t& merge_self(const self_t& other) noexcept 
+			{
+			ll() = utils::math::min(ll(), other.ll());
+			up() = utils::math::min(up(), other.up());
+			rr() = utils::math::max(rr(), other.rr());
+			dw() = utils::math::max(dw(), other.dw());
+			return *this;
+			}
+		self_t merge(const self_t& other) const noexcept { self_t tmp{*this}; return tmp.merge_self(other); }
+
+
 		utils_gpu_available const const_aware_value_type& ll() const noexcept { return (*this)[0]; }
 		utils_gpu_available       const_aware_value_type& ll()       noexcept { return (*this)[0]; }
 		utils_gpu_available const const_aware_value_type& up() const noexcept { return (*this)[1]; }
