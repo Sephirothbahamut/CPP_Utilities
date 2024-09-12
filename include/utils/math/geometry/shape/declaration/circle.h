@@ -1,7 +1,8 @@
 #pragma once
 
-#include "declaration/all.h"
-
+//#include "../../details/base_types.h"
+//#include "point.h"
+//
 //namespace utils::math::geometry::shape::details
 //	{
 //	template <typename derived_T>
