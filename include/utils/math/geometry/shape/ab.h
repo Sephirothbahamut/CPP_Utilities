@@ -110,6 +110,9 @@ namespace utils::math::geometry::shape::generic
 			{
 			return closest_point_at<optional_ends.value()>(t); 
 			}
+
+		struct sdf_proxy;
+		sdf_proxy sdf(const shape::point& point) const noexcept;
 		};
 	}
 
