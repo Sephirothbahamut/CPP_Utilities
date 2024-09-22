@@ -6,7 +6,7 @@
 
 namespace utils::math::geometry::interactions
 	{
-	inline static constexpr float bezier_stepping_t{0.2f};
+	inline static constexpr float bezier_stepping_t{0.05f};
 
 	template <ends::ab ends>
 	utils_gpu_available constexpr float closest_t(const shape::concepts::bezier auto& bezier, const vec2f& point) noexcept

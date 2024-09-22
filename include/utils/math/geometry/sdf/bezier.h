@@ -1,4 +1,5 @@
 #include "../shape/bezier.h"
+//TODO 
 
 namespace utils::math::geometry::shape::generic
 	{
@@ -7,9 +8,9 @@ namespace utils::math::geometry::shape::generic
 		{
 		using shape_t = bezier<storage_type, extent, optional_ends>;
 
-		sdf_proxy(const shape_t& shape, const shape::point& point) : shape{shape}, point{point} {};
+		sdf_proxy(const shape_t& shape, const vec2f& point) : shape{shape}, point{point} {};
 		const shape_t& shape;
-		const shape::point point;
+		const vec2f point;
 
 
 		};

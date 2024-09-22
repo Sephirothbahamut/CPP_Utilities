@@ -526,6 +526,9 @@ namespace utils::math
 #pragma endregion Aliases
 
 		utils_gpu_available constexpr bool contains(const concepts::vec_size<2> auto& point) const noexcept { return point.x() >= ll() && point.x() <= rr() && point.y() >= up() && point.y() <= dw(); }
+		
+		struct sdf_proxy;
+		utils_gpu_available sdf_proxy sdf(const vec2f& point) const noexcept requires(std::same_as<value_type, float>);
 		};
 	}
 

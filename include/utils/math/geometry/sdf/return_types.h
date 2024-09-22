@@ -1,60 +1,12 @@
 #pragma once
 
-#include "../shape/point.h"
-#include "../shape/aabb.h"
+#include "../interactions/base_types.h"
 
-namespace utils::math::geometry::interactions::return_types
+namespace utils::math::geometry::sdf
 	{
-	using bounding_box = shape::aabb;
-
-	class side
-		{
-		public:
-			constexpr side() = default; // No need to specify utils_gpu_available for defaults
-			utils_gpu_available constexpr side(float value) : _value{value < -math::constants::epsilonf ? -1.f : value > math::constants::epsilonf ? 1.f : 0.f} {}
-
-			struct create : ::utils::oop::non_constructible
-				{
-				utils_gpu_available static consteval side left      () noexcept { return {-1.f}; }
-				utils_gpu_available static consteval side right     () noexcept { return { 1.f}; }
-				utils_gpu_available static consteval side coincident() noexcept { return { 0.f}; }
-
-				utils_gpu_available static consteval side inside () noexcept { return left (); }
-				utils_gpu_available static consteval side outside() noexcept { return right(); }
-				};
-
-			utils_gpu_available constexpr bool is_left      (float epsilon = 0.f) const noexcept { return _value <  -epsilon; }
-			utils_gpu_available constexpr bool is_coincident(float epsilon = 0.f) const noexcept { return _value >= -epsilon && _value <= epsilon; }
-			utils_gpu_available constexpr bool is_right     (float epsilon = 0.f) const noexcept { return _value >   epsilon; }
-
-			utils_gpu_available constexpr bool is_outside(float epsilon = 0.f) const noexcept { return  is_right  (epsilon); }
-			utils_gpu_available constexpr bool is_inside (float epsilon = 0.f) const noexcept { return !is_outside(epsilon); }
-
-			utils_gpu_available constexpr bool is_exactly_left      () const noexcept { return is_left      (0.f); }
-			utils_gpu_available constexpr bool is_exactly_coincident() const noexcept { return is_coincident(0.f); }
-			utils_gpu_available constexpr bool is_exactly_right     () const noexcept { return is_right     (0.f); }
-			utils_gpu_available constexpr bool is_approx_left       () const noexcept { return is_left      (utils::math::constants::epsilonf); }
-			utils_gpu_available constexpr bool is_approx_coincident () const noexcept { return is_coincident(utils::math::constants::epsilonf); }
-			utils_gpu_available constexpr bool is_approx_right      () const noexcept { return is_right     (utils::math::constants::epsilonf); }
-
-			utils_gpu_available constexpr bool is_exactly_inside () const noexcept { return is_inside (0.f); }
-			utils_gpu_available constexpr bool is_exactly_outside() const noexcept { return is_outside(0.f); }
-			utils_gpu_available constexpr bool is_approx_inside  () const noexcept { return is_inside (utils::math::constants::epsilonf); }
-			utils_gpu_available constexpr bool is_approx_outside () const noexcept { return is_outside(utils::math::constants::epsilonf); }
-
-			
-			utils_gpu_available constexpr float value    () const noexcept { return   _value; }
-			/// <summary> Returns non-zero value.</summary>
-			utils_gpu_available constexpr float sign     () const noexcept { return _value < 0.f ? -1.f : 1.f; }
-			utils_gpu_available constexpr side  operator-() const noexcept { return {-_value}; }
-
-		private:
-			float _value{0.f};
-		};
-	utils_gpu_available constexpr float  operator* (const float& f, const side& side) noexcept { return f * side.sign(); }
-	utils_gpu_available constexpr float& operator*=(      float& f, const side& side) noexcept { return f = f * side.sign(); }
-	utils_gpu_available constexpr bool   operator==(const side & a, const side& b   ) noexcept { return (a.is_left() && b.is_left()) || (a.is_right() && b.is_right()) || (a.is_approx_coincident() && b.is_approx_coincident()); }
-	utils_gpu_available constexpr bool   operator==(const float& f, const side& side) noexcept { return (math::sign(f) == math::sign(side.value())) || (f == 0.f && side.value() == 0.f); }
+	using namespace interactions::return_types;
+	/*
+	using interactions::return_types::side;
 
 	struct signed_distance
 		{
@@ -127,14 +79,14 @@ namespace utils::math::geometry::interactions::return_types
 			const float m{0.25f * h * h / smoothness};
 			const float n{0.50f * h / smoothness};
 			const signed_distance ret_distance{utils::math::min(a.distance.value, b.distance.value) - m};
-			const shape::point ret_gradient{utils::math::lerp(a.gradient, b.gradient, (a.distance.value < b.distance.value) ? n : 1.f - n)};
+			const vec2f ret_gradient{utils::math::lerp(a.gradient, b.gradient, (a.distance.value < b.distance.value) ? n : 1.f - n)};
 			return {ret_distance, ret_gradient};
 			}
 		};
 
 	struct closest_point_with_signed_distance
 		{
-		shape::point closest{0.f, 0.f};
+		vec2f closest{0.f, 0.f};
 		signed_distance distance{utils::math::constants::finf};
 
 		utils_gpu_available static constexpr closest_point_with_signed_distance pick_closest(const closest_point_with_signed_distance& a, const closest_point_with_signed_distance& b) noexcept
@@ -169,7 +121,7 @@ namespace utils::math::geometry::interactions::return_types
 
 	struct closest_point_with_distance
 		{
-		shape::point closest{0.f, 0.f};
+		vec2f closest{0.f, 0.f};
 		float distance{utils::math::constants::finf};
 
 		utils_gpu_available static constexpr closest_point_with_distance pick_closest(const closest_point_with_distance& a, const closest_point_with_distance& b) noexcept
@@ -181,5 +133,5 @@ namespace utils::math::geometry::interactions::return_types
 			if (other.distance < distance) { (*this) = other; }
 			return *this;
 			}
-		};
+		};*/
 	}
