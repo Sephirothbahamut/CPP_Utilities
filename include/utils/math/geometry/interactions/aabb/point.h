@@ -58,9 +58,9 @@ namespace utils::math::geometry::interactions
 
 	utils_gpu_available constexpr return_types::signed_distance signed_distance(const shape::concepts::aabb auto& aabb, const vec2f& point) noexcept
 		{
-		const vec2f point_from_center_ur_quadrant{utils::math::abs(point - aabb.centre())};
-		const vec2f corner_from_center{aabb.ur() - aabb.centre()};
-		const vec2f distances{point_from_center_ur_quadrant - corner_from_center};
+		const vec2f point_from_centre_ur_quadrant{utils::math::abs(point - aabb.centre())};
+		const vec2f corner_from_centre{aabb.ur() - aabb.centre()};
+		const vec2f distances{point_from_centre_ur_quadrant - corner_from_centre};
 		return {utils::math::max(distances, {0.f}).get_length() + utils::math::min(utils::math::max(distances.x(), distances.y()), 0.f)};
 		}
 

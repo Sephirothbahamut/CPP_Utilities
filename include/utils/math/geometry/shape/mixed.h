@@ -276,7 +276,7 @@ namespace utils::math::geometry::shape::generic
 			utils_gpu_available constexpr auto get_pieces() const noexcept { return pieces_view{*this}; }
 
 			struct sdf_proxy;
-			utils_gpu_available sdf_proxy sdf(const vec2f& point) const noexcept;
+			utils_gpu_available sdf_proxy sdf(const shape::point& point) const noexcept;
 		};
 	}
 

@@ -57,7 +57,7 @@ namespace utils::logging
 					default: return "[This error code should be impossible to get]";
 					}
 				}
-			constexpr utils::graphics::colour::base out_type_color() const noexcept
+			constexpr utils::graphics::colour::base out_type_colour() const noexcept
 				{
 				switch (type)
 					{
@@ -112,7 +112,7 @@ namespace utils::logging
 					os << "_________________________________\n";
 					os << ' ';
 
-					os << utils::console::colour::background{utils::console::colour::colour_8::dark(m.out_type_color())};
+					os << utils::console::colour::background{utils::console::colour::colour_8::dark(m.out_type_colour())};
 					os << utils::console::colour::foreground{utils::console::colour::colour_8::bright(utils::graphics::colour::base::white)};
 					os << std::left << m.out_type_verbose();
 					os << utils::console::colour::restore_defaults;
@@ -138,7 +138,7 @@ namespace utils::logging
 					if constexpr (output_style == output_style_t::on_line)
 						{
 						os << " ";
-						os << utils::console::colour::background{utils::console::colour::colour_8::dark(m.out_type_color())};
+						os << utils::console::colour::background{utils::console::colour::colour_8::dark(m.out_type_colour())};
 						os << utils::console::colour::foreground{utils::console::colour::colour_8::bright(utils::graphics::colour::base::white)};
 						os << std::left << m.out_type();
 						os << utils::console::colour::restore_defaults;

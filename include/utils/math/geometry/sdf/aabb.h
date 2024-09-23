@@ -65,9 +65,9 @@ namespace utils::math
 
 		utils_gpu_available constexpr geometry::sdf::signed_distance signed_distance() const noexcept
 			{
-			const vec2f point_from_center_ur_quadrant{utils::math::abs(point - shape.centre())};
-			const vec2f corner_from_center{shape.ur() - shape.centre()};
-			const vec2f distances{point_from_center_ur_quadrant - corner_from_center};
+			const vec2f point_from_centre_ur_quadrant{utils::math::abs(point - shape.centre())};
+			const vec2f corner_from_centre{shape.ur() - shape.centre()};
+			const vec2f distances{point_from_centre_ur_quadrant - corner_from_centre};
 			return {utils::math::max(distances, {0.f}).get_length() + utils::math::min(utils::math::max(distances.x(), distances.y()), 0.f)};
 			}
 
@@ -89,7 +89,8 @@ namespace utils::math
 namespace utils::math
 	{
 	template <typename T>
-	utils_gpu_available rect<T>::sdf_proxy rect<T>::sdf(const vec2f& point) const noexcept requires(std::same_as<value_type, float>)
+	utils_gpu_available rect<T>::sdf_proxy rect<T>::sdf(const vec2f& point) const noexcept 
+		requires(std::same_as<value_type, float>)
 		{
 		return {*this, point};
 		}

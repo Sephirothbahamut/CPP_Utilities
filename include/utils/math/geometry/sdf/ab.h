@@ -113,7 +113,7 @@ namespace utils::math::geometry::shape::generic
 namespace utils::math::geometry::shape::generic
 	{
 	template <storage::type storage_type, geometry::ends::optional_ab optional_ends>
-	ab<storage_type, optional_ends>::sdf_proxy ab<storage_type, optional_ends>::sdf(const vec2f& point) const noexcept
+	ab<storage_type, optional_ends>::sdf_proxy ab<storage_type, optional_ends>::sdf(const shape::point& point) const noexcept
 		{
 		return {*this, point};
 		}

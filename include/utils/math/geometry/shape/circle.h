@@ -1,38 +1,34 @@
 #pragma once
 
-#include "declaration/all.h"
+#include "declaration/circle.h"
 
-//namespace utils::math::geometry::shape::details
-//	{
-//	template <typename derived_T>
-//	struct circle : details::base<derived_T, shapes_enum::circle>
-//		{
-//		protected:
-//			using derived_t = derived_T;
-//			utils_gpu_available constexpr const derived_t& derived() const noexcept { return static_cast<const derived_t&>(*this); }
-//			utils_gpu_available constexpr       derived_t& derived()       noexcept { return static_cast<      derived_t&>(*this); }
-//
-//		public:
-//			utils_gpu_available constexpr view ::point center_point()       noexcept { return {derived().center}; }
-//			utils_gpu_available constexpr shape::point center_point() const noexcept { return {derived().center}; }
-//		};
-//	}
-//
-//namespace utils::math::geometry::shape
-//	{
-//	struct circle : utils::math::geometry::shape::details::circle<circle>
-//		{
-//		circle(utils::math::vec2f center, float radius) : center{center}, radius{radius} {}
-//		::utils::math::vec2f center;
-//		float radius;
-//		};
-//
-//	namespace view
-//		{
-//		struct circle : utils::math::geometry::shape::details::circle<circle>
-//			{
-//			::utils::math::vecref2f center;
-//			std::reference_wrapper<float> radius;
-//			};
-//		}
-//	}
+namespace utils::math::geometry::shape::generic
+	{
+	template <storage::type STORAGE_TYPE>
+	struct utils_oop_empty_bases circle : utils::math::geometry::shape_flag
+		{
+		inline static constexpr auto storage_type{STORAGE_TYPE};
+
+		using self_t        = circle<storage_type                  >;
+		using nonref_self_t = circle<storage::type::create::owner()>;
+
+		using vertex_t = generic::point<storage_type>;
+		using radius_t = storage::single<storage::storage_type_for<float, storage_type>>;
+
+		vertex_t centre;
+		radius_t radius;
+		circle(vertex_t centre, storage::concepts::can_construct_value_type<radius_t> auto radius) : centre{centre}, radius{radius} {}
+
+		struct sdf_proxy;
+		utils_gpu_available sdf_proxy sdf(const shape::point& point) const noexcept;
+		};
+	}
+
+static_assert(utils::math::geometry::shape::concepts::circle
+	<
+	utils::math::geometry::shape::circle
+	>);
+static_assert(utils::math::geometry::shape::concepts::shape
+	<
+	utils::math::geometry::shape::circle
+	>);

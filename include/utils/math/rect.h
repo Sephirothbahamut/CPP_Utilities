@@ -488,9 +488,9 @@ namespace utils::math
 		value_type   centre_x()        const noexcept { return ll() + (w() / value_type{2}); }
 		value_type   centre_y()        const noexcept { return up() + (h() / value_type{2}); }
 		vertex_owner centre  ()        const noexcept { return {centre_x(), centre_y()}; }
-		//void set_center_x(T value) noexcept { auto half_w{get_w() / value_type{2}}; remove_reference_v(ll) = value - half_w; remove_reference_v(rr) = value + half_w; }
-		//void set_center_y(T value){ auto half_h{get_h() / value_type{2}}; remove_reference_v(up) = value - half_h; remove_reference_v(dw()) = value + half_h; }
-		//void set_center(vec2<value_type> value) noexcept { set_center_x(value.x); set_center_y(value.y); }
+		//void set_centre_x(T value) noexcept { auto half_w{get_w() / value_type{2}}; remove_reference_v(ll) = value - half_w; remove_reference_v(rr) = value + half_w; }
+		//void set_centre_y(T value){ auto half_h{get_h() / value_type{2}}; remove_reference_v(up) = value - half_h; remove_reference_v(dw()) = value + half_h; }
+		//void set_centre(vec2<value_type> value) noexcept { set_centre_x(value.x); set_centre_y(value.y); }
 #pragma endregion Accessors
 
 #pragma region Aliases

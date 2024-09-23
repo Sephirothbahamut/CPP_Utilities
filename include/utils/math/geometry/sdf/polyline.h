@@ -123,7 +123,7 @@ namespace utils::math::geometry::shape::generic
 namespace utils::math::geometry::shape::generic
 	{
 	template <storage::type storage_type, geometry::ends::closeable ends, size_t extent>
-	polyline<storage_type, ends, extent>::sdf_proxy polyline<storage_type, ends, extent>::sdf(const vec2f& point) const noexcept
+	polyline<storage_type, ends, extent>::sdf_proxy polyline<storage_type, ends, extent>::sdf(const shape::point& point) const noexcept
 		{
 		return {*this, point};
 		}

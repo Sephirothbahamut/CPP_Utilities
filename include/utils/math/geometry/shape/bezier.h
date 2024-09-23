@@ -250,7 +250,7 @@ namespace utils::math::geometry::shape::generic
 		utils_gpu_available constexpr auto get_edges_equidistant(size_t divisions) const noexcept { return edges_view<true >{*this, divisions}; }
 
 		struct sdf_proxy;
-		sdf_proxy sdf(const concepts::point auto& point) const noexcept;
+		sdf_proxy sdf(const shape::point& point) const noexcept;
 		};
 	}
 

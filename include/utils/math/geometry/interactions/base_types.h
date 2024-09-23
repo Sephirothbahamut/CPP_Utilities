@@ -137,6 +137,22 @@ namespace utils::math::geometry::interactions::return_types
 			return {ret_distance, ret_gradient};
 			}
 		};
+	
+	struct closest_point_with_distance
+		{
+		shape::point closest{0.f, 0.f};
+		float distance{utils::math::constants::finf};
+
+		utils_gpu_available static constexpr closest_point_with_distance pick_closest(const closest_point_with_distance& a, const closest_point_with_distance& b) noexcept
+			{
+			return a.distance < b.distance ? a : b;
+			}
+		utils_gpu_available constexpr closest_point_with_distance& set_to_closest(const closest_point_with_distance& other) noexcept
+			{
+			if (other.distance < distance) { (*this) = other; }
+			return *this;
+			}
+		};
 
 	struct closest_point_with_signed_distance
 		{
@@ -161,6 +177,11 @@ namespace utils::math::geometry::interactions::return_types
 			{
 			return a.distance.value < b.distance.value ? a : b;
 			}
+
+		utils_gpu_available constexpr closest_point_with_distance absolute() const noexcept
+			{
+			return closest_point_with_distance{closest, distance.absolute()};
+			}
 		};
 
 	utils_gpu_available constexpr gradient_signed_distance gradient_signed_distance::create(const closest_point_with_signed_distance& closest_point_with_signed_distance, const shape::concepts::point auto& point) noexcept
@@ -173,19 +194,4 @@ namespace utils::math::geometry::interactions::return_types
 		}
 
 
-	struct closest_point_with_distance
-		{
-		shape::point closest{0.f, 0.f};
-		float distance{utils::math::constants::finf};
-
-		utils_gpu_available static constexpr closest_point_with_distance pick_closest(const closest_point_with_distance& a, const closest_point_with_distance& b) noexcept
-			{
-			return a.distance < b.distance ? a : b;
-			}
-		utils_gpu_available constexpr closest_point_with_distance& set_to_closest(const closest_point_with_distance& other) noexcept
-			{
-			if (other.distance < distance) { (*this) = other; }
-			return *this;
-			}
-		};
 	}

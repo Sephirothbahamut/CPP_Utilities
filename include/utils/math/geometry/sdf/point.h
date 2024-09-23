@@ -46,9 +46,9 @@ namespace utils::math
 namespace utils::math
 	{
 	template <typename T, size_t extent>
-	vec<T, extent>::sdf_proxy vec<T, extent>::sdf(const vec<float, 2>& point) const noexcept
+	vec<T, extent>::sdf_proxy vec<T, extent>::sdf(const vec<float, 2>& point) const noexcept 
+		requires(std::same_as<value_type, float> && extent == 2)
 		{
-		static_assert(std::same_as<typename vec<T, extent>::value_type, float> && vec<T, extent>::extent == 2);
 		return {*this, point};
 		}
 	}

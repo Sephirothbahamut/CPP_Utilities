@@ -116,7 +116,7 @@ namespace utils::math::geometry
 				};
 			shapes_metadata.circles.push_back({circle.radius});
 
-			vertices.push_back(circle.center);
+			vertices.push_back(circle.centre);
 
 			//element_metadata.bounding_box = mixed.bounding_box();
 			elements_metadata.push_back(element_metadata);
