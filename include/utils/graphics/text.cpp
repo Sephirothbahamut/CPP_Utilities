@@ -473,7 +473,7 @@ namespace utils::graphics::text
 		dw::text_format text_format{dw_factory, dw::text_format::create_info
 			{
 			.name{font},
-			.size{128.f}
+			.size{32.f}
 			}};
 		
 		D2D1_RECT_F layoutRect{0.f, 0.f, 1024.f, 500.f};

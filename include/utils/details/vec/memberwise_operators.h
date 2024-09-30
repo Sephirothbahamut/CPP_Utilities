@@ -209,7 +209,7 @@ namespace utils::math
 		}
 
 	template <::utils::details::vector::concepts::vector T>
-	utils_gpu_available constexpr T pow(const T& a, const utils::details::vector::concepts::compatible_vector<T> auto& b)
+	utils_gpu_available constexpr typename T::nonref_self_t pow(const T& a, const utils::details::vector::concepts::compatible_vector<T> auto& b)
 		{
 		return a.operator_to_new<[](const auto& a, const auto& b) { return std::pow(a, b); }>(b);
 		}
@@ -237,13 +237,13 @@ namespace utils::math
 		}
 
 	template <utils::details::vector::concepts::vector T>
-	utils_gpu_available constexpr auto min(const T& a, const T& b)
+	utils_gpu_available constexpr typename T::nonref_self_t min(const T& a, const T& b)
 		{
 		return a.operator_to_new<[](const auto& a, const auto& b) { return utils::math::min(a, b); }>(b);
 		}
 
 	template <utils::details::vector::concepts::vector T>
-	utils_gpu_available constexpr T max(const T& a, const T& b)
+	utils_gpu_available constexpr typename T::nonref_self_t max(const T& a, const T& b)
 		{
 		return a.operator_to_new<[](const auto& a, const auto& b) { return utils::math::max(a, b); }>(b);
 		}

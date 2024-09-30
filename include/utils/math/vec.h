@@ -144,33 +144,46 @@ namespace utils::math
 		#pragma endregion fields
 
 		#pragma region swizzle
-		utils_gpu_available constexpr const vec<const       value_type&, 2> xy() const noexcept requires(extent >= 2) { return {(*this)[0], (*this)[1]}; }
-		utils_gpu_available constexpr       vec<const_aware_value_type&, 2> xy()       noexcept requires(extent >= 2) { return {(*this)[0], (*this)[1]}; }
-		utils_gpu_available constexpr const vec<const       value_type&, 2> xz() const noexcept requires(extent >= 3) { return {(*this)[0], (*this)[2]}; }
-		utils_gpu_available constexpr       vec<const_aware_value_type&, 2> xz()       noexcept requires(extent >= 3) { return {(*this)[0], (*this)[2]}; }
-		utils_gpu_available constexpr const vec<const       value_type&, 2> xw() const noexcept requires(extent >= 4) { return {(*this)[0], (*this)[3]}; }
-		utils_gpu_available constexpr       vec<const_aware_value_type&, 2> xw()       noexcept requires(extent >= 4) { return {(*this)[0], (*this)[3]}; }
+		utils_gpu_available constexpr const vec<const       value_type&, 2> xy () const noexcept requires(extent >= 2) { return {(*this)[0], (*this)[1]}; }
+		utils_gpu_available constexpr       vec<const_aware_value_type&, 2> xy ()       noexcept requires(extent >= 2) { return {(*this)[0], (*this)[1]}; }
+		utils_gpu_available constexpr const vec<const       value_type&, 2> xz () const noexcept requires(extent >= 3) { return {(*this)[0], (*this)[2]}; }
+		utils_gpu_available constexpr       vec<const_aware_value_type&, 2> xz ()       noexcept requires(extent >= 3) { return {(*this)[0], (*this)[2]}; }
+		utils_gpu_available constexpr const vec<const       value_type&, 2> xw () const noexcept requires(extent >= 4) { return {(*this)[0], (*this)[3]}; }
+		utils_gpu_available constexpr       vec<const_aware_value_type&, 2> xw ()       noexcept requires(extent >= 4) { return {(*this)[0], (*this)[3]}; }
 
-		utils_gpu_available constexpr const vec<const       value_type&, 2> yx() const noexcept requires(extent >= 3) { return {(*this)[1], (*this)[0]}; }
-		utils_gpu_available constexpr       vec<const_aware_value_type&, 2> yx()       noexcept requires(extent >= 3) { return {(*this)[1], (*this)[0]}; }
-		utils_gpu_available constexpr const vec<const       value_type&, 2> yz() const noexcept requires(extent >= 3) { return {(*this)[1], (*this)[2]}; }
-		utils_gpu_available constexpr       vec<const_aware_value_type&, 2> yz()       noexcept requires(extent >= 3) { return {(*this)[1], (*this)[2]}; }
-		utils_gpu_available constexpr const vec<const       value_type&, 2> yw() const noexcept requires(extent >= 4) { return {(*this)[1], (*this)[3]}; }
-		utils_gpu_available constexpr       vec<const_aware_value_type&, 2> yw()       noexcept requires(extent >= 4) { return {(*this)[1], (*this)[3]}; }
+		utils_gpu_available constexpr const vec<const       value_type&, 2> yx () const noexcept requires(extent >= 3) { return {(*this)[1], (*this)[0]}; }
+		utils_gpu_available constexpr       vec<const_aware_value_type&, 2> yx ()       noexcept requires(extent >= 3) { return {(*this)[1], (*this)[0]}; }
+		utils_gpu_available constexpr const vec<const       value_type&, 2> yz () const noexcept requires(extent >= 3) { return {(*this)[1], (*this)[2]}; }
+		utils_gpu_available constexpr       vec<const_aware_value_type&, 2> yz ()       noexcept requires(extent >= 3) { return {(*this)[1], (*this)[2]}; }
+		utils_gpu_available constexpr const vec<const       value_type&, 2> yw () const noexcept requires(extent >= 4) { return {(*this)[1], (*this)[3]}; }
+		utils_gpu_available constexpr       vec<const_aware_value_type&, 2> yw ()       noexcept requires(extent >= 4) { return {(*this)[1], (*this)[3]}; }
 
-		utils_gpu_available constexpr const vec<const       value_type&, 2> zx() const noexcept requires(extent >= 3) { return {(*this)[2], (*this)[0]}; }
-		utils_gpu_available constexpr       vec<const_aware_value_type&, 2> zx()       noexcept requires(extent >= 3) { return {(*this)[2], (*this)[0]}; }
-		utils_gpu_available constexpr const vec<const       value_type&, 2> zy() const noexcept requires(extent >= 2) { return {(*this)[2], (*this)[1]}; }
-		utils_gpu_available constexpr       vec<const_aware_value_type&, 2> zy()       noexcept requires(extent >= 2) { return {(*this)[2], (*this)[1]}; }
-		utils_gpu_available constexpr const vec<const       value_type&, 2> zw() const noexcept requires(extent >= 4) { return {(*this)[2], (*this)[3]}; }
-		utils_gpu_available constexpr       vec<const_aware_value_type&, 2> zw()       noexcept requires(extent >= 4) { return {(*this)[2], (*this)[3]}; }
+		utils_gpu_available constexpr const vec<const       value_type&, 2> zx () const noexcept requires(extent >= 3) { return {(*this)[2], (*this)[0]}; }
+		utils_gpu_available constexpr       vec<const_aware_value_type&, 2> zx ()       noexcept requires(extent >= 3) { return {(*this)[2], (*this)[0]}; }
+		utils_gpu_available constexpr const vec<const       value_type&, 2> zy () const noexcept requires(extent >= 2) { return {(*this)[2], (*this)[1]}; }
+		utils_gpu_available constexpr       vec<const_aware_value_type&, 2> zy ()       noexcept requires(extent >= 2) { return {(*this)[2], (*this)[1]}; }
+		utils_gpu_available constexpr const vec<const       value_type&, 2> zw () const noexcept requires(extent >= 4) { return {(*this)[2], (*this)[3]}; }
+		utils_gpu_available constexpr       vec<const_aware_value_type&, 2> zw ()       noexcept requires(extent >= 4) { return {(*this)[2], (*this)[3]}; }
 
-		utils_gpu_available constexpr const vec<const       value_type&, 2> wx() const noexcept requires(extent >= 3) { return {(*this)[3], (*this)[0]}; }
-		utils_gpu_available constexpr       vec<const_aware_value_type&, 2> wx()       noexcept requires(extent >= 3) { return {(*this)[3], (*this)[0]}; }
-		utils_gpu_available constexpr const vec<const       value_type&, 2> wy() const noexcept requires(extent >= 2) { return {(*this)[3], (*this)[1]}; }
-		utils_gpu_available constexpr       vec<const_aware_value_type&, 2> wy()       noexcept requires(extent >= 2) { return {(*this)[3], (*this)[1]}; }
-		utils_gpu_available constexpr const vec<const       value_type&, 2> wz() const noexcept requires(extent >= 4) { return {(*this)[3], (*this)[2]}; }
-		utils_gpu_available constexpr       vec<const_aware_value_type&, 2> wz()       noexcept requires(extent >= 4) { return {(*this)[3], (*this)[2]}; }
+		utils_gpu_available constexpr const vec<const       value_type&, 2> wx () const noexcept requires(extent >= 3) { return {(*this)[3], (*this)[0]}; }
+		utils_gpu_available constexpr       vec<const_aware_value_type&, 2> wx ()       noexcept requires(extent >= 3) { return {(*this)[3], (*this)[0]}; }
+		utils_gpu_available constexpr const vec<const       value_type&, 2> wy () const noexcept requires(extent >= 2) { return {(*this)[3], (*this)[1]}; }
+		utils_gpu_available constexpr       vec<const_aware_value_type&, 2> wy ()       noexcept requires(extent >= 2) { return {(*this)[3], (*this)[1]}; }
+		utils_gpu_available constexpr const vec<const       value_type&, 2> wz () const noexcept requires(extent >= 4) { return {(*this)[3], (*this)[2]}; }
+		utils_gpu_available constexpr       vec<const_aware_value_type&, 2> wz ()       noexcept requires(extent >= 4) { return {(*this)[3], (*this)[2]}; }
+		
+		utils_gpu_available constexpr       vec<const_aware_value_type&, 3> xyz()       noexcept requires(extent >= 3) { return {(*this)[0], (*this)[1], (*this)[2]}; }
+		utils_gpu_available constexpr const vec<const       value_type&, 3> xyz() const noexcept requires(extent >= 3) { return {(*this)[0], (*this)[1], (*this)[2]}; }
+		utils_gpu_available constexpr       vec<const_aware_value_type&, 3> xzy()       noexcept requires(extent >= 3) { return {(*this)[0], (*this)[2], (*this)[1]}; }
+		utils_gpu_available constexpr const vec<const       value_type&, 3> xzy() const noexcept requires(extent >= 3) { return {(*this)[0], (*this)[2], (*this)[1]}; }
+		utils_gpu_available constexpr       vec<const_aware_value_type&, 3> yxz()       noexcept requires(extent >= 3) { return {(*this)[1], (*this)[0], (*this)[2]}; }
+		utils_gpu_available constexpr const vec<const       value_type&, 3> yxz() const noexcept requires(extent >= 3) { return {(*this)[1], (*this)[0], (*this)[2]}; }
+		utils_gpu_available constexpr       vec<const_aware_value_type&, 3> yzx()       noexcept requires(extent >= 3) { return {(*this)[1], (*this)[2], (*this)[1]}; }
+		utils_gpu_available constexpr const vec<const       value_type&, 3> yzx() const noexcept requires(extent >= 3) { return {(*this)[1], (*this)[2], (*this)[1]}; }
+		utils_gpu_available constexpr       vec<const_aware_value_type&, 3> zxy()       noexcept requires(extent >= 3) { return {(*this)[2], (*this)[0], (*this)[1]}; }
+		utils_gpu_available constexpr const vec<const       value_type&, 3> zxy() const noexcept requires(extent >= 3) { return {(*this)[2], (*this)[0], (*this)[1]}; }
+		utils_gpu_available constexpr       vec<const_aware_value_type&, 3> zyx()       noexcept requires(extent >= 3) { return {(*this)[2], (*this)[1], (*this)[0]}; }
+		utils_gpu_available constexpr const vec<const       value_type&, 3> zyx() const noexcept requires(extent >= 3) { return {(*this)[2], (*this)[1], (*this)[0]}; }
 		#pragma endregion swizzle
 
 #pragma region distances
@@ -343,4 +356,5 @@ namespace utils::math
 
 #include "vec2.h"
 #include "vec3.h"
+#include "vec4.h"
 #include "vec_s.h"

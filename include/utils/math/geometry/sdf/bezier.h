@@ -10,10 +10,15 @@ namespace utils::math::geometry::shape::generic
 	struct bezier<storage_type, extent, optional_ends>::sdf_proxy : geometry::sdf::details::bezier::proxy_t<storage_type, extent, optional_ends>
 		{
 		using proxy_t = geometry::sdf::details::bezier::proxy_t<storage_type, extent, optional_ends>;
+		using proxy_t::sdf_proxy;
 		using proxy_t::shape;
 		using proxy_t::point;
-		using proxy_t::closest_t;
 
+		template <ends::ab ends>
+		utils_gpu_available constexpr float closest_t() const noexcept
+			{
+			return this->proxy_t::closest_t<ends>();
+			}
 
 		utils_gpu_available constexpr float closest_t() const noexcept
 			requires(optional_ends.has_value())
@@ -40,14 +45,15 @@ namespace utils::math::geometry::shape::generic
 		utils_gpu_available constexpr float minimum_distance()const noexcept
 			{
 			const auto proxy{closest_proxy<ends>()};
-			return minimum_distance(proxy.point(), point);
+			const float distance{proxy.point().sdf(point).minimum_distance()};
+			return distance;
 			}
 
 		template <ends::ab ends>
 		utils_gpu_available constexpr geometry::sdf::closest_point_with_distance closest_with_distance()const noexcept
 			{
 			const auto proxy{closest_proxy<ends>()};
-			const float distance{minimum_distance(proxy.point(), point)};
+			const float distance{proxy.point().sdf(point).minimum_distance()};
 			return {proxy.point(), distance};
 			}
 
@@ -66,25 +72,24 @@ namespace utils::math::geometry::shape::generic
 		utils_gpu_available constexpr geometry::sdf::signed_distance signed_distance()const noexcept
 			{
 			const auto distance{minimum_distance<ends>()};
-			const auto side{side<ends>()};
+			const auto side{this->side<ends>()};
 			return {distance * side.value()};
 			}
 
 		template <ends::ab ends>
 		utils_gpu_available constexpr geometry::sdf::closest_point_with_signed_distance closest_with_signed_distance()const noexcept
 			{
-			if (shape.vertices.size() == 4)
-				{//special case for segmented workaround to my proper math ignorance
-				const float t_mid{closest_t<ends>()};
-				const float t_a{std::max(0.f, t_mid - shape_stepping_t / 2.f)};
-				const float t_b{std::min(1.f, t_mid + shape_stepping_t / 2.f)};
-				const shape::segment edge{shape.at(t_a).point(), shape.at(t_b).point()};
-				return closest_with_signed_distance(edge, point);
-				}
-
+			//if (shape.vertices.size() == 4)
+			//	{//special case for segmented workaround to my proper math ignorance
+			//	const float t_mid{closest_t<ends>()};
+			//	const float t_a{std::max(0.f, t_mid - shape_stepping_t / 2.f)};
+			//	const float t_b{std::min(1.f, t_mid + shape_stepping_t / 2.f)};
+			//	const shape::segment edge{shape.at(t_a).point(), shape.at(t_b).point()};
+			//	return closest_with_signed_distance(edge, point);
+			//	}
 			const auto proxy{closest_proxy<ends>()};
 			const auto closest{proxy.point()};
-			const float distance{minimum_distance(closest, point)};
+			const float distance{minimum_distance<ends>()};
 
 			const auto left{proxy.normal()};
 			const auto a_to_point{point - closest};

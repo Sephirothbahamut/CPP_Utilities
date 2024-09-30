@@ -2,6 +2,7 @@
 
 #include "../return_types.h"
 #include "../../shape/bezier.h"
+#include "../../../vec2.h"
 
 namespace utils::math::geometry::sdf::details::bezier::_3pt
 	{
@@ -9,12 +10,13 @@ namespace utils::math::geometry::sdf::details::bezier::_3pt
 	struct sdf_proxy
 		{
 		using shape_t = geometry::shape::generic::bezier<storage_type, 3, optional_ends>;
+
 		sdf_proxy(const shape_t& shape, const vec2f& point) : shape{shape}, point{point} {};
 		const shape_t& shape;
 		const vec2f point;
 
 		template <ends::ab ends>
-		utils_gpu_available constexpr float closest_t()const noexcept
+		utils_gpu_available constexpr float closest_t() const noexcept
 			{
 			//https://www.shadertoy.com/view/NdfSDl
 			const float t_min{ends.is_a_finite() ? 0.f : -utils::math::constants::finf};
@@ -26,6 +28,11 @@ namespace utils::math::geometry::sdf::details::bezier::_3pt
 				}};
 
 			utils::math::vec2f c1 = point - shape.vertices[0];
+
+			const auto test{shape.vertices[1].operator_to_new<[](const auto& a, const auto& b) { return a + b; }>(2.f)};
+
+			using ::operator*; //TODO understand why `side * float` in `return_types` namespace hides `vec<float, extent> * float` that's declared in global namespace
+
 			utils::math::vec2f c2 = (shape.vertices[1] * 2.f) - shape.vertices[2] - shape.vertices[0];
 			utils::math::vec2f c3 =  shape.vertices[0]        - shape.vertices[1];
 
@@ -70,6 +77,5 @@ namespace utils::math::geometry::sdf::details::bezier::_3pt
 				return d1 < d2 ? roots.x() : roots.y();
 				}
 			}
-
 		};
 	}
