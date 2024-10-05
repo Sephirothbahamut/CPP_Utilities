@@ -1,7 +1,8 @@
 #pragma once
 
 #include "return_types.h"
-#include "../shape/polyline.h"
+#include "../polyline.h"
+#include "ab.h"
 
 namespace utils::math::geometry::shape::generic
 	{
@@ -87,21 +88,21 @@ namespace utils::math::geometry::shape::generic
 				const shape::line line_a{point_a, point_b};
 				const shape::line line_b{point_b, point_c};
 		
-				const float distance_a{interactions::minimum_distance(line_a, point)};
-				const float distance_b{interactions::minimum_distance(line_b, point)};
+				const float distance_a{line_a.sdf(point).minimum_distance()};
+				const float distance_b{line_b.sdf(point).minimum_distance()};
 		
-				const bool               return_first{distance_a > distance_b};
-				const geometry::sdf::side side{interactions::side(return_first ? line_a : line_b, point)};
-				const vec2f       closest{line_a.value_at(current_t)};
+				const bool                return_first{distance_a > distance_b};
+				const geometry::sdf::side side{(return_first ? line_a : line_b).sdf(point).side()};
+				const vec2f               closest{line_a.value_at(current_t)};
 
 				const geometry::sdf::closest_point_with_signed_distance ret{closest, geometry::sdf::signed_distance{current_distance * side}};
 
 				return ret;
 				}
 
-			const shape::segment     edge   {edges.ends_aware_access(current_index)};
-			const vec2f       closest{edge.value_at          (current_t    )};
-			const geometry::sdf::side side   {interactions::side(edge, point  )};
+			const shape::segment      edge   {edges.ends_aware_access(current_index)};
+			const vec2f               closest{edge.value_at          (current_t    )};
+			const geometry::sdf::side side   {edge.sdf(point).side()};
 			const geometry::sdf::closest_point_with_signed_distance ret{closest, current_distance * side};
 			return ret;
 			}

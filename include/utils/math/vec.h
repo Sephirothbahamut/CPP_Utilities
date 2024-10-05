@@ -302,8 +302,6 @@ namespace utils::math
 			return ret;
 			}
 		
-		struct sdf_proxy;
-		utils_gpu_available sdf_proxy sdf(const vec<float, 2>& point) const noexcept requires(std::same_as<value_type, float> && extent == 2);
 		};
 	
 

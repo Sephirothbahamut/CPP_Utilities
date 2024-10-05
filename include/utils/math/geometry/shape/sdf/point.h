@@ -1,14 +1,14 @@
 #pragma once
 
 #include "return_types.h"
-#include "../shape/point.h"
+#include "../point.h"
 
-namespace utils::math
+namespace utils::math::details
 	{
-	template <typename T, size_t extent>
-	struct vec<T, extent>::sdf_proxy
+	template<typename T, template <typename, size_t> class unspecialized_derived_T>
+	struct vec_sized_specialization<T, 2, unspecialized_derived_T>::sdf_proxy
 		{
-		using shape_t = vec<T, extent>;
+		using shape_t = vec<T, 2>;
 		#include "common.inline.h"
 		
 		utils_gpu_available constexpr geometry::shape::point closest_point() const noexcept
@@ -41,14 +41,11 @@ namespace utils::math
 			return {shape, minimum_distance()};
 			}
 		};
-	}
 
-namespace utils::math
-	{
-	template <typename T, size_t extent>
-	vec<T, extent>::sdf_proxy vec<T, extent>::sdf(const vec<float, 2>& point) const noexcept 
-		requires(std::same_as<value_type, float> && extent == 2)
+	template<typename T, template <typename, size_t> class unspecialized_derived_T>
+	vec_sized_specialization<T, 2, unspecialized_derived_T>::sdf_proxy vec_sized_specialization<T, 2, unspecialized_derived_T>::sdf(const vec<float, 2>& point) const noexcept 
 		{
-		return {*this, point};
+		//self() instead of this because vec_sized_specialization is a CRTP parent of the actual vec.
+		return {self(), point};
 		}
 	}

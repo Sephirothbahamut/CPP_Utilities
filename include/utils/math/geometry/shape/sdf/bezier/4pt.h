@@ -1,8 +1,8 @@
 #pragma once
 
 #include "../return_types.h"
-#include "../../shape/bezier.h"
-#include "../../../vec4.h"
+#include "../../bezier.h"
+#include "../../../../vec4.h"
 
 namespace utils::math::geometry::sdf::details::bezier::_4pt
 	{
@@ -20,11 +20,11 @@ namespace utils::math::geometry::sdf::details::bezier::_4pt
 		See also my approximate version:
 		https://www.shadertoy.com/view/lsByRG
 		*/
-		const float eps = .000005;
-		const float zoom = 1.f;
-		const float dot_size = .005;
+		const float              eps     { .000005f};
+		const float              zoom    {1.f      };
+		const float              dot_size{ .005f};
 		const utils::math::vec3f point_col{1.f, 1.f, 0.f};
-		const int halley_iterations = 8;
+		const int halley_iterations{8};
 
 		//lagrange positive real root upper bound
 		//see for example: https://doi.org/10.1016/j.jsc.2014.09.038
@@ -186,17 +186,17 @@ namespace utils::math::geometry::sdf::details::bezier::_4pt
 			float b = coeffs[1];
 			float c = coeffs[0];
 
-			float p = b - a * a / 3.0;
-			float q = a * (2.0 * a * a - 9.0 * b) / 27.0 + c;
+			float p = b - a * a / 3.0f;
+			float q = a * (2.0f * a * a - 9.0f * b) / 27.0f + c;
 			float p3 = p * p * p;
-			float d = q * q + 4.0 * p3 / 27.0;
-			float offset = -a / 3.0;
-			if (d >= 0.0) { // Single solution
+			float d = q * q + 4.0f * p3 / 27.0f;
+			float offset = -a / 3.0f;
+			if (d >= 0.0f) { // Single solution
 				float z = sqrt(d);
-				float u = (-q + z) / 2.0;
-				float v = (-q - z) / 2.0;
-				u = sign(u) * std::pow(utils::math::abs(u), 1.0 / 3.0);
-				v = sign(v) * std::pow(utils::math::abs(v), 1.0 / 3.0);
+				float u = (-q + z) / 2.0f;
+				float v = (-q - z) / 2.0f;
+				u = sign(u) * std::pow(utils::math::abs(u), 1.0f / 3.0f);
+				v = sign(v) * std::pow(utils::math::abs(v), 1.0f / 3.0f);
 				r[0] = offset + u + v;
 
 				//Single newton iteration to account for cancellation
@@ -207,8 +207,8 @@ namespace utils::math::geometry::sdf::details::bezier::_4pt
 
 				return 1;
 				}
-			float u = sqrt(-p / 3.0);
-			float v = acos(-sqrt(-27.0 / p3) * q / 2.0) / 3.0;
+			float u = sqrt(-p / 3.0f);
+			float v = acos(-sqrt(-27.0f / p3) * q / 2.0f) / 3.0f;
 			float m = cos(v), n = sin(v) * 1.732050808;
 
 			//Single newton iteration to account for cancellation
@@ -265,9 +265,9 @@ namespace utils::math::geometry::sdf::details::bezier::_4pt
 
 				utils::math::vec3f cubic_coeffs;
 
-				cubic_coeffs[0] = 1.0 / 2.f * r * p - 1.0 / 8.f * q * q;
+				cubic_coeffs[0] = 1.0f / 2.f * r * p - 1.0f / 8.f * q * q;
 				cubic_coeffs[1] = -r;
-				cubic_coeffs[2] = -1.0 / 2.f * p;
+				cubic_coeffs[2] = -1.0f / 2.f * p;
 
 				solve_cubic(cubic_coeffs, s.xyz());
 

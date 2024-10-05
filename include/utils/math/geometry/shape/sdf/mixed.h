@@ -1,7 +1,9 @@
 #pragma once
 
 #include "return_types.h"
-#include "../shape/mixed.h"
+#include "../mixed.h"
+#include "bezier.h"
+#include "ab.h"
 
 namespace utils::math::geometry::shape::generic
 	{
@@ -50,7 +52,7 @@ namespace utils::math::geometry::shape::generic
 
 			shape.get_pieces().for_each([&](const auto& candidate, size_t first_index, size_t last_index)
 				{
-				const auto candidate_values{interactions::closest_with_signed_distance(candidate, point)};
+				const auto candidate_values{candidate.sdf(point).closest_with_signed_distance()};
 				if(candidate_values.distance.absolute() < current.distance.absolute())
 					{
 					current = candidate_values;
@@ -80,11 +82,11 @@ namespace utils::math::geometry::shape::generic
 				const shape::line line_a{point_a, point_b};
 				const shape::line line_b{point_b, point_c};
 		
-				const float distance_a{interactions::minimum_distance(line_a, point)};
-				const float distance_b{interactions::minimum_distance(line_b, point)};
+				const float distance_a{line_a.sdf(point).minimum_distance()};
+				const float distance_b{line_b.sdf(point).minimum_distance()};
 		
 				const bool               return_first{distance_a > distance_b};
-				const geometry::sdf::side side{interactions::side(return_first ? line_a : line_b, point)};
+				const geometry::sdf::side side{(return_first ? line_a : line_b).sdf(point).side()};
 		
 				current.distance = geometry::sdf::signed_distance{current.distance.absolute() * side};
 				}

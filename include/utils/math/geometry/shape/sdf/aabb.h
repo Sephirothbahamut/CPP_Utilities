@@ -1,7 +1,7 @@
 #pragma once
 
 #include "return_types.h"
-#include "../shape/mixed.h"
+#include "../aabb.h"
 
 namespace utils::math
 	{

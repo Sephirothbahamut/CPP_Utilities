@@ -17,10 +17,24 @@ namespace utils::math::geometry::shape::generic
 
 		vertex_t centre;
 		radius_t radius;
-		circle(vertex_t centre, storage::concepts::can_construct_value_type<radius_t> auto radius) : centre{centre}, radius{radius} {}
 
-		struct sdf_proxy;
-		utils_gpu_available sdf_proxy sdf(const shape::point& point) const noexcept;
+		utils_gpu_available constexpr circle() noexcept = default;
+		utils_gpu_available constexpr circle(      concepts::point auto& centre, storage::concepts::can_construct_value_type<radius_t> auto& radius) :
+			centre{centre}, radius{radius} {}
+
+		utils_gpu_available constexpr circle(const concepts::point auto& centre, const storage::concepts::can_construct_value_type<radius_t> auto& radius)
+			requires(storage_type.can_construct_from_const()) :
+			centre{centre}, radius{radius} {}
+
+		utils_gpu_available constexpr circle(const concepts::circle auto& other) requires(storage_type.can_construct_from_const()): 
+			centre{other.centre}, radius{other.radius} {}
+
+		utils_gpu_available constexpr circle(      concepts::circle auto& other) requires(storage::constness_matching<self_t, decltype(other)>::compatible_constness) :
+			centre{other.centre}, radius{other.radius} {}
+
+		#include "sdf/common_declaration.inline.h"
+		#include "bounds/common_declaration.inline.h"
+		#include "transform/common_declaration.inline.h"
 		};
 	}
 

@@ -1,6 +1,6 @@
 #pragma once
 #include "return_types.h"
-#include "../shape/ab.h"
+#include "../ab.h"
 
 namespace utils::math::geometry::shape::generic
 	{

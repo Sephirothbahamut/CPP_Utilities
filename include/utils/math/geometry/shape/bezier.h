@@ -10,7 +10,7 @@
 namespace utils::math::geometry::shape::generic
 	{
 	template<storage::type STORAGE_TYPE, size_t EXTENT, geometry::ends::optional_ab OPTIONAL_ENDS>
-	struct utils_oop_empty_bases bezier : geometry::piece_flag, geometry::shape_flag
+	struct utils_oop_empty_bases bezier : geometry::piece_flag, geometry::shape_flag, utils::math::geometry::vertices_as_field<geometry::vertices<STORAGE_TYPE, EXTENT>>
 		{
 		inline static constexpr auto storage_type {STORAGE_TYPE};
 		inline static constexpr auto extent       {EXTENT};
@@ -19,8 +19,9 @@ namespace utils::math::geometry::shape::generic
 		using self_t = bezier<storage_type, extent, optional_ends>;
 		using nonref_self_t = bezier<storage::type::create::owner(), extent, optional_ends>;
 
-		using vertices_t = geometry::vertices<storage_type, extent>;
-		vertices_t vertices;
+		using          utils::math::geometry::vertices_as_field<geometry::vertices<STORAGE_TYPE, EXTENT>>::vertices;
+		using typename utils::math::geometry::vertices_as_field<geometry::vertices<STORAGE_TYPE, EXTENT>>::vertices_t;
+		using          utils::math::geometry::vertices_as_field<geometry::vertices<STORAGE_TYPE, EXTENT>>::vertices_as_field;
 
 		struct at_proxy
 			{
@@ -249,8 +250,8 @@ namespace utils::math::geometry::shape::generic
 		utils_gpu_available constexpr auto get_edges            (size_t divisions) const noexcept { return edges_view<false>{*this, divisions}; }
 		utils_gpu_available constexpr auto get_edges_equidistant(size_t divisions) const noexcept { return edges_view<true >{*this, divisions}; }
 
-		struct sdf_proxy;
-		sdf_proxy sdf(const shape::point& point) const noexcept;
+		#include "sdf/common_declaration.inline.h"
+		#include "bounds/common_declaration.inline.h"
 		};
 	}
 

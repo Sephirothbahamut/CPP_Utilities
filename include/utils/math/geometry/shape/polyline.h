@@ -21,7 +21,7 @@ namespace utils::math::geometry::shape::generic
 		}
 
 	template <storage::type STORAGE_TYPE, geometry::ends::closeable ENDS, size_t EXTENT>
-	struct polyline : utils::math::geometry::shape_flag
+	struct utils_oop_empty_bases polyline : utils::math::geometry::shape_flag, utils::math::geometry::vertices_as_field<geometry::ends_aware_vertices<STORAGE_TYPE, ENDS.is_closed(), EXTENT>>
 		{
 		inline static constexpr auto storage_type{STORAGE_TYPE};
 		inline static constexpr auto ends        {ENDS};
@@ -30,9 +30,9 @@ namespace utils::math::geometry::shape::generic
 		using self_t        = polyline<storage_type, ends, extent>;
 		using nonref_self_t = polyline<storage::type::create::owner(), ends, extent>;
 
-		using vertices_t = geometry::ends_aware_vertices<storage_type, ends.is_closed(), extent>;
-		vertices_t vertices;
-
+		using          utils::math::geometry::vertices_as_field<geometry::ends_aware_vertices<storage_type, ends.is_closed(), extent>>::vertices;
+		using typename utils::math::geometry::vertices_as_field<geometry::ends_aware_vertices<storage_type, ends.is_closed(), extent>>::vertices_t;
+		using          utils::math::geometry::vertices_as_field<geometry::ends_aware_vertices<storage_type, ends.is_closed(), extent>>::vertices_as_field;
 
 		template <bool is_function_const>
 		using edge = utils::math::geometry::shape::generic::segment
@@ -207,8 +207,8 @@ namespace utils::math::geometry::shape::generic
 		/// </summary>
 		utils_gpu_available constexpr auto get_edges() noexcept { return edges_view<storage_type.is_const()>{*this}; }
 
-		struct sdf_proxy;
-		utils_gpu_available sdf_proxy sdf(const shape::point& point) const noexcept;
+		#include "sdf/common_declaration.inline.h"
+		#include "bounds/common_declaration.inline.h"
 		};
 
 	template <storage::type storage_type, size_t extent = std::dynamic_extent>

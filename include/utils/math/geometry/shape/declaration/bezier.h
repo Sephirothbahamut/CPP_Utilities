@@ -45,4 +45,10 @@ namespace utils::math::geometry::shape
 		template <size_t extent = std::dynamic_extent, geometry::ends::optional_ab optional_ends = ends::optional_ab::create::value(ends::ab::create::finite())>
 		using bezier = shape::generic::bezier<storage::type::create::const_observer(), extent, optional_ends>;
 		}
+
+	template <concepts::bezier T, storage::type desired_storage_type>
+	struct cast_storage_type<T, desired_storage_type>
+		{
+		using type = generic::bezier<desired_storage_type, T::ends, T::extent>;
+		};
 	}

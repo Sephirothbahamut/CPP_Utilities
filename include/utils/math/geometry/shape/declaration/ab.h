@@ -64,4 +64,10 @@ namespace utils::math::geometry::shape
 		using reverse_ray = shape::generic::reverse_ray<storage::type::create::const_observer()>;
 		using segment     = shape::generic::segment    <storage::type::create::const_observer()>;
 		}
+
+	template <concepts::ab T, storage::type desired_storage_type>
+	struct cast_storage_type<T, desired_storage_type>
+		{
+		using type = generic::ab<desired_storage_type, T::ends>;
+		};
 	}

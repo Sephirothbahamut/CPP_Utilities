@@ -5,10 +5,10 @@
 namespace utils::math::geometry
 	{
 	template <storage::type storage_type, bool CLOSED, size_t extent>
-	struct ends_aware_vertices : utils::storage::multiple<storage::storage_type_for<geometry::shape::point, storage_type>, extent, true>
+	struct utils_oop_empty_bases ends_aware_vertices : vertices<storage_type, extent>
 		{
 		private:
-			using multiple_t = utils::storage::multiple<storage::storage_type_for<geometry::shape::point, storage_type>, extent, true>;
+			using multiple_t = vertices<storage_type, extent>;
 
 		public:
 			using multiple_t::multiple;
@@ -40,5 +40,34 @@ namespace utils::math::geometry
 				else { return index; }
 				}
 			utils_gpu_available constexpr size_t ends_aware_index(const size_t index) const noexcept { return ends_aware_index<closed>(index); }
+		};
+
+	/// <summary> Only purpose is to not rewrite identical constructors for multiple typess</summary>
+	template <concepts::vertices VERTICES_T>
+	struct vertices_as_field
+		{
+		using vertices_t = VERTICES_T;
+		vertices_t vertices;
+
+		utils_gpu_available constexpr vertices_as_field() = default;
+
+		template <typename iterator_t>
+		utils_gpu_available constexpr vertices_as_field(iterator_t first, size_t count) : vertices{first, count} {}
+
+		template <storage::concepts::can_construct_value_type<typename vertices_t::inner_storage_t::value_type>  ...Args>
+		utils_gpu_available constexpr vertices_as_field(Args&&... args) : 
+			vertices(utils::storage::construct_flag_data, std::forward<Args>(args)...) {}
+
+		utils_gpu_available constexpr vertices_as_field(size_t size) : vertices(size) {}
+
+		utils_gpu_available constexpr vertices_as_field(const shape::concepts::has_vertices auto& other) noexcept
+			requires(vertices_t::storage_type.can_construct_from_const()) : 
+			vertices(other.vertices) {}
+
+		utils_gpu_available constexpr vertices_as_field(      shape::concepts::has_vertices auto& other) noexcept
+			requires(storage::constness_matching<vertices_t, typename decltype(other)::vertices_t>::compatible_constness) :
+			vertices(other.vertices) {}
+
+		#include "transform/common_declaration.inline.h"
 		};
 	}

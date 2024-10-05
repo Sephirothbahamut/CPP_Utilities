@@ -10,11 +10,13 @@ namespace utils::math::geometry::shape::generic
 		inline static constexpr auto storage_type {STORAGE_TYPE };
 		inline static constexpr auto optional_ends{OPTIONAL_ENDS};
 
-		using self_t   = ab            <storage_type, optional_ends>;
+		using self_t       = ab<storage_type, optional_ends>;
+
 		using vertex_t = generic::point<storage_type>;
 		template <bool is_function_const>
 		using vertex_observer = generic::point<storage::type::create::observer(is_function_const)>;
-		using nonref_self_t = ab<storage::type::create::owner(), optional_ends>;
+
+		utils_gpu_available constexpr ab() noexcept = default;
 
 		utils_gpu_available constexpr ab(const utils::math::concepts::vec_size<2> auto& a, const utils::math::concepts::vec_size<2> auto& b) noexcept
 			requires(storage_type.can_construct_from_const()) : 
@@ -23,13 +25,11 @@ namespace utils::math::geometry::shape::generic
 		utils_gpu_available constexpr ab(utils::math::concepts::vec_size<2> auto& a, utils::math::concepts::vec_size<2> auto& b) noexcept :
 			a{a}, b{b} {}
 
-		template <storage::type other_storage_type, geometry::ends::optional_ab other_optional_ends>
-		utils_gpu_available constexpr ab(ab<other_storage_type, other_optional_ends>& other) noexcept
-			requires(storage::constness_matching<self_t, ab<other_storage_type, other_optional_ends>>::compatible_constness) :
+		utils_gpu_available constexpr ab(concepts::ab auto& other) noexcept
+			requires(storage::constness_matching<self_t, decltype(other)>::compatible_constness) :
 			a{other.a}, b{other.b} {}
 
-		template <storage::type other_storage_type, geometry::ends::optional_ab other_optional_ends>
-		utils_gpu_available constexpr ab(const ab<other_storage_type, other_optional_ends>& other) noexcept
+		utils_gpu_available constexpr ab(const concepts::ab auto& other) noexcept
 			requires(storage_type.can_construct_from_const()) :
 			a{other.a}, b{other.b} {}
 
@@ -111,8 +111,9 @@ namespace utils::math::geometry::shape::generic
 			return closest_point_at<optional_ends.value()>(t); 
 			}
 
-		struct sdf_proxy;
-		sdf_proxy sdf(const shape::point& point) const noexcept;
+		#include "sdf/common_declaration.inline.h"
+		#include "bounds/common_declaration.inline.h"
+		#include "transform/common_declaration.inline.h"
 		};
 	}
 
@@ -124,3 +125,74 @@ static_assert(utils::math::geometry::shape::concepts::shape
 	<
 	utils::math::geometry::shape::ab<>
 	>);
+
+
+
+
+
+
+
+///////// Old interactions, kept for reference for intersections with other edges
+//namespace utils::math::geometry::interactions
+//	{
+//	namespace return_types
+//		{
+//		struct percentages
+//			{
+//			float b_to_reach_a{utils::math::constants::finf};
+//			float a_to_reach_b{utils::math::constants::finf};
+//			};
+//		}
+//
+//	return_types::percentages percentages(const shape::concepts::ab auto& ab_a, const shape::concepts::ab auto& ab_b) noexcept
+//		{//https://stackoverflow.com/questions/563198/how-do-you-detect-where-two-line-segments-intersect
+//		const vec2f s1{ab_a.a_to_b()};
+//		const vec2f s2{ab_b.a_to_b()};
+//	
+//		const float b_percentage_to_reach_a{(-s1.y() * (ab_a.a.x() - ab_b.a.x()) + s1.x() * (ab_a.a.y() - ab_b.a.y())) / (-s2.x() * s1.y() + s1.x() * s2.y())};
+//		const float a_percentage_to_reach_b{( s2.x() * (ab_a.a.y() - ab_b.a.y()) - s2.y() * (ab_a.a.x() - ab_b.a.x())) / (-s2.x() * s1.y() + s1.x() * s2.y())};
+//		
+//		return {b_percentage_to_reach_a, a_percentage_to_reach_b};
+//		}
+//
+//	utils_gpu_available constexpr bool intersects(const shape::concepts::line auto& a, const shape::concepts::line auto& b) noexcept
+//		{
+//		return a.forward().angle() != b.forward().angle();
+//		}
+//	
+//	template <shape::concepts::ab a_t, shape::concepts::ab b_t>
+//	utils_gpu_available constexpr bool intersects(const a_t& a, const b_t& b) noexcept
+//		{
+//		const auto percents{percentages(a, b)};
+//		if constexpr (a_t::ends.is_a_finite()) { if (percents.a_to_reach_b < 0.f) { return false; } }
+//		if constexpr (a_t::ends.is_b_finite()) { if (percents.a_to_reach_b > 1.f) { return false; } }
+//		if constexpr (b_t::ends.is_a_finite()) { if (percents.b_to_reach_a < 0.f) { return false; } }
+//		if constexpr (b_t::ends.is_b_finite()) { if (percents.b_to_reach_a > 1.f) { return false; } }
+//		return intersects(shape::line{a.a, a.b}, shape::line{b.a, b.b});
+//		}
+//
+//	std::optional<vec2f> intersection(const shape::concepts::ab auto& a, const shape::concepts::ab auto& b) noexcept
+//		{
+//		if (!intersects(a, b)) { return std::nullopt; }
+//
+//		const vec2f s1{a.a_to_b()};
+//		const vec2f s2{b.a_to_b()};
+//		const auto percents{percentages(a, b)};
+//
+//		return vec2f{a.x() + (percents.a_to_reach_b * s1.x()), a.y() + (percents.a_to_reach_b * s1.y())};
+//		}
+//
+//	utils_gpu_available constexpr bool intersects(const shape::concepts::segment auto& a, const shape::concepts::line auto& b) noexcept
+//		{
+//		const auto point_side_a{side(b, a.a)};
+//		const auto point_side_b{side(b, a.b)};
+//		return (point_side_a != point_side_b) || (point_side_a == point_side_b && point_side_a.is_coincident());
+//		}
+//
+//	utils_gpu_available constexpr bool intersects(const shape::concepts::segment auto& a, const shape::concepts::segment auto& b) noexcept
+//		{
+//		const auto a_intersects_b_line{intersects(a, shape::line{b.a, b.b})};
+//		const auto b_intersects_a_line{intersects(b, shape::line{a.a, a.b})};
+//		return a_intersects_b_line || b_intersects_a_line;
+//		}
+//	}

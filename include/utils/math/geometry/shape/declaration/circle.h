@@ -32,4 +32,10 @@ namespace utils::math::geometry::shape
 		{
 		using circle = shape::generic::circle<storage::type::create::const_observer()>;
 		}
+
+	template <concepts::circle T, storage::type desired_storage_type>
+	struct cast_storage_type<T, desired_storage_type>
+		{
+		using type = generic::circle<desired_storage_type>;
+		};
 	}

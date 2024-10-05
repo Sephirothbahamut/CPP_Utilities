@@ -1,3 +1,3 @@
 #pragma once
 
-#include "declaration/all.h"
+#include "declaration/aabb.h"

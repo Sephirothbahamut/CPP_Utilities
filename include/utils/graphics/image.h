@@ -3,16 +3,15 @@
 #include <filesystem>
 
 #include "colour.h"
-#include "../matrix_interface.h"
+#include "../matrix.h"
 
-namespace utils::graphics
+namespace utils::graphics::image
 	{
-	struct image
-		{
-		image(utils::math::vec2s sizes) : matrix{sizes} {}
+	/*template <utils::concepts::matrix image_t>
+		requires(utils::graphics::colour::concepts::colour<typename image_t::value_type>)
+	void save_to_file(const image_t& image, const std::filesystem::path& path);*/
 
-		utils::matrix<colour::rgba_u> matrix;
-		};
+	void save_to_file(const utils::matrix<utils::graphics::colour::rgba_u>& image, const std::filesystem::path& path);
 	}
 
 #ifdef utils_implementation

@@ -1,6 +1,6 @@
 #pragma once
 
-#include "../interactions/base_types.h"
+#include "../../interactions/base_types.h"
 
 namespace utils::math::geometry::sdf
 	{

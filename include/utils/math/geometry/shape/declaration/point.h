@@ -19,4 +19,10 @@ namespace utils::math::geometry::shape
 	namespace owner         { using point = shape::generic::point<storage::type::create::owner         ()>; }
 	namespace observer      { using point = shape::generic::point<storage::type::create::observer      ()>; }
 	namespace const_observer{ using point = shape::generic::point<storage::type::create::const_observer()>; }
+
+	template <concepts::point T, storage::type desired_storage_type>
+	struct cast_storage_type<T, desired_storage_type>
+		{
+		using type = generic::point<desired_storage_type>;
+		};
 	}

@@ -1,7 +1,7 @@
 #pragma once
 
 #include "../return_types.h"
-#include "../../shape/bezier.h"
+#include "../../bezier.h"
 
 namespace utils::math::geometry::sdf::details::bezier::other
 	{

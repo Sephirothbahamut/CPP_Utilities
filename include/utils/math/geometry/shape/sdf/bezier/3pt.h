@@ -1,8 +1,8 @@
 #pragma once
 
 #include "../return_types.h"
-#include "../../shape/bezier.h"
-#include "../../../vec2.h"
+#include "../../bezier.h"
+#include "../../../../vec2.h"
 
 namespace utils::math::geometry::sdf::details::bezier::_3pt
 	{

@@ -23,9 +23,9 @@ namespace utils::storage
 		template <typename T>
 		concept vector = std::same_as<std::remove_cvref_t<T>, std::vector<typename std::remove_cvref_t<T>::value_type>>;
 		template <typename T>
-		concept array = std::same_as<std::remove_cvref_t<T>, std::array<typename std::remove_cvref_t<T>::value_type, std::tuple_size<std::remove_cvref_t<T>>::value>>; //Note: using tuple_size_t won't work
+		concept array  = std::same_as<std::remove_cvref_t<T>, std::array<typename std::remove_cvref_t<T>::value_type, std::tuple_size<std::remove_cvref_t<T>>::value>>; //Note: using tuple_size_t won't work
 		template <typename T>
-		concept span = std::same_as<std::remove_cvref_t<T>, std::span<typename std::remove_cvref_t<T>::element_type, std::remove_cvref_t<T>::extent>>;
+		concept span   = std::same_as<std::remove_cvref_t<T>, std::span<typename std::remove_cvref_t<T>::element_type, std::remove_cvref_t<T>::extent>>;
 		}
 
 	struct type
@@ -83,7 +83,12 @@ namespace utils::storage
 			<
 			storage_type.is_owner(),
 			T,
-			std::reference_wrapper<T>
+			std::conditional_t
+				<
+				storage_type.is_const(),
+				std::reference_wrapper<const value_type>,
+				std::reference_wrapper<      value_type>
+				>
 			>;
 
 		inner_storage_t storage;
@@ -141,7 +146,9 @@ namespace utils::storage
 
 		inner_storage_t storage;
 
-		utils_gpu_available constexpr       size_t size () const noexcept { return storage.size (); }
+		utils_gpu_available        constexpr size_t size() const noexcept requires(extent == std::dynamic_extent) { return storage.size(); }
+		utils_gpu_available static consteval size_t size()       noexcept requires(extent != std::dynamic_extent) { return extent; }
+
 		utils_gpu_available constexpr       bool   empty() const noexcept { return storage.empty(); }
 		utils_gpu_available constexpr const auto   data () const noexcept { return storage.data (); }
 		utils_gpu_available constexpr       auto   data ()       noexcept { return storage.data (); }
@@ -227,6 +234,7 @@ namespace utils::storage
 			{};
 
 		template <concepts::can_construct_value_type<typename inner_storage_t::value_type> ...Args>
+			requires((!std::same_as<utils::storage::construct_flag_data_t, Args>) && ...)
 		utils_gpu_available constexpr multiple(Args&&... args) : multiple{utils::storage::construct_flag_data, std::forward<Args>(args)...}
 			{}
 

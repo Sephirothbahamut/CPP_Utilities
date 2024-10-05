@@ -1,6 +1,6 @@
 #pragma once
 #include "return_types.h"
-#include "../shape/bezier.h"
+#include "../bezier.h"
 
 #include "bezier/all.h"
 

@@ -53,4 +53,10 @@ namespace utils::math::geometry::shape
 		template <size_t extent = std::dynamic_extent>
 		using polygon = shape::generic::polygon<storage::type::create::const_observer(), extent>;
 		}
+
+	template <concepts::polyline T, storage::type desired_storage_type>
+	struct cast_storage_type<T, desired_storage_type>
+		{
+		using type = generic::polyline<desired_storage_type, T::ends, T::extent>; 
+		};
 	}

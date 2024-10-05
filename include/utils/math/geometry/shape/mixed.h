@@ -1,7 +1,6 @@
 #pragma once
 
 #include <span>
-#include <variant>
 
 #include "declaration/mixed.h"
 #include "vertices.h"
@@ -10,9 +9,11 @@ namespace utils::math::geometry::shape::generic
 	{
 	/// <summary> 
 	/// Only use finite or closed ends, infinite ends not supported (yet)
+	/// Functions that assemble the mixed adding pieces dynamically are unsupported on the GPU side on purpose.
+	/// On the GPU side this should only exist as an observer.
 	/// </summary>
 	template <storage::type STORAGE_TYPE, ends::closeable ENDS>
-	struct mixed : utils::math::geometry::shape_flag
+	struct utils_oop_empty_bases mixed : utils::math::geometry::shape_flag, utils::math::geometry::vertices_as_field<geometry::ends_aware_vertices<STORAGE_TYPE, ENDS.is_closed(), std::dynamic_extent>>
 		{
 		public:
 			inline static constexpr auto storage_type{STORAGE_TYPE};
@@ -21,8 +22,8 @@ namespace utils::math::geometry::shape::generic
 			using self_t        = mixed<storage_type, ends>;
 			using nonref_self_t = mixed<storage::type::create::owner(), ends>;
 
-			using vertices_t = geometry::ends_aware_vertices<storage_type, ends.is_closed()>;
-			vertices_t vertices;
+			using          utils::math::geometry::vertices_as_field<geometry::ends_aware_vertices<storage_type, ends.is_closed(), std::dynamic_extent>>::vertices;
+			using typename utils::math::geometry::vertices_as_field<geometry::ends_aware_vertices<storage_type, ends.is_closed(), std::dynamic_extent>>::vertices_t;
 
 			struct piece_metadata_t
 				{
@@ -46,8 +47,18 @@ namespace utils::math::geometry::shape::generic
 				}
 
 		public:
-			mixed(const shape::point& first_point) noexcept { vertices.storage.emplace_back(first_point); }
-			mixed() noexcept = default;
+			constexpr mixed(const shape::point& first_point) noexcept { vertices.storage.emplace_back(first_point); }
+			constexpr mixed() noexcept = default;
+
+			utils_gpu_available constexpr mixed(const concepts::mixed auto& other) 
+				requires(storage_type.can_construct_from_const()) :
+				utils::math::geometry::vertices_as_field<geometry::ends_aware_vertices<STORAGE_TYPE, ENDS.is_closed(), std::dynamic_extent>>{other},
+				pieces_metadata{other.pieces_metadata} {}
+
+			utils_gpu_available constexpr mixed(concepts::mixed auto& other) 
+				requires(storage::constness_matching<self_t, decltype(other)>::compatible_constness) :
+				utils::math::geometry::vertices_as_field<geometry::ends_aware_vertices<STORAGE_TYPE, ENDS.is_closed(), std::dynamic_extent>>{other},
+				pieces_metadata{other.pieces_metadata} {}
 
 			void clear(const shape::point& first_point) noexcept
 				requires(storage_type.is_owner())
@@ -144,7 +155,7 @@ namespace utils::math::geometry::shape::generic
 			struct pieces_view : ::utils::oop::non_copyable, ::utils::oop::non_movable
 				{
 				public:
-					pieces_view(const self_t& mixed) : mixed_ref{mixed} {}
+					utils_gpu_available constexpr pieces_view(const self_t& mixed) : mixed_ref{mixed} {}
 					const self_t& mixed_ref;
 
 					using edge_t       = utils::math::geometry::shape::segment;
@@ -232,7 +243,7 @@ namespace utils::math::geometry::shape::generic
 							const auto vertex_a{mixed_ref.vertices[index_a]};
 							const auto vertex_b{mixed_ref.vertices[index_b]};
 							const auto vertex_c{mixed_ref.vertices.ends_aware_access(index_c)};
-							const shape::bezier<3> piece{.vertices{vertex_a, vertex_b, vertex_c}};
+							const shape::bezier<3> piece{vertex_a, vertex_b, vertex_c};
 							call(callback, piece, index_a, index_c);
 							}
 						}
@@ -255,7 +266,7 @@ namespace utils::math::geometry::shape::generic
 							const auto vertex_b{mixed_ref.vertices[index_b]};
 							const auto vertex_c{mixed_ref.vertices[index_c]};
 							const auto vertex_d{mixed_ref.vertices.ends_aware_access(index_d)};
-							const shape::bezier<4> piece{.vertices{vertex_a, vertex_b, vertex_c, vertex_d}};
+							const shape::bezier<4> piece{vertex_a, vertex_b, vertex_c, vertex_d};
 							call(callback, piece, index_a, index_d);
 							}
 						}
@@ -268,15 +279,15 @@ namespace utils::math::geometry::shape::generic
 					
 						//Note: Not "vertices.begin()" because my own iterator can't build a span
 						//TODO check why, it's 6 am and i'm too tired to check now.
-						shape::const_observer::bezier<std::dynamic_extent> piece{.vertices{mixed_ref.vertices.storage.begin() + index_vertex_begin, vertices_count}};
+						shape::const_observer::bezier<std::dynamic_extent> piece{mixed_ref.vertices.storage.begin() + index_vertex_begin, vertices_count};
 						call(callback, piece, index_vertex_begin, index_vertex_last);
 						}
 				};
 
 			utils_gpu_available constexpr auto get_pieces() const noexcept { return pieces_view{*this}; }
 
-			struct sdf_proxy;
-			utils_gpu_available sdf_proxy sdf(const shape::point& point) const noexcept;
+			#include "sdf/common_declaration.inline.h"
+			#include "bounds/common_declaration.inline.h"
 		};
 	}
 
