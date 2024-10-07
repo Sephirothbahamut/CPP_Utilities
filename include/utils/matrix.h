@@ -91,25 +91,27 @@ namespace utils
 		using owner_self_t    = matrix<value_type             , EXTENTS>;
 		using observer_self_t = matrix<const_aware_value_type&, EXTENTS>;
 
-		utils_gpu_available constexpr matrix(utils::math::vec2s sizes) requires(EXTENTS.is_dynamic() && storage_type.is_owniner()) :
+		utils_gpu_available constexpr matrix(utils::math::vec2s sizes) requires(EXTENTS.is_dynamic() && storage_type.is_owner()) :
 			multiple_t(sizes.sizes_to_size()),
-			details::matrix_sizes_interface{sizes}
+			details::matrix_sizes_interface<T, EXTENTS>{sizes}
 			{
 			}
 
 		template <typename ...Args>
-		utils_gpu_available constexpr matrix(utils::math::vec2s sizes, Args&&... args) requires(EXTENTS.is_dynamic() && storage_type.is_owniner()) :
+		utils_gpu_available constexpr matrix(utils::math::vec2s sizes, Args&&... args) requires(EXTENTS.is_dynamic() && storage_type.is_owner()) :
 			multiple_t(utils::storage::construct_flag_data, std::forward<Args>(args)...),
-			details::matrix_sizes_interface{sizes}
+			details::matrix_sizes_interface<T, EXTENTS>{sizes}
 			{
 			assert(sizes.sizes_to_size() == size());
 			}
-
+		
 		template <typename ...Args>
-		utils_gpu_available constexpr matrix(Args&&... args) requires(!EXTENTS.is_dynamic() && storage_type.is_owniner()) :
+		utils_gpu_available constexpr matrix(Args&&... args) requires(!EXTENTS.is_dynamic() && storage_type.is_owner()) :
 			multiple_t(utils::storage::construct_flag_data, std::forward<Args>(args)...)
 			{}
 
+		using multiple_t::operator[];
+		using multiple_t::at;
 		utils_gpu_available constexpr const       value_type& operator[](math::vec2s coords) const noexcept                                    { return operator[](sizes().coords_to_index(coords)); }
 		utils_gpu_available constexpr const_aware_value_type& operator[](math::vec2s coords)       noexcept requires(!storage_type.is_const()) { return operator[](sizes().coords_to_index(coords)); }
 		utils_gpu_available constexpr const       value_type& at        (math::vec2s coords) const                                             { if (!validate_coords(coords)) { throw std::out_of_range{"Matrix access out of bounds."}; }; return at(sizes().coords_to_index(coords)); }

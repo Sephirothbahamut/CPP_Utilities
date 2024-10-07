@@ -19,4 +19,21 @@ namespace utils
 	// 	[](b&) {/*..*/},
 	// 	[](c&) {/*..*/}
 	// 	}, var);
+
+	namespace concepts
+		{
+		namespace details
+			{
+			//https://stackoverflow.com/questions/45892170/how-do-i-check-if-an-stdvariant-can-hold-a-certain-type
+			template<typename T, typename VARIANT_T>
+			struct is_variant_member;
+
+			template<typename T, typename... ALL_T>
+			struct is_variant_member<T, std::variant<ALL_T...>>
+				: public std::disjunction<std::is_same<T, ALL_T>...> {};
+			}
+
+		template <typename T, typename variant_T>
+		concept is_variant_member = details::is_variant_member<T, variant_T>::value;
+		}
 	}

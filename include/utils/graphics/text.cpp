@@ -8,7 +8,7 @@
 #include "../compilation/OS.h"
 #include "../math/transform2.h"
 #include "../math/geometry/shape/mixed.h"
-#include "../math/geometry/interactions/mixed.h"
+#include "../math/geometry/shape/transform/vertices.h"
 
 //TODO remove Utilities_MS dependency
 #include "../../../../../CPP_Utilities_MS/include/utils/MS/graphics/d2d.h"
@@ -352,7 +352,7 @@ namespace utils::graphics::text
 		for (auto& glyph : geometry_sink.glyphs)
 			{
 			utils::math::transform2 transform{.translation{baselineOriginX, baselineOriginY}}; 
-			utils::math::geometry::interactions::transform_self(glyph, transform);
+			glyph.transform_self(transform);
 			}
 		
 		//Emplace because this function may be called multiple times
@@ -447,7 +447,7 @@ namespace utils::graphics::text
 			{
 			// Calculate target buffer size (not including the zero terminator).
 			//CP_UTF8 fails cause reasons i guess
-			int len = MultiByteToWideChar(CP_UTF8, MB_ERR_INVALID_CHARS, in.c_str(), in.size(), NULL, 0);
+			int len = MultiByteToWideChar(CP_UTF8, MB_ERR_INVALID_CHARS, in.c_str(), static_cast<int>(in.size()), NULL, 0);
 			if (len == 0)
 				{
 				throw std::runtime_error("Invalid character sequence.");
@@ -455,7 +455,7 @@ namespace utils::graphics::text
 
 			out.resize(len);
 			// No error checking. We already know, that the conversion will succeed.
-			MultiByteToWideChar(CP_UTF8, MB_ERR_INVALID_CHARS, in.c_str(), in.size(), out.data(), out.size());
+			MultiByteToWideChar(CP_UTF8, MB_ERR_INVALID_CHARS, in.c_str(), static_cast<int>(in.size()), out.data(), static_cast<int>(out.size()));
 			}
 
 		return out;
