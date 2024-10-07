@@ -14,6 +14,9 @@ namespace utils::math::geometry
 	utils_gpu_available constexpr auto& shape_flag::transform_self(this       auto& self, const utils::math::transform2  & transform  ) noexcept
 		requires(!std::remove_cvref_t<decltype(self)>::storage_type.is_const())
 		{
-		return translate_self(rotate_self(scale_self(self, transform.scaling), transform.rotation), transform.translation);
+		self.scale_self    (transform.scaling    );
+		self.rotate_self   (transform.rotation   );
+		self.translate_self(transform.translation);
+		return self;
 		}
 	}

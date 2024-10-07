@@ -11,11 +11,11 @@ namespace utils::math::geometry::shape::generic
 	utils_gpu_available constexpr auto mixed<storage_type, ends>::bounding_box() const noexcept
 		{
 		const auto pieces{get_pieces()};
-		auto ret{return_types::bounding_box::create::inverse_infinite()};
+		auto ret{shape::aabb::create::inverse_infinite()};
 
 		pieces.for_each([&ret](const auto& piece)
 			{
-			const auto piece_bounding_box{interactions::bounding_box(piece)};
+			const auto piece_bounding_box{piece.bounding_box()};
 			ret.merge_self(piece_bounding_box);
 			});
 

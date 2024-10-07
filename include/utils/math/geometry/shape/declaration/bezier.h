@@ -49,6 +49,6 @@ namespace utils::math::geometry::shape
 	template <concepts::bezier T, storage::type desired_storage_type>
 	struct cast_storage_type<T, desired_storage_type>
 		{
-		using type = generic::bezier<desired_storage_type, T::ends, T::extent>;
+		using type = generic::bezier<desired_storage_type, T::extent, T::optional_ends>;
 		};
 	}

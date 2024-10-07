@@ -5,6 +5,7 @@
 #include "../../../memory.h"
 #include "../../../storage.h"
 #include "../../../math/math.h"
+#include "../../../math/angle.h"
 #include "../../../math/constants.h"
 #include "../../../compilation/gpu.h"
 #include "../../../template/optional.h"
@@ -18,12 +19,6 @@ namespace utils::math
 	using vec2f = vec<float, 2>;
 
 	struct transform2;
-
-	namespace angle
-		{
-		template <utils::math::concepts::undecorated_number T, utils::remove_reference_t<T> full_angle_value>
-		class base;
-		}
 	}
 
 namespace utils::math::geometry

@@ -28,7 +28,7 @@ namespace utils::math::geometry::sdf::details::bezier::_4pt
 
 		//lagrange positive real root upper bound
 		//see for example: https://doi.org/10.1016/j.jsc.2014.09.038
-		float upper_bound_lagrange5(float a0, float a1, float a2, float a3, float a4) 
+		inline float upper_bound_lagrange5(float a0, float a1, float a2, float a3, float a4) 
 			{
 			utils::math::vec4f coeffs1 = utils::math::vec4f(a0, a1, a2, a3);
 
@@ -56,7 +56,7 @@ namespace utils::math::geometry::sdf::details::bezier::_4pt
 			}
 
 		//lagrange upper bound applied to f(-x) to get lower bound
-		float lower_bound_lagrange5(float a0, float a1, float a2, float a3, float a4) 
+		inline float lower_bound_lagrange5(float a0, float a1, float a2, float a3, float a4)
 			{
 			//See comments of the shadertoy page suggesting to replace the commented function bodyy with this line.
 			const auto ret{-1.0f * upper_bound_lagrange5(-a0, a1, -a2, a3, -a4)};
@@ -87,7 +87,7 @@ namespace utils::math::geometry::sdf::details::bezier::_4pt
 			//return -max_max - max_max2;
 			}
 
-		utils::math::vec2f parametric_cub_bezier(float t, utils::math::vec2f p0, utils::math::vec2f p1, utils::math::vec2f p2, utils::math::vec2f p3) 
+		inline utils::math::vec2f parametric_cub_bezier(float t, utils::math::vec2f p0, utils::math::vec2f p1, utils::math::vec2f p2, utils::math::vec2f p3)
 			{
 			utils::math::vec2f a0 = (-p0 + p1 * 3.f - p2 * 3.f + p3);
 			utils::math::vec2f a1 = (p0 * 3.f - p1 * 6.f + p2 * 3.f);
@@ -97,7 +97,7 @@ namespace utils::math::geometry::sdf::details::bezier::_4pt
 			return (((a0 * t) + a1) * t + a2) * t + a3;
 			}
 
-		void sort_roots3(utils::math::vec3f& roots) 
+		inline void sort_roots3(utils::math::vec3f& roots)
 			{
 			utils::math::vec3f tmp;
 
@@ -108,7 +108,7 @@ namespace utils::math::geometry::sdf::details::bezier::_4pt
 			roots = tmp;
 			}
 
-		void sort_roots4(utils::math::vec4f& roots) 
+		inline void sort_roots4(utils::math::vec4f& roots)
 			{
 			utils::math::vec4f tmp;
 
@@ -126,7 +126,7 @@ namespace utils::math::geometry::sdf::details::bezier::_4pt
 			roots = tmp;
 			}
 
-		float eval_poly5(float a0, float a1, float a2, float a3, float a4, float x) 
+		inline float eval_poly5(float a0, float a1, float a2, float a3, float a4, float x)
 			{
 			const float f = ((((x + a4) * x + a3) * x + a2) * x + a1) * x + a0;
 
@@ -137,7 +137,7 @@ namespace utils::math::geometry::sdf::details::bezier::_4pt
 			//basically a variant of newton raphson which converges quicker and has bigger basins of convergence
 			//see http://mathworld.wolfram.com/HalleysMethod.html
 			//or https://en.wikipedia.org/wiki/Halley%27s_method
-		float halley_iteration5(float a0, float a1, float a2, float a3, float a4, float x) 
+		inline float halley_iteration5(float a0, float a1, float a2, float a3, float a4, float x)
 			{
 			float f = ((((x + a4) * x + a3) * x + a2) * x + a1) * x + a0;
 			float f1 = (((5.f * x + 4.f * a4) * x + 3.f * a3) * x + 2.f * a2) * x + a1;
@@ -146,7 +146,7 @@ namespace utils::math::geometry::sdf::details::bezier::_4pt
 			return x - (2.f * f * f1) / (2.f * f1 * f1 - f * f2);
 			}
 
-		float halley_iteration4(utils::math::vec4f coeffs, float x) 
+		inline float halley_iteration4(utils::math::vec4f coeffs, float x)
 			{
 			float f = (((x + coeffs[3]) * x + coeffs[2]) * x + coeffs[1]) * x + coeffs[0];
 			float f1 = ((4.f * x + 3.f * coeffs[3]) * x + 2.f * coeffs[2]) * x + coeffs[1];
@@ -157,7 +157,7 @@ namespace utils::math::geometry::sdf::details::bezier::_4pt
 
 		// Modified from http://tog.acm.org/resources/GraphicsGems/gems/Roots3And4.c
 		// Credits to Doublefresh for hinting there
-		int solve_quadric(utils::math::vec2f coeffs, utils::math::vecref2f roots) 
+		inline int solve_quadric(utils::math::vec2f coeffs, utils::math::vecref2f roots)
 			{
 			// normal form: x^2 + px + q = 0
 			float p = coeffs[1] / 2.f;
@@ -180,7 +180,7 @@ namespace utils::math::geometry::sdf::details::bezier::_4pt
 
 		//From Trisomie21
 		//But instead of his cancellation fix i'm using a newton iteration
-		int solve_cubic(utils::math::vec3f coeffs, utils::math::vecref3f r) 
+		inline int solve_cubic(utils::math::vec3f coeffs, utils::math::vecref3f r)
 			{
 			float a = coeffs[2];
 			float b = coeffs[1];
@@ -227,7 +227,7 @@ namespace utils::math::geometry::sdf::details::bezier::_4pt
 
 		// Modified from http://tog.acm.org/resources/GraphicsGems/gems/Roots3And4.c
 		// Credits to Doublefresh for hinting there
-		int solve_quartic(utils::math::vec4f coeffs, utils::math::vecref4f s) 
+		inline int solve_quartic(utils::math::vec4f coeffs, utils::math::vecref4f s)
 			{
 			float a = coeffs[3];
 			float b = coeffs[2];
@@ -342,7 +342,7 @@ namespace utils::math::geometry::sdf::details::bezier::_4pt
 		//I'm solving a cubic equation to get the intersection count
 		//of a ray from the current point to infinity and parallel to the x axis
 		//Also i'm computing the intersection count with the tangent in the end points of the curve
-		float cubic_bezier_sign(utils::math::vec2f uv, utils::math::vec2f p0, utils::math::vec2f p1, utils::math::vec2f p2, utils::math::vec2f p3) 
+			inline float cubic_bezier_sign(utils::math::vec2f uv, utils::math::vec2f p0, utils::math::vec2f p1, utils::math::vec2f p2, utils::math::vec2f p3)
 			{
 			float cu = (-p0.y() + 3.f * p1.y() - 3.f * p2.y() + p3.y());
 			float qu = (3.f * p0.y() - 6.f * p1.y() + 3.f * p2.y());
@@ -425,7 +425,7 @@ namespace utils::math::geometry::sdf::details::bezier::_4pt
 			float t;
 			};
 
-		distance_closest_and_t cubic_bezier_dis(utils::math::vec2f uv, utils::math::vec2f p0, utils::math::vec2f p1, utils::math::vec2f p2, utils::math::vec2f p3)
+		inline distance_closest_and_t cubic_bezier_dis(utils::math::vec2f uv, utils::math::vec2f p0, utils::math::vec2f p1, utils::math::vec2f p2, utils::math::vec2f p3)
 			{
 			//switch points when near to end point to minimize numerical error
 			//only needed when control point(s) very far away

@@ -1,12 +1,64 @@
 #pragma once
 
-#include "../../interactions/base_types.h"
+#include "../../../../concepts.h"
+#include "../../../../compilation/gpu.h"
+
+#include "../../../angle.h"
+#include "../../../transform2.h"
+
+#include "../point.h"
+#include "../aabb.h"
 
 namespace utils::math::geometry::sdf
 	{
-	using namespace interactions::return_types;
-	/*
-	using interactions::return_types::side;
+	class side
+		{
+		public:
+			constexpr side() = default; // No need to specify utils_gpu_available for defaults
+			utils_gpu_available constexpr side(float value) : _value{value < -math::constants::epsilonf ? -1.f : value > math::constants::epsilonf ? 1.f : 0.f} {}
+
+			struct create : ::utils::oop::non_constructible
+				{
+				utils_gpu_available static consteval side left      () noexcept { return {-1.f}; }
+				utils_gpu_available static consteval side right     () noexcept { return { 1.f}; }
+				utils_gpu_available static consteval side coincident() noexcept { return { 0.f}; }
+
+				utils_gpu_available static consteval side inside () noexcept { return left (); }
+				utils_gpu_available static consteval side outside() noexcept { return right(); }
+				};
+
+			utils_gpu_available constexpr bool is_left      (float epsilon = 0.f) const noexcept { return _value <  -epsilon; }
+			utils_gpu_available constexpr bool is_coincident(float epsilon = 0.f) const noexcept { return _value >= -epsilon && _value <= epsilon; }
+			utils_gpu_available constexpr bool is_right     (float epsilon = 0.f) const noexcept { return _value >   epsilon; }
+
+			utils_gpu_available constexpr bool is_outside(float epsilon = 0.f) const noexcept { return  is_right  (epsilon); }
+			utils_gpu_available constexpr bool is_inside (float epsilon = 0.f) const noexcept { return !is_outside(epsilon); }
+
+			utils_gpu_available constexpr bool is_exactly_left      () const noexcept { return is_left(0.f); }
+			utils_gpu_available constexpr bool is_exactly_coincident() const noexcept { return is_coincident(0.f); }
+			utils_gpu_available constexpr bool is_exactly_right     () const noexcept { return is_right(0.f); }
+			utils_gpu_available constexpr bool is_approx_left       () const noexcept { return is_left(utils::math::constants::epsilonf); }
+			utils_gpu_available constexpr bool is_approx_coincident () const noexcept { return is_coincident(utils::math::constants::epsilonf); }
+			utils_gpu_available constexpr bool is_approx_right      () const noexcept { return is_right(utils::math::constants::epsilonf); }
+
+			utils_gpu_available constexpr bool is_exactly_inside () const noexcept { return is_inside (0.f); }
+			utils_gpu_available constexpr bool is_exactly_outside() const noexcept { return is_outside(0.f); }
+			utils_gpu_available constexpr bool is_approx_inside  () const noexcept { return is_inside (utils::math::constants::epsilonf); }
+			utils_gpu_available constexpr bool is_approx_outside () const noexcept { return is_outside(utils::math::constants::epsilonf); }
+
+			
+			utils_gpu_available constexpr float value    () const noexcept { return   _value; }
+			/// <summary> Returns non-zero value.</summary>
+			utils_gpu_available constexpr float sign     () const noexcept { return _value < 0.f ? -1.f : 1.f; }
+			utils_gpu_available constexpr side  operator-() const noexcept { return {-_value}; }
+
+		private:
+			float _value{0.f};
+		};
+	utils_gpu_available constexpr float  operator* (const float& f, const side& side) noexcept { return f * side.sign(); }
+	utils_gpu_available constexpr float& operator*=(      float& f, const side& side) noexcept { return f = f * side.sign(); }
+	utils_gpu_available constexpr bool   operator==(const side & a, const side& b   ) noexcept { return (a.is_left() && b.is_left()) || (a.is_right() && b.is_right()) || (a.is_approx_coincident() && b.is_approx_coincident()); }
+	utils_gpu_available constexpr bool   operator==(const float& f, const side& side) noexcept { return (math::sign(f) == math::sign(side.value())) || (f == 0.f && side.value() == 0.f); }
 
 	struct signed_distance
 		{
@@ -133,5 +185,5 @@ namespace utils::math::geometry::sdf
 			if (other.distance < distance) { (*this) = other; }
 			return *this;
 			}
-		};*/
+		};
 	}

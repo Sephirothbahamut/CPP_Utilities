@@ -165,20 +165,20 @@ namespace utils::math
 #pragma region Proxies
 	#pragma region Position
 		template <bool is_const>
-		class proxy_position;
+		class proxy_position_t;
 		template <bool is_const>
-		class proxy_x
+		class proxy_x_t
 			{
 			template <typename T2>
 			friend struct rect;
-			friend class proxy_position<is_const>;
+			friend class proxy_position_t<is_const>;
 			using rect_t = std::conditional_t<is_const, const self_t, self_t>;
 
 			public:
 				utils_gpu_available constexpr operator value_type () const noexcept { return r.ll(); }
 				utils_gpu_available constexpr operator value_type&() noexcept requires(!is_const) { return utils::remove_reference_v(r.ll()); }
 
-				utils_gpu_available constexpr proxy_x& operator=(const value_type& new_value) noexcept
+				utils_gpu_available constexpr proxy_x_t& operator=(const value_type& new_value) noexcept
 					requires(!is_const)
 					{
 					value_type previous_width{r.width()};
@@ -192,28 +192,28 @@ namespace utils::math
 				utils_gpu_available constexpr value_type operator*(const value_type& factor) const noexcept { return static_cast<value_type>(*this) * factor; }
 				utils_gpu_available constexpr value_type operator/(const value_type& factor) const noexcept { return static_cast<value_type>(*this) / factor; }
 
-				utils_gpu_available constexpr proxy_x& operator+=(const value_type& delta ) noexcept requires(!is_const) { return (*this) = operator+(delta ); }
-				utils_gpu_available constexpr proxy_x& operator-=(const value_type& delta ) noexcept requires(!is_const) { return (*this) = operator-(delta ); }
-				utils_gpu_available constexpr proxy_x& operator*=(const value_type& factor) noexcept requires(!is_const) { return (*this) = operator*(factor); }
-				utils_gpu_available constexpr proxy_x& operator/=(const value_type& factor) noexcept requires(!is_const) { return (*this) = operator/(factor); }
+				utils_gpu_available constexpr proxy_x_t& operator+=(const value_type& delta ) noexcept requires(!is_const) { return (*this) = operator+(delta ); }
+				utils_gpu_available constexpr proxy_x_t& operator-=(const value_type& delta ) noexcept requires(!is_const) { return (*this) = operator-(delta ); }
+				utils_gpu_available constexpr proxy_x_t& operator*=(const value_type& factor) noexcept requires(!is_const) { return (*this) = operator*(factor); }
+				utils_gpu_available constexpr proxy_x_t& operator/=(const value_type& factor) noexcept requires(!is_const) { return (*this) = operator/(factor); }
 
 			private:
-				utils_gpu_available constexpr proxy_x(rect_t& r) : r{r} {}
+				utils_gpu_available constexpr proxy_x_t(rect_t& r) : r{r} {}
 				rect_t& r;
 			};
 		template <bool is_const>
-		class proxy_y
+		class proxy_y_t
 			{
 			template <typename T2>
 			friend struct rect;
-			friend class proxy_position<is_const>;
+			friend class proxy_position_t<is_const>;
 			using rect_t = std::conditional_t<is_const, const self_t, self_t>;
 
 			public:
 				utils_gpu_available constexpr operator value_type () const noexcept { return r.up(); }
 				utils_gpu_available constexpr operator value_type&() noexcept requires(!is_const) { return utils::remove_reference_v(r.up()); }
 
-				utils_gpu_available constexpr proxy_y& operator=(const value_type& new_value) noexcept
+				utils_gpu_available constexpr proxy_y_t& operator=(const value_type& new_value) noexcept
 					requires(!is_const)
 					{
 					value_type previous_height{r.height()};
@@ -227,30 +227,30 @@ namespace utils::math
 				utils_gpu_available constexpr value_type operator*(const value_type& factor) const noexcept { return static_cast<value_type>(*this) * factor; }
 				utils_gpu_available constexpr value_type operator/(const value_type& factor) const noexcept { return static_cast<value_type>(*this) / factor; }
 
-				utils_gpu_available constexpr proxy_y& operator+=(const value_type& delta ) noexcept requires(!is_const) { return (*this) = operator+(delta ); }
-				utils_gpu_available constexpr proxy_y& operator-=(const value_type& delta ) noexcept requires(!is_const) { return (*this) = operator-(delta ); }
-				utils_gpu_available constexpr proxy_y& operator*=(const value_type& factor) noexcept requires(!is_const) { return (*this) = operator*(factor); }
-				utils_gpu_available constexpr proxy_y& operator/=(const value_type& factor) noexcept requires(!is_const) { return (*this) = operator/(factor); }
+				utils_gpu_available constexpr proxy_y_t& operator+=(const value_type& delta ) noexcept requires(!is_const) { return (*this) = operator+(delta ); }
+				utils_gpu_available constexpr proxy_y_t& operator-=(const value_type& delta ) noexcept requires(!is_const) { return (*this) = operator-(delta ); }
+				utils_gpu_available constexpr proxy_y_t& operator*=(const value_type& factor) noexcept requires(!is_const) { return (*this) = operator*(factor); }
+				utils_gpu_available constexpr proxy_y_t& operator/=(const value_type& factor) noexcept requires(!is_const) { return (*this) = operator/(factor); }
 
 			private:
-				utils_gpu_available constexpr proxy_y(rect_t& r) : r{r} {}
+				utils_gpu_available constexpr proxy_y_t(rect_t& r) : r{r} {}
 				rect_t& r;
 			};
 		template <bool is_const>
-		class proxy_position
+		class proxy_position_t
 			{
 			template <typename T2>
 			friend struct rect;
 			using rect_t = std::conditional_t<is_const, const self_t, self_t>;
 
 			public:
-				proxy_x<is_const> x;
-				proxy_y<is_const> y;
+				proxy_x_t<is_const> x;
+				proxy_y_t<is_const> y;
 
 				utils_gpu_available constexpr operator vertex_owner() const noexcept { return {r.ul()}; }
 				utils_gpu_available constexpr operator vertex_observer() noexcept requires(!is_const) { return r.ul(); }
 
-				utils_gpu_available constexpr proxy_position& operator=(const vertex_owner& new_value) noexcept
+				utils_gpu_available constexpr proxy_position_t& operator=(const vertex_owner& new_value) noexcept
 					requires(!is_const)
 					{
 					x = new_value.x();
@@ -263,38 +263,38 @@ namespace utils::math
 				utils_gpu_available constexpr vertex_owner operator*(const vertex_owner& factor) const noexcept { return static_cast<vertex_owner>(*this) * factor; }
 				utils_gpu_available constexpr vertex_owner operator/(const vertex_owner& factor) const noexcept { return static_cast<vertex_owner>(*this) / factor; }
 
-				utils_gpu_available constexpr proxy_position& operator+=(const vertex_owner& delta ) noexcept requires(!is_const) { return (*this) = operator+(delta ); }
-				utils_gpu_available constexpr proxy_position& operator-=(const vertex_owner& delta ) noexcept requires(!is_const) { return (*this) = operator-(delta ); }
-				utils_gpu_available constexpr proxy_position& operator*=(const vertex_owner& factor) noexcept requires(!is_const) { return (*this) = operator*(factor); }
-				utils_gpu_available constexpr proxy_position& operator/=(const vertex_owner& factor) noexcept requires(!is_const) { return (*this) = operator/(factor); }
+				utils_gpu_available constexpr proxy_position_t& operator+=(const vertex_owner& delta ) noexcept requires(!is_const) { return (*this) = operator+(delta ); }
+				utils_gpu_available constexpr proxy_position_t& operator-=(const vertex_owner& delta ) noexcept requires(!is_const) { return (*this) = operator-(delta ); }
+				utils_gpu_available constexpr proxy_position_t& operator*=(const vertex_owner& factor) noexcept requires(!is_const) { return (*this) = operator*(factor); }
+				utils_gpu_available constexpr proxy_position_t& operator/=(const vertex_owner& factor) noexcept requires(!is_const) { return (*this) = operator/(factor); }
 
 			private:
-				utils_gpu_available constexpr proxy_position(rect_t& r) : x{r}, y{r}, r{r} {}
+				utils_gpu_available constexpr proxy_position_t(rect_t& r) : x{r}, y{r}, r{r} {}
 				rect_t& r;
 			};
 	#pragma endregion Position
 	#pragma region Size
 		template <bool is_const>
-		class proxy_size;
+		class proxy_size_t;
 		template <bool is_const>
-		class proxy_width
+		class proxy_width_t
 			{
 			template <typename T2>
 			friend struct rect;
-			friend class proxy_size<is_const>;
+			friend class proxy_size_t<is_const>;
 			using rect_t = std::conditional_t<is_const, const self_t, self_t>;
 
 			public:
 				utils_gpu_available constexpr operator value_type() const noexcept { return r.rr() - r.ll(); }
 
-				utils_gpu_available constexpr proxy_width& operator=(const value_type& new_value) noexcept
+				utils_gpu_available constexpr proxy_width_t& operator=(const value_type& new_value) noexcept
 					requires(!is_const)
 					{
 					r.rr() = r.ll() + new_value;
 					return *this;
 					}
 
-				utils_gpu_available constexpr proxy_width& resize(const utils::alignment::horizontal& anchor, const value_type& new_value) noexcept
+				utils_gpu_available constexpr proxy_width_t& resize(const utils::alignment::horizontal& anchor, const value_type& new_value) noexcept
 					requires(!is_const)
 					{
 					switch (anchor)
@@ -321,7 +321,7 @@ namespace utils::math
 					return *this;
 					}
 
-				utils_gpu_available constexpr proxy_width& scale(const utils::alignment::horizontal& anchor, const value_type& factor) noexcept
+				utils_gpu_available constexpr proxy_width_t& scale(const utils::alignment::horizontal& anchor, const value_type& factor) noexcept
 					requires(!is_const)
 					{
 					return resize(anchor, static_cast<value_type>(*this) * factor);
@@ -332,34 +332,34 @@ namespace utils::math
 				utils_gpu_available constexpr value_type operator*(const value_type& factor) const noexcept { return static_cast<value_type>(*this) * factor; }
 				utils_gpu_available constexpr value_type operator/(const value_type& factor) const noexcept { return static_cast<value_type>(*this) / factor; }
 
-				utils_gpu_available constexpr proxy_width& operator+=(const value_type& delta ) noexcept requires(!is_const) { return (*this) = operator+(delta ); }
-				utils_gpu_available constexpr proxy_width& operator-=(const value_type& delta ) noexcept requires(!is_const) { return (*this) = operator-(delta ); }
-				utils_gpu_available constexpr proxy_width& operator*=(const value_type& factor) noexcept requires(!is_const) { return (*this) = operator*(factor); }
-				utils_gpu_available constexpr proxy_width& operator/=(const value_type& factor) noexcept requires(!is_const) { return (*this) = operator/(factor); }
+				utils_gpu_available constexpr proxy_width_t& operator+=(const value_type& delta ) noexcept requires(!is_const) { return (*this) = operator+(delta ); }
+				utils_gpu_available constexpr proxy_width_t& operator-=(const value_type& delta ) noexcept requires(!is_const) { return (*this) = operator-(delta ); }
+				utils_gpu_available constexpr proxy_width_t& operator*=(const value_type& factor) noexcept requires(!is_const) { return (*this) = operator*(factor); }
+				utils_gpu_available constexpr proxy_width_t& operator/=(const value_type& factor) noexcept requires(!is_const) { return (*this) = operator/(factor); }
 
 			private:
-				utils_gpu_available constexpr proxy_width(rect_t& r) : r{r} {}
+				utils_gpu_available constexpr proxy_width_t(rect_t& r) : r{r} {}
 				rect_t& r;
 			};
 		template <bool is_const>
-		class proxy_height 
+		class proxy_height_t 
 			{
 			template <typename T2>
 			friend struct rect;
-			friend class proxy_size<is_const>;
+			friend class proxy_size_t<is_const>;
 			using rect_t = std::conditional_t<is_const, const self_t, self_t>;
 
 			public:
 				utils_gpu_available constexpr operator value_type() const noexcept { return r.dw() - r.up(); }
 
-				utils_gpu_available constexpr proxy_height& operator=(const value_type& new_value) noexcept
+				utils_gpu_available constexpr proxy_height_t& operator=(const value_type& new_value) noexcept
 					requires(!is_const)
 					{
 					r.dw() = r.up() + new_value;
 					return *this;
 					}
 
-				utils_gpu_available constexpr proxy_height& resize(const utils::alignment::vertical& anchor, const value_type& new_value) noexcept
+				utils_gpu_available constexpr proxy_height_t& resize(const utils::alignment::vertical& anchor, const value_type& new_value) noexcept
 					requires(!is_const)
 					{
 					switch (anchor)
@@ -386,7 +386,7 @@ namespace utils::math
 					return *this;
 					}
 
-				utils_gpu_available constexpr proxy_height& scale(const utils::alignment::vertical& anchor, const value_type& factor) noexcept
+				utils_gpu_available constexpr proxy_height_t& scale(const utils::alignment::vertical& anchor, const value_type& factor) noexcept
 					requires(!is_const)
 					{
 					return resize(anchor, static_cast<value_type>(*this) * factor);
@@ -397,36 +397,37 @@ namespace utils::math
 				utils_gpu_available constexpr value_type operator*(const value_type& factor) const noexcept { return static_cast<value_type>(*this) * factor; }
 				utils_gpu_available constexpr value_type operator/(const value_type& factor) const noexcept { return static_cast<value_type>(*this) / factor; }
 				
-				utils_gpu_available constexpr proxy_height& operator+=(const value_type& delta ) noexcept requires(!is_const) { return (*this) = operator+(delta ); }
-				utils_gpu_available constexpr proxy_height& operator-=(const value_type& delta ) noexcept requires(!is_const) { return (*this) = operator-(delta ); }
-				utils_gpu_available constexpr proxy_height& operator*=(const value_type& factor) noexcept requires(!is_const) { return (*this) = operator*(factor); }
-				utils_gpu_available constexpr proxy_height& operator/=(const value_type& factor) noexcept requires(!is_const) { return (*this) = operator/(factor); }
+				utils_gpu_available constexpr proxy_height_t& operator+=(const value_type& delta ) noexcept requires(!is_const) { return (*this) = operator+(delta ); }
+				utils_gpu_available constexpr proxy_height_t& operator-=(const value_type& delta ) noexcept requires(!is_const) { return (*this) = operator-(delta ); }
+				utils_gpu_available constexpr proxy_height_t& operator*=(const value_type& factor) noexcept requires(!is_const) { return (*this) = operator*(factor); }
+				utils_gpu_available constexpr proxy_height_t& operator/=(const value_type& factor) noexcept requires(!is_const) { return (*this) = operator/(factor); }
 
 			private:
-				utils_gpu_available constexpr proxy_height(rect_t& r) : r{r} {}
+				utils_gpu_available constexpr proxy_height_t(rect_t& r) : r{r} {}
 				rect_t& r;
 			};
 		template <bool is_const>
-		class proxy_size
+		class proxy_size_t
 			{
 			template <typename T2>
 			friend struct rect;
 			using rect_t = std::conditional_t<is_const, const self_t, self_t>;
 
 			public:
-				proxy_width<is_const> w;
-				proxy_height<is_const> h;
+				proxy_width_t<is_const> w;
+				proxy_height_t<is_const> h;
 
-				utils_gpu_available constexpr operator vertex_owner() const noexcept { return r.dr() - r.ul(); }
+				utils_gpu_available constexpr operator  vertex_owner() const noexcept { return r.dr() - r.ul(); }
+				utils_gpu_available constexpr vertex_owner operator*() const noexcept { return r.dr() - r.ul(); }
 
-				utils_gpu_available constexpr proxy_size& operator=(const vertex_owner& new_value) noexcept requires(!is_const)
+				utils_gpu_available constexpr proxy_size_t& operator=(const vertex_owner& new_value) noexcept requires(!is_const)
 					{
 					w = new_value.x();
 					h = new_value.y();
 					return *this;
 					}
 
-				utils_gpu_available constexpr proxy_size& resize(const utils::alignment& anchor, const vertex_owner& new_value) noexcept
+				utils_gpu_available constexpr proxy_size_t& resize(const utils::alignment& anchor, const vertex_owner& new_value) noexcept
 					requires(!is_const)
 					{
 					w.resize(anchor.horizontal_alignment, new_value.x());
@@ -434,7 +435,7 @@ namespace utils::math
 					return *this;
 					}
 
-				utils_gpu_available constexpr proxy_size& scale(const utils::alignment& anchor, const vertex_owner& factor) noexcept
+				utils_gpu_available constexpr proxy_size_t& scale(const utils::alignment& anchor, const vertex_owner& factor) noexcept
 					requires(!is_const)
 					{
 					return resize(anchor, static_cast<vertex_owner>(*this) * factor);
@@ -445,13 +446,13 @@ namespace utils::math
 				utils_gpu_available constexpr vertex_owner operator*(const vertex_owner& factor) const noexcept { return static_cast<vertex_owner>(*this) * factor; }
 				utils_gpu_available constexpr vertex_owner operator/(const vertex_owner& factor) const noexcept { return static_cast<vertex_owner>(*this) / factor; }
 				
-				utils_gpu_available constexpr proxy_size& operator+=(const vertex_owner& delta ) noexcept requires(!is_const) { return (*this) = operator+(delta ); }
-				utils_gpu_available constexpr proxy_size& operator-=(const vertex_owner& delta ) noexcept requires(!is_const) { return (*this) = operator-(delta ); }
-				utils_gpu_available constexpr proxy_size& operator*=(const vertex_owner& factor) noexcept requires(!is_const) { return (*this) = operator*(factor); }
-				utils_gpu_available constexpr proxy_size& operator/=(const vertex_owner& factor) noexcept requires(!is_const) { return (*this) = operator/(factor); }
+				utils_gpu_available constexpr proxy_size_t& operator+=(const vertex_owner& delta ) noexcept requires(!is_const) { return (*this) = operator+(delta ); }
+				utils_gpu_available constexpr proxy_size_t& operator-=(const vertex_owner& delta ) noexcept requires(!is_const) { return (*this) = operator-(delta ); }
+				utils_gpu_available constexpr proxy_size_t& operator*=(const vertex_owner& factor) noexcept requires(!is_const) { return (*this) = operator*(factor); }
+				utils_gpu_available constexpr proxy_size_t& operator/=(const vertex_owner& factor) noexcept requires(!is_const) { return (*this) = operator/(factor); }
 
 			private:
-				proxy_size(rect_t& r) : w{r}, h{r}, r{r} {}
+				proxy_size_t(rect_t& r) : w{r}, h{r}, r{r} {}
 				rect_t& r;
 			};
 	#pragma endregion Size
@@ -461,28 +462,34 @@ namespace utils::math
 
 #pragma region Accessors
 		// Corners
-		utils_gpu_available constexpr vertex_owner    ul() const noexcept { return {ll(), up()}; }
-		utils_gpu_available constexpr vertex_owner    ur() const noexcept { return {rr(), up()}; }
-		utils_gpu_available constexpr vertex_owner    dr() const noexcept { return {rr(), dw()}; }
-		utils_gpu_available constexpr vertex_owner    dl() const noexcept { return {ll(), dw()}; }
-		utils_gpu_available constexpr vertex_observer ul()       noexcept { return {ll(), up()}; }
-		utils_gpu_available constexpr vertex_observer ur()       noexcept { return {rr(), up()}; }
-		utils_gpu_available constexpr vertex_observer dr()       noexcept { return {rr(), dw()}; }
-		utils_gpu_available constexpr vertex_observer dl()       noexcept { return {ll(), dw()}; }
+		utils_gpu_available constexpr const vertex_owner ul() const noexcept { return {ll(), up()}; }
+		utils_gpu_available constexpr const vertex_owner ur() const noexcept { return {rr(), up()}; }
+		utils_gpu_available constexpr const vertex_owner dr() const noexcept { return {rr(), dw()}; }
+		utils_gpu_available constexpr const vertex_owner dl() const noexcept { return {ll(), dw()}; }
+		utils_gpu_available constexpr vertex_observer    ul()       noexcept { return {ll(), up()}; }
+		utils_gpu_available constexpr vertex_observer    ur()       noexcept { return {rr(), up()}; }
+		utils_gpu_available constexpr vertex_observer    dr()       noexcept { return {rr(), dw()}; }
+		utils_gpu_available constexpr vertex_observer    dl()       noexcept { return {ll(), dw()}; }
 
 		// Pos-size
-		utils_gpu_available constexpr proxy_x       <true                              > x () const noexcept { return {*this}; }
-		utils_gpu_available constexpr proxy_y       <true                              > y () const noexcept { return {*this}; }
-		utils_gpu_available constexpr proxy_width   <true                              > w () const noexcept { return {*this}; }
-		utils_gpu_available constexpr proxy_height  <true                              > h () const noexcept { return {*this}; }
-		utils_gpu_available constexpr proxy_position<true                              > p () const noexcept { return {*this}; }
-		utils_gpu_available constexpr proxy_size    <true                              > s () const noexcept { return {*this}; }
-		utils_gpu_available constexpr proxy_x       <storage_t::storage_type.is_const()> x () noexcept { return {*this}; }
-		utils_gpu_available constexpr proxy_y       <storage_t::storage_type.is_const()> y () noexcept { return {*this}; }
-		utils_gpu_available constexpr proxy_width   <storage_t::storage_type.is_const()> w () noexcept { return {*this}; }
-		utils_gpu_available constexpr proxy_height  <storage_t::storage_type.is_const()> h () noexcept { return {*this}; }
-		utils_gpu_available constexpr proxy_position<storage_t::storage_type.is_const()> p () noexcept { return {*this}; }
-		utils_gpu_available constexpr proxy_size    <storage_t::storage_type.is_const()> s () noexcept { return {*this}; }
+		utils_gpu_available constexpr const value_type                                           x() const noexcept { return {ll()}; }
+		utils_gpu_available constexpr const value_type                                           y() const noexcept { return {up()}; }
+		utils_gpu_available constexpr const value_type                                           w() const noexcept { return {rr() - ll()}; }
+		utils_gpu_available constexpr const value_type                                           h() const noexcept { return {dw() - up()}; }
+		utils_gpu_available constexpr const vertex_owner                                         p() const noexcept { return {ul()}; }
+		utils_gpu_available constexpr const vertex_owner                                         s() const noexcept { return {dr() - ul()}; }
+		utils_gpu_available constexpr proxy_x_t       <true                              > proxy_x() const noexcept { return {*this}; }
+		utils_gpu_available constexpr proxy_y_t       <true                              > proxy_y() const noexcept { return {*this}; }
+		utils_gpu_available constexpr proxy_width_t   <true                              > proxy_w() const noexcept { return {*this}; }
+		utils_gpu_available constexpr proxy_height_t  <true                              > proxy_h() const noexcept { return {*this}; }
+		utils_gpu_available constexpr proxy_position_t<true                              > proxy_p() const noexcept { return {*this}; }
+		utils_gpu_available constexpr proxy_size_t    <true                              > proxy_s() const noexcept { return {*this}; }
+		utils_gpu_available constexpr proxy_x_t       <storage_t::storage_type.is_const()> proxy_x()       noexcept { return {*this}; }
+		utils_gpu_available constexpr proxy_y_t       <storage_t::storage_type.is_const()> proxy_y()       noexcept { return {*this}; }
+		utils_gpu_available constexpr proxy_width_t   <storage_t::storage_type.is_const()> proxy_w()       noexcept { return {*this}; }
+		utils_gpu_available constexpr proxy_height_t  <storage_t::storage_type.is_const()> proxy_h()       noexcept { return {*this}; }
+		utils_gpu_available constexpr proxy_position_t<storage_t::storage_type.is_const()> proxy_p()       noexcept { return {*this}; }
+		utils_gpu_available constexpr proxy_size_t    <storage_t::storage_type.is_const()> proxy_s()       noexcept { return {*this}; }
 
 		// Center
 		value_type   centre_x()        const noexcept { return ll() + (w() / value_type{2}); }
@@ -513,16 +520,21 @@ namespace utils::math
 		utils_gpu_available constexpr auto bottom_left ()       noexcept { return dl(); }
 
 		// Pos-size
-		utils_gpu_available constexpr auto height  () const noexcept { return h(); }
-		utils_gpu_available constexpr auto width   () const noexcept { return w(); }
-		utils_gpu_available constexpr auto size    () const noexcept { return s(); }
-		utils_gpu_available constexpr auto pos     () const noexcept { return p(); }
-		utils_gpu_available constexpr auto position() const noexcept { return p(); }
-		utils_gpu_available constexpr auto height  ()       noexcept { return h(); }
-		utils_gpu_available constexpr auto width   ()       noexcept { return w(); }
-		utils_gpu_available constexpr auto size    ()       noexcept { return s(); }
-		utils_gpu_available constexpr auto pos     ()       noexcept { return p(); }
-		utils_gpu_available constexpr auto position()       noexcept { return p(); }
+		utils_gpu_available constexpr auto       height  () const noexcept { return       h(); }
+		utils_gpu_available constexpr auto       width   () const noexcept { return       w(); }
+		utils_gpu_available constexpr auto       size    () const noexcept { return       s(); }
+		utils_gpu_available constexpr auto       pos     () const noexcept { return       p(); }
+		utils_gpu_available constexpr auto       position() const noexcept { return       p(); }
+		utils_gpu_available constexpr auto proxy_height  () const noexcept { return proxy_h(); }
+		utils_gpu_available constexpr auto proxy_width   () const noexcept { return proxy_w(); }
+		utils_gpu_available constexpr auto proxy_size    () const noexcept { return proxy_s(); }
+		utils_gpu_available constexpr auto proxy_pos     () const noexcept { return proxy_p(); }
+		utils_gpu_available constexpr auto proxy_position() const noexcept { return proxy_p(); }
+		utils_gpu_available constexpr auto proxy_height  ()       noexcept { return proxy_h(); }
+		utils_gpu_available constexpr auto proxy_width   ()       noexcept { return proxy_w(); }
+		utils_gpu_available constexpr auto proxy_size    ()       noexcept { return proxy_s(); }
+		utils_gpu_available constexpr auto proxy_pos     ()       noexcept { return proxy_p(); }
+		utils_gpu_available constexpr auto proxy_position()       noexcept { return proxy_p(); }
 #pragma endregion Aliases
 
 		utils_gpu_available constexpr bool contains(const concepts::vec_size<2> auto& point) const noexcept { return point.x() >= ll() && point.x() <= rr() && point.y() >= up() && point.y() <= dw(); }

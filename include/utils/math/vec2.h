@@ -52,27 +52,27 @@ namespace utils::math
 	namespace details
 		{
 		template<typename T, template <typename, size_t> class unspecialized_derived_T>
-		class utils_oop_empty_bases vec_sized_specialization<T, 2, unspecialized_derived_T> : utils::math::geometry::shape_flag
+		class utils_oop_empty_bases vec_sized_specialization<T, 2, unspecialized_derived_T> : public utils::math::geometry::shape_flag
 			{
 			private:
 				using self_t = unspecialized_derived_T<T, 2>;
 				utils_gpu_available constexpr const self_t& self() const noexcept { return static_cast<const self_t&>(*this); }
 				utils_gpu_available constexpr       self_t& self()       noexcept { return static_cast<      self_t&>(*this); }
-
+	
 			public:
 				using value_type = typename T;
 				template <typename T, size_t size>
 				using unspecialized_derived_t = unspecialized_derived_T<T, size>;
 				using nonref_value_type = typename utils::remove_reference_t<value_type>;
 				using nonref_self_t     = unspecialized_derived_t<nonref_value_type, 2>;
-
+	
 				utils_gpu_available  static constexpr self_t from(const math::angle::concepts::angle auto& angle, T magnitude = 1) noexcept
 					{
 					auto x{angle.cos() * magnitude};
 					auto y{angle.sin() * magnitude};
 					return self_t{x, y};
 					}
-
+	
 				template <typename T = float, T f_a_v = 360.f>
 				utils_gpu_available constexpr math::angle::base<T, f_a_v> angle() const noexcept { return math::angle::base<T, f_a_v>::atan2(self().y(), self().x()); }
 				
@@ -104,7 +104,7 @@ namespace utils::math
 						self().x() * nngle.sin() + self().y() * nngle.cos()
 						};
 					}
-
+	
 				utils_gpu_available constexpr self_t& operator+=(const math::angle::concepts::angle auto& angle) noexcept 
 					{
 					assert(this == &self());
@@ -115,15 +115,14 @@ namespace utils::math
 					{
 					return self() = {angle.cos() * self().magnitude(), angle.sin() * self().magnitude()}; 
 					}
-
+	
 				utils_gpu_available constexpr nonref_self_t perpendicular_right           () const noexcept { return { self().y(), -self().x()}; }
 				utils_gpu_available constexpr nonref_self_t perpendicular_left            () const noexcept { return {-self().y(),  self().x()}; }
 				utils_gpu_available constexpr nonref_self_t perpendicular_clockwise       () const noexcept { return perpendicular_right(); }
 				utils_gpu_available constexpr nonref_self_t perpendicular_counterclockwise() const noexcept { return perpendicular_left (); }
-
+	
 				#include "geometry/shape/sdf/common_declaration.inline.h"
 				#include "geometry/shape/bounds/common_declaration.inline.h"
-				#include "geometry/shape/transform/common_declaration.inline.h"
 			};
 		}
 	}

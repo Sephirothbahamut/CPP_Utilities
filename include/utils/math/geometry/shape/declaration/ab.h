@@ -68,6 +68,6 @@ namespace utils::math::geometry::shape
 	template <concepts::ab T, storage::type desired_storage_type>
 	struct cast_storage_type<T, desired_storage_type>
 		{
-		using type = generic::ab<desired_storage_type, T::ends>;
+		using type = generic::ab<desired_storage_type, T::optional_ends>;
 		};
 	}

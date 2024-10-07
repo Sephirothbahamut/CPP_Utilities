@@ -3,26 +3,32 @@
 #include "common.h"
 #include "../point.h"
 
-namespace utils::math::details
+namespace utils::math
 	{
-	template<typename T, template <typename, size_t> class unspecialized_derived_T>
-	utils_gpu_available constexpr auto& vec_sized_specialization<T, 2, unspecialized_derived_T>::scale_self(this auto& self, const float& scaling) noexcept
-		requires(!std::remove_cvref_t<decltype(self)>::storage_type.is_const())
+	template<typename T, size_t size>
+	utils_gpu_available constexpr auto& vec<T, size>::scale_self(const float& scaling) noexcept
 		{
-		return self *= scaling;
+		if constexpr (std::same_as<value_type, float> && extent == 2)
+			{
+			return *this *= scaling;
+			}
 		}
 
-	template<typename T, template <typename, size_t> class unspecialized_derived_T>
-	utils_gpu_available constexpr auto& vec_sized_specialization<T, 2, unspecialized_derived_T>::rotate_self(this auto& self, const angle::concepts::angle auto& rotation) noexcept
-		requires(!std::remove_cvref_t<decltype(self)>::storage_type.is_const())
+	template<typename T, size_t size>
+	utils_gpu_available constexpr auto& vec<T, size>::rotate_self(const angle::concepts::angle auto& rotation) noexcept
 		{
-		return self += rotation;
+		if constexpr (std::same_as<value_type, float> && extent == 2)
+			{
+			return *this += rotation;
+			}
 		}
 
-	template<typename T, template <typename, size_t> class unspecialized_derived_T>
-	utils_gpu_available constexpr auto& vec_sized_specialization<T, 2, unspecialized_derived_T>::translate_self(this auto& self, const vec2f& translation) noexcept
-		requires(!std::remove_cvref_t<decltype(self)>::storage_type.is_const())
+	template<typename T, size_t size>
+	utils_gpu_available constexpr auto& vec<T, size>::translate_self(const vec2f& translation) noexcept
 		{
-		return self += translation;
+		if constexpr (std::same_as<value_type, float> && extent == 2)
+			{
+			return *this += translation;
+			}
 		}
 	}
