@@ -14,6 +14,7 @@
 #include "../math/geometry/shape/aabb.h"
 #include "../math/geometry/shape/shapes_group.h"
 #include "../math/geometry/shape/transform/aabb.h"
+#include "../math/geometry/shape/transform/point.h"
 #include "../math/geometry/shape/sdf/return_types.h"
 
 namespace utils::graphics::sdf

@@ -87,12 +87,12 @@ namespace utils::math::geometry
 
 	struct shape_flag 
 		{
-		//utils_gpu_available constexpr auto  scale         (this const auto& self, const float                    & scaling    ) noexcept;
-		//utils_gpu_available constexpr auto  rotate        (this const auto& self, const angle::base<float, 360.f>& rotation   ) noexcept;
-		//utils_gpu_available constexpr auto  translate     (this const auto& self, const vec2f                    & translation) noexcept;
-		//utils_gpu_available constexpr auto  transform     (this const auto& self, const utils::math::transform2  & transform  ) noexcept;
-		//utils_gpu_available constexpr auto& transform_self(this       auto& self, const utils::math::transform2  & transform  ) noexcept
-		//	requires(!std::remove_cvref_t<decltype(self)>::storage_type.is_const());
+		utils_gpu_available constexpr auto  scale         (this const auto& self, const float                    & scaling    ) noexcept;
+		utils_gpu_available constexpr auto  rotate        (this const auto& self, const angle::base<float, 360.f>& rotation   ) noexcept;
+		utils_gpu_available constexpr auto  translate     (this const auto& self, const vec2f                    & translation) noexcept;
+		utils_gpu_available constexpr auto  transform     (this const auto& self, const utils::math::transform2  & transform  ) noexcept;
+		utils_gpu_available constexpr auto& transform_self(this       auto& self, const utils::math::transform2  & transform  ) noexcept
+			requires(!std::remove_cvref_t<decltype(self)>::storage_type.is_const());
 		};
 	struct piece_flag {};
 
@@ -112,5 +112,24 @@ namespace utils::math::geometry
 
 		template <concepts::shape T, storage::type desired_storage_type>
 		struct cast_storage_type;
+
+		template <storage::type desired_storage_type, concepts::shape shape_t>
+		auto cast_storage(const shape_t& shape)
+			{
+			//Note: the type alias make it so that intellisense shows "return_type" as type of the returned value assigned to an "auto" variable.
+			// hence I'm not aliasing the type so we get a full readable type in the popup windows.
+			//using return_type = typename cast_storage_type<shape_t, desired_storage_type>::type;
+			const typename cast_storage_type<shape_t, desired_storage_type>::type ret{shape};
+			return ret;
+			}
+		template <storage::type desired_storage_type, concepts::shape shape_t>
+		auto cast_storage(shape_t& shape)
+			{
+			//Note: the type alias make it so that intellisense shows "return_type" as type of the returned value assigned to an "auto" variable.
+			// hence I'm not aliasing the type so we get a full readable type in the popup windows.
+			//using return_type = typename cast_storage_type<shape_t, desired_storage_type>::type;
+			typename cast_storage_type<shape_t, desired_storage_type>::type ret{shape};
+			return ret;
+			}
 		}
 	}

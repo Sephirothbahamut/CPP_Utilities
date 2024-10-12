@@ -25,17 +25,4 @@ namespace utils::math::geometry::shape
 		{
 		using type = generic::aabb<desired_storage_type>;
 		};
-
-	template <storage::type desired_storage_type>
-	utils_gpu_available constexpr auto cast_storage(const concepts::aabb auto& shape) noexcept
-		{
-		const typename cast_storage_type<std::remove_cvref_t<decltype(shape)>, desired_storage_type>::type ret{shape};
-		return ret;
-		}
-	template <storage::type desired_storage_type>
-	utils_gpu_available constexpr auto cast_storage(concepts::aabb auto& shape) noexcept
-		{
-		typename cast_storage_type<std::remove_cvref_t<decltype(shape)>, desired_storage_type>::type ret{shape};
-		return ret;
-		}
 	}
