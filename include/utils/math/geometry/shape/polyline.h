@@ -89,8 +89,8 @@ namespace utils::math::geometry::shape::generic
 			utils_gpu_available constexpr auto ends_aware_access(size_t index)       noexcept requires(!is_view_const) { return ends_aware_access<polyline_ref.vertices.closed>(index); }
 
 
-			utils_gpu_available constexpr auto operator[](size_t index) const noexcept                          { return ends_aware_access<true>(); }
-			utils_gpu_available constexpr auto operator[](size_t index)       noexcept requires(!is_view_const) { return ends_aware_access<true>(); }
+			utils_gpu_available constexpr auto operator[](size_t index) const noexcept                          { return ends_aware_access<true>(index); }
+			utils_gpu_available constexpr auto operator[](size_t index)       noexcept requires(!is_view_const) { return ends_aware_access<true>(index); }
 
 			utils_gpu_available constexpr auto begin() const noexcept { return iterator<true         >{&polyline_ref, 0     }; }
 			utils_gpu_available constexpr auto begin()       noexcept { return iterator<is_view_const>{&polyline_ref, 0     }; }

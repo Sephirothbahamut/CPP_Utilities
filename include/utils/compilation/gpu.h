@@ -40,6 +40,6 @@ namespace utils::compilation::gpu
 	#define utils_is_gpu
 	#define utils_if_gpu(x) x
 #else
-	#define utils_gpu_available
+	#define utils_gpu_available 
 	#define utils_if_gpu(x)
 #endif

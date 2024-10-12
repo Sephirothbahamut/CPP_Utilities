@@ -1,5 +1,5 @@
 #pragma once
-
+/*
 #include <any>
 #include <variant>
 
@@ -128,4 +128,4 @@ namespace utils::math::geometry::shapes_group
 	//	std::vector<utils::math::vec2f> vertices;
 	//	std::vector<float             > radii;
 	//	};
-	}
+	}*/

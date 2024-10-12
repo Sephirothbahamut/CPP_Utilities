@@ -285,7 +285,7 @@ namespace utils::graphics::text
 			}
 		else
 			{
-			throw std::runtime_error{"idk directx stuff"};
+			assert(false && "Directx stuff.");
 			}
 		
 		// Get the glyph run outline geometries back from DirectWrite and place them within the
@@ -306,7 +306,7 @@ namespace utils::graphics::text
 			}
 		else
 			{
-			throw std::runtime_error{"idk directx stuff"};
+			assert(false && "Directx stuff.");
 			}
 		
 			// Close the geometry sink
@@ -316,7 +316,7 @@ namespace utils::graphics::text
 			}
 		else
 			{
-			throw std::runtime_error{"idk directx stuff"};
+			assert(false && "Directx stuff.");
 			}
 		
 			// Initialize a matrix to translate the origin of the glyph run.
@@ -478,7 +478,7 @@ namespace utils::graphics::text
 		
 		D2D1_RECT_F layoutRect{0.f, 0.f, 1024.f, 500.f};
 
-		dw::text_layout text_layout{dw_factory, wide, text_format, utils::math::vec2u32{uint32_t{2048}, uint32_t{2048}}};
+		dw::text_layout text_layout{dw_factory, wide, text_format, utils::math::vec2f{2048.f, 2048.f}};
 
 		std::vector<glyph_t> glyphs;
 

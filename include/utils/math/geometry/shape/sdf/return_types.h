@@ -3,6 +3,7 @@
 #include "../../../../concepts.h"
 #include "../../../../compilation/gpu.h"
 
+#include "../../../math.h"
 #include "../../../angle.h"
 #include "../../../transform2.h"
 

@@ -18,6 +18,11 @@ namespace utils::math::geometry::shape::generic
 		vertex_t centre;
 		radius_t radius;
 
+		#ifdef __INTELLISENSE__
+		//Intellisense for some reason doesn't enjoy the concept centric constructors here, lacking this constructor makes intellisense crash in longer `.cpp`s
+		utils_gpu_available constexpr circle(const shape::point& centre, float radius);
+		#endif
+
 		utils_gpu_available constexpr circle() noexcept = default;
 		utils_gpu_available constexpr circle(      concepts::point auto& centre, storage::concepts::can_construct_value_type<radius_t> auto& radius) :
 			centre{centre}, radius{radius} {}

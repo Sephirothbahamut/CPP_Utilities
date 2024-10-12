@@ -101,7 +101,7 @@ namespace utils::math
 			utils_gpu_available inline static constexpr self_t from_vertices(vec_range auto range)
 				requires (storage_type.is_owner())
 				{
-				self_t ret{create::infinite()};
+				self_t ret{create::inverse_infinite()};
 			
 				for (const auto& vertex : range)
 					{
@@ -151,6 +151,18 @@ namespace utils::math
 			return *this;
 			}
 		self_t merge(const self_t& other) const noexcept { self_t tmp{*this}; return tmp.merge_self(other); }
+
+		nonref_self_t operator+(const self_t& other) const noexcept
+			{
+			const nonref_self_t ret
+				{
+				ll() + other.ll(),
+				up() + other.up(),
+				rr() + other.rr(),
+				dw() + other.dw()
+				};
+			return ret;
+			}
 
 
 		utils_gpu_available const const_aware_value_type& ll() const noexcept { return (*this)[0]; }

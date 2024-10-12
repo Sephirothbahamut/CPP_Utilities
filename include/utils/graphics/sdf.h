@@ -10,11 +10,20 @@
 #include "../matrix.h"
 #include "../math/rect.h"
 #include "../math/vec2.h"
-#include "../math/geometry/shape/sdf/return_types.h"
+#include "../math/transform2.h"
+#include "../math/geometry/shape/aabb.h"
 #include "../math/geometry/shape/shapes_group.h"
+#include "../math/geometry/shape/transform/aabb.h"
+#include "../math/geometry/shape/sdf/return_types.h"
 
 namespace utils::graphics::sdf
 	{
+	using sample_gsdf_signature = utils::math::geometry::sdf::gradient_signed_distance(const utils::math::vec2f& coords_f);
+	using sample_gsdf_callback  = std::function<sample_gsdf_signature>;
+
+	using merge_signature = utils::math::geometry::sdf::gradient_signed_distance(utils::math::geometry::sdf::gradient_signed_distance, utils::math::geometry::sdf::gradient_signed_distance);
+	using merge_callback  = std::function<merge_signature>;
+
 	template <typename T>
 	struct renderer
 		{
@@ -28,21 +37,31 @@ namespace utils::graphics::sdf
 
 		utils_gpu_available constexpr virtual value_type sample(const utils::math::vec2f& coords, const utils::math::geometry::sdf::gradient_signed_distance& gsdf) const noexcept = 0;
 
+		/// <summary>
+		/// Applies the renderer to a precalculated gradient signed distance field.
+		/// Use together with `utils::graphics::sdf::evaluate_gsdf`.
+		/// </summary>
+		/// <typeparam name="parallel">Self explanatory :)</typeparam>
+		/// <param name="gradient_signed_distance_field"></param>
+		/// <returns>An image with the same resolution as the input gradient signed distance field</returns>
 		template <bool parallel = true>
-		constexpr utils::matrix<T> render(const utils::matrix<utils::math::geometry::sdf::gradient_signed_distance>& gradient_signed_distance_field)
+		constexpr utils::matrix<T> render(const utils::math::transform2& camera_transform, const utils::matrix<utils::math::geometry::sdf::gradient_signed_distance>& gradient_signed_distance_field, float supersampling = 1.f)
 			{
 			const auto resolution{gradient_signed_distance_field.sizes()};
 			utils::matrix<T, matrix_size::create::dynamic()> ret(resolution);
 
-			std::ranges::iota_view indices(size_t{0}, resolution.sizes_to_size());
-
-			const auto callback{[&gradient_signed_distance_field, &ret, &resolution, this](size_t index)
+			const auto callback{[&, this](size_t index)
 				{
 				const utils::math::vec2s coords_indices{ret.sizes().index_to_coords(index)};
 				const utils::math::vec2f coords_f
 					{
-					static_cast<float>(coords_indices.x()),
-					static_cast<float>(coords_indices.y())
+					utils::math::vec2f
+						{
+						static_cast<float>(coords_indices.x()),
+						static_cast<float>(coords_indices.y())
+						}
+					.transform(camera_transform)
+					.scale    (1.f / supersampling)
 					};
 
 				auto& pixel{ret[index]};
@@ -51,6 +70,7 @@ namespace utils::graphics::sdf
 				pixel = sample(coords_f, gradient_signed_distance);
 				}};
 
+			std::ranges::iota_view indices(size_t{0}, resolution.sizes_to_size());
 			if constexpr (parallel)
 				{
 				std::for_each(std::execution::par, indices.begin(), indices.end(), callback);
@@ -60,6 +80,53 @@ namespace utils::graphics::sdf
 				std::for_each(indices.begin(), indices.end(), callback);
 				}
 
+			return ret;
+			}
+
+
+
+		/// <summary>
+		/// Applies the renderer sampling the gradient distances for each pixel all at once.
+		/// </summary>
+		/// <typeparam name="parallel"></typeparam>
+		/// <param name="resolution"></param>
+		/// <param name="sample_gsdf_callback">A lambda which takes coordinates to be sampled. It's up to the lambda to capture the shapes and calculate the gradient signed distance and perform spatial optimizations.</param>
+		/// <returns></returns>
+		template <bool parallel = true>
+		constexpr utils::matrix<T> render(const utils::math::transform2& camera_transform, const utils::math::vec2s& resolution, sample_gsdf_callback sample_gsdf_callback, float supersampling = 1.f)
+			{
+			utils::matrix<T> ret(resolution);
+
+			const auto callback{[&, this](size_t index)
+				{
+				const utils::math::vec2s coords_indices{resolution.index_to_coords(index)};
+				const utils::math::vec2f coords_f
+					{
+					utils::math::vec2f
+						{
+						static_cast<float>(coords_indices.x()),
+						static_cast<float>(coords_indices.y())
+						}
+					.transform(camera_transform)
+					.scale    (1.f / supersampling)
+					};
+
+				const utils::math::geometry::sdf::gradient_signed_distance gradient_signed_distance{sample_gsdf_callback(coords_f)};
+
+				T& pixel{ret[index]};
+				pixel = sample(coords_f, gradient_signed_distance);
+				}};
+
+			std::ranges::iota_view indices(size_t{0}, resolution.sizes_to_size());
+			if constexpr (parallel)
+				{
+				std::for_each(std::execution::par, indices.begin(), indices.end(), callback);
+				}
+			else if constexpr (!parallel)
+				{
+				std::for_each(indices.begin(), indices.end(), callback);
+				}
+			
 			return ret;
 			}
 		};
@@ -112,128 +179,83 @@ namespace utils::graphics::sdf
 		
 		};
 
-	template <typename T, typename execution_policy_t>
-	constexpr utils::matrix<T> render
-		(
-		execution_policy_t execution_policy, 
-		const renderer<T>& renderer, 
-		utils::math::vec2s resolution,
-		const utils::math::geometry::shapes_group::observers& shapes
-		) noexcept
+	template <utils::math::geometry::shape::concepts::shape shape_t>
+	class shape_bounding_box_wrapper
 		{
-		auto bounding_boxes{shapes.evaluate_bounding_boxes()};
-		std::for_each(std::execution::par, bounding_boxes.begin(), bounding_boxes.end(), [&renderer](auto& bounding_box)
-			{
-			bounding_box.ll() += renderer.shape_padding.ll();
-			bounding_box.up() += renderer.shape_padding.up();
-			bounding_box.rr() += renderer.shape_padding.rr();
-			bounding_box.dw() += renderer.shape_padding.dw();
-			});
+		public:
+			utils_gpu_available constexpr shape_bounding_box_wrapper(const shape_t& shape, utils::math::geometry::shape::aabb shape_padding = {-1.f, -1.f, 0.f, 0.f}) :
+				shape_ptr{std::addressof(shape)},
+				bounding_box{shape.bounding_box() + shape_padding}
+				{}
 
-		utils::matrix<T, matrix_size::create::dynamic()> ret(resolution);
-
-		std::ranges::iota_view indices(size_t{0}, resolution.sizes_to_size());
-		std::for_each(execution_policy, indices.begin(), indices.end(), [&ret, &renderer, &resolution, &shapes, &bounding_boxes](size_t index)
-			{
-			const utils::math::vec2s coords_indices{resolution.index_to_coords(index)};
-			const utils::math::vec2f coords_f
+			utils_gpu_available constexpr utils::math::geometry::sdf::gradient_signed_distance evaluate_gradient_signed_distance(const utils::math::vec2f& coords_f) const noexcept
 				{
-				static_cast<float>(coords_indices.x()),
-				static_cast<float>(coords_indices.y())
-				};
-
-			T& pixel{ret[index]};
-
-			//utils::graphics::multisample
-			utils::math::geometry::sdf::gradient_signed_distance gradient_signed_distance;
-
-			for (size_t i{0}; i < shapes.observer_shapes.size(); i++)
-				{
-				const auto& bounding_box {bounding_boxes        [i]};
-				if (!bounding_box.contains(coords_f)) { continue; }
-
-				const auto& shape_variant{shapes.observer_shapes[i]};
-
-				std::visit([&coords_f, &gradient_signed_distance](const auto& shape)
+				if (bounding_box.contains(coords_f))
 					{
-					const auto shape_gradient_signed_distance{shape.sdf(coords_f).gradient_signed_distance()};
-					gradient_signed_distance = utils::math::geometry::sdf::gradient_signed_distance::merge(gradient_signed_distance, shape_gradient_signed_distance);
-					}, shape_variant);
+					const auto ret{shape_ptr->sdf(coords_f).gradient_signed_distance()};
+					}
+				return {};
 				}
 
-			pixel = renderer.sample(coords_f, gradient_signed_distance);
-			});
+			/// <summary> Populates a gradient signed distance field with the gradient distance field of an additional shape. </summary>
+			template <bool parallel = true>
+			constexpr utils::matrix<utils::math::geometry::sdf::gradient_signed_distance>& evaluate_gsdf
+				(
+				const utils::math::transform2& camera_transform,
+				const merge_callback& merge_callback,
+				utils::matrix<utils::math::geometry::sdf::gradient_signed_distance>& gradient_signed_distance_field,
+				float supersampling = 1.f
+				) noexcept
+				{
+				const utils::math::rect<float> pixels_region_f{bounding_box.transform(camera_transform).scale(1.f / supersampling)};
+				const utils::math::rect<size_t> pixels_region
+					{
+					utils::math::rect<size_t>
+						{
+								 utils::math::cast_clamp<size_t>(std::floor(pixels_region_f.ll())),
+								 utils::math::cast_clamp<size_t>(std::floor(pixels_region_f.up())),
+						std::min(utils::math::cast_clamp<size_t>(std::ceil (pixels_region_f.rr())), gradient_signed_distance_field.sizes().x()),
+						std::min(utils::math::cast_clamp<size_t>(std::ceil (pixels_region_f.dw())), gradient_signed_distance_field.sizes().y())
+						}
+					};
+				const size_t indices_end{pixels_region.size().sizes_to_size()};
 
-		return ret;
-		}
+				std::ranges::iota_view indices(size_t{0}, indices_end);
+				const auto callback{[&, this](size_t index)
+					{
+					const utils::math::vec2s coords_indices{pixels_region.ul() + pixels_region.size().index_to_coords(index)};
+					const utils::math::vec2f coords_f
+						{
+						utils::math::vec2f
+							{
+							static_cast<float>(coords_indices.x()),
+							static_cast<float>(coords_indices.y())
+							}
+						.transform(camera_transform)
+						.scale(1.f / supersampling)
+						};
 
-	template <typename T>
-	constexpr utils::matrix<T> render(const renderer<T>& renderer, utils::math::vec2s resolution, const utils::math::geometry::shapes_group::observers& shapes) noexcept
-		{
-		return render(std::execution::seq, renderer, resolution, shapes);
-		}
+					utils::math::geometry::sdf::gradient_signed_distance& value_at_pixel{gradient_signed_distance_field[coords_indices]};
 
+					const utils::math::geometry::sdf::gradient_signed_distance shape_gradient_signed_distance{shape_ptr->sdf(coords_f).gradient_signed_distance()};
+					value_at_pixel = merge_callback(value_at_pixel, shape_gradient_signed_distance);
+					}};
+		
+				if constexpr (parallel)
+					{
+					std::for_each(std::execution::par, indices.begin(), indices.end(), callback);
+					}
+				else if constexpr (!parallel)
+					{
+					std::for_each(indices.begin(), indices.end(), callback);
+					}
 
+				return gradient_signed_distance_field;
+				}
 
-
-
-
-	using merge_function_signature = utils::math::geometry::sdf::gradient_signed_distance(utils::math::geometry::sdf::gradient_signed_distance, utils::math::geometry::sdf::gradient_signed_distance);
-	using merge_function_t = std::function<merge_function_signature>;
-
-	struct evaluate_sdf_params
-		{
-		utils::math::geometry::shape::aabb                                   shape_padding {-1.f, -1.f, 0.f, 0.f};
-		const merge_function_t                                             & merge_function{&utils::math::geometry::sdf::gradient_signed_distance::merge};
-		utils::matrix<utils::math::geometry::sdf::gradient_signed_distance>& gradient_signed_distance_field;
+		private:
+			const shape_t* shape_ptr;
+			const utils::math::geometry::shape::aabb bounding_box;
 		};
 
-	template <bool parallel = true>
-	constexpr utils::matrix<utils::math::geometry::sdf::gradient_signed_distance>& evaluate_sdf
-		(
-		evaluate_sdf_params params,
-		const utils::math::geometry::shape::concepts::shape auto& shape
-		) noexcept
-		{
-		auto bounding_box{shape.bounding_box()};
-		bounding_box.ll() += params.shape_padding.ll();
-		bounding_box.up() += params.shape_padding.up();
-		bounding_box.rr() += params.shape_padding.rr();
-		bounding_box.dw() += params.shape_padding.dw();
-		const utils::math::rect<size_t> pixels_region
-			{
-			         utils::math::cast_clamp<size_t>(std::floor(bounding_box.ll())),
-			         utils::math::cast_clamp<size_t>(std::floor(bounding_box.up())),
-			std::min(utils::math::cast_clamp<size_t>(std::ceil (bounding_box.rr())), params.gradient_signed_distance_field.sizes().x()),
-			std::min(utils::math::cast_clamp<size_t>(std::ceil (bounding_box.dw())), params.gradient_signed_distance_field.sizes().y()),
-			};
-		const size_t indices_end{pixels_region.size().sizes_to_size()};
-
-		std::ranges::iota_view indices(size_t{0}, indices_end);
-		const auto callback{[&shape, &params, &pixels_region](size_t index)
-			{
-			const utils::math::vec2s coords_indices{pixels_region.ul() + pixels_region.size().index_to_coords(index)};
-			const utils::math::vec2f coords_f
-				{
-				static_cast<float>(coords_indices.x()),
-				static_cast<float>(coords_indices.y())
-				};
-
-			utils::math::geometry::sdf::gradient_signed_distance& value_at_pixel{params.gradient_signed_distance_field[coords_indices]};
-
-			const utils::math::geometry::sdf::gradient_signed_distance shape_gradient_signed_distance{shape.sdf(coords_f).gradient_signed_distance()};
-			value_at_pixel = params.merge_function(value_at_pixel, shape_gradient_signed_distance);
-			}};
-		
-		if constexpr (parallel)
-			{
-			std::for_each(std::execution::par, indices.begin(), indices.end(), callback);
-			}
-		else if constexpr (!parallel)
-			{
-			std::for_each(indices.begin(), indices.end(), callback);
-			}
-
-		return params.gradient_signed_distance_field;
-		}
 	}

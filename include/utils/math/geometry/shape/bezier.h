@@ -1,5 +1,7 @@
 #pragma once
 
+#include <cassert>
+
 #include "declaration/bezier.h"
 #include "ab.h"
 
@@ -70,8 +72,7 @@ namespace utils::math::geometry::shape::generic
 							}
 						return tmp[0];
 						}
-
-					throw std::runtime_error{"Unsupported amount of control points."};
+					assert(false && "Unsupported amount of control points.");
 					}
 				utils_gpu_available constexpr vec2f tangent() const noexcept
 					{
@@ -89,7 +90,7 @@ namespace utils::math::geometry::shape::generic
 						return ((coefficients[0] * 3.0f * t * t) + (coefficients[1] * 2.0f * t) + coefficients[2]);
 						}
 
-					throw std::runtime_error{"Unsupported amount of control points."};
+					assert(false && "Unsupported amount of control points.");
 					}
 				utils_gpu_available constexpr vec2f normal() const noexcept
 					{
@@ -123,7 +124,7 @@ namespace utils::math::geometry::shape::generic
 				}
 			else
 				{
-				throw std::runtime_error{"Unsupported amount of control points."};
+				assert(false && "Unsupported amount of control points.");
 				}
 
 			return ret;

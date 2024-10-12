@@ -54,7 +54,12 @@ namespace utils::math::geometry::shape::generic
 		utils_gpu_available constexpr auto minimum_distance() const noexcept
 			requires(shape::concepts::ab_ends_aware<shape_t>)
 			{
+			#ifdef __INTELLISENSE__
+			//Intellisense doesn't see the above templated function for some reason
+			return float{0.f};
+			#else
 			return minimum_distance<shape.optional_ends.value()>();
+			#endif
 			}
 
 		utils_gpu_available constexpr geometry::sdf::side side() const noexcept
