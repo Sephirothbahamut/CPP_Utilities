@@ -34,7 +34,7 @@ namespace utils::math::geometry::sdf::details::bezier::_4pt
 		simple_static_vector<float, 5> solved_quintic(const utils::math::vec2f point, const utils::math::vec2f v1, const utils::math::vec2f v2, const utils::math::vec2f v3, const utils::math::vec2f v4) noexcept;
 
 		// Faster version I gave up trying to understand, it passes by reference solutions to one degree of math function to another, I'm utterly lost.
-		closest_precalculated_information_t cubic_bezier_dis(utils::math::vec2f uv, utils::math::vec2f p0, utils::math::vec2f p1, utils::math::vec2f p2, utils::math::vec2f p3) noexcept;
+		float cubic_bezier_t(utils::math::vec2f uv, utils::math::vec2f p0, utils::math::vec2f p1, utils::math::vec2f p2, utils::math::vec2f p3) noexcept;
 		}
 
 	template<storage::type storage_type, geometry::ends::optional_ab optional_ends>
@@ -49,8 +49,6 @@ namespace utils::math::geometry::sdf::details::bezier::_4pt
 		template <utils::math::geometry::ends::ab ends>
 		utils_gpu_available constexpr closest_precalculated_information_t closest_precalculated_information() const noexcept
 			{
-			//return free_functions::cubic_bezier_dis(point, shape.vertices[0], shape.vertices[1], shape.vertices[2], shape.vertices[3]);
-
 			closest_precalculated_information_t closest;
 
 			const auto quintic_roots = free_functions::solved_quintic(point, shape.vertices[0], shape.vertices[1], shape.vertices[2], shape.vertices[3]);
@@ -76,8 +74,9 @@ namespace utils::math::geometry::sdf::details::bezier::_4pt
 		template <ends::ab ends>
 		utils_gpu_available constexpr float closest_t() const noexcept
 			{
-			const auto closest{closest_precalculated_information<ends>()};
-			return closest.t;
+			//const auto closest{closest_precalculated_information<ends>()};
+			//return closest.t;
+			return free_functions::cubic_bezier_t(point, shape.vertices[0], shape.vertices[1], shape.vertices[2], shape.vertices[3]);
 			}
 		};
 	}

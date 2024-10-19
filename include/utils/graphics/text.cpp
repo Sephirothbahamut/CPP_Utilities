@@ -351,8 +351,7 @@ namespace utils::graphics::text
 		
 		for (auto& glyph : geometry_sink.glyphs)
 			{
-			utils::math::transform2 transform{.translation{baselineOriginX, baselineOriginY}}; 
-			glyph.transform_self(transform);
+			glyph.translate_self({baselineOriginX, baselineOriginY});
 			}
 		
 		//Emplace because this function may be called multiple times
@@ -473,17 +472,15 @@ namespace utils::graphics::text
 		dw::text_format text_format{dw_factory, dw::text_format::create_info
 			{
 			.name{font},
-			.size{32.f}
+			.size{64.f}
 			}};
-		
-		D2D1_RECT_F layoutRect{0.f, 0.f, 1024.f, 500.f};
 
 		dw::text_layout text_layout{dw_factory, wide, text_format, utils::math::vec2f{2048.f, 2048.f}};
 
 		std::vector<glyph_t> glyphs;
 
 		glyphs_converter converter;
-		text_layout->Draw(&glyphs, &converter, 0.f, 0.f);
+		text_layout->Draw(&glyphs, &converter, 0.f, 64.f);
 
 
 		return glyphs;

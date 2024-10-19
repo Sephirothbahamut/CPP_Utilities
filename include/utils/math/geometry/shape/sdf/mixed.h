@@ -22,10 +22,9 @@ namespace utils::math::geometry::shape::generic
 			{
 			float ret{utils::math::constants::finf};
 
-			auto pieces_view{shape.get_pieces()};
-			pieces_view.for_each([this, &ret](const auto& piece, size_t index)
+			shape.get_pieces().for_each([this, &ret](const auto& piece, size_t first_index, size_t last_index)
 				{
-				ret = utils::math::min(ret, minimum_distance(piece, point));
+				ret = utils::math::min(ret, piece.sdf(point).minimum_distance());
 				});
 			return ret;
 			}
@@ -35,7 +34,7 @@ namespace utils::math::geometry::shape::generic
 			geometry::sdf::closest_point_with_distance ret;
 			shape.get_pieces().for_each([this, &ret](const auto& piece)
 				{
-				ret.set_to_closest(closest_with_distance(piece, point));
+				ret.set_to_closest(piece.sdf(point).closest_with_distance());
 				});
 			return ret;
 			}
@@ -50,18 +49,20 @@ namespace utils::math::geometry::shape::generic
 			bool current_is_vertex{false};
 			size_t current_index  {0};
 
+			size_t index{0};
 			shape.get_pieces().for_each([&](const auto& candidate, size_t first_index, size_t last_index)
 				{
 				const auto candidate_values{candidate.sdf(point).closest_with_signed_distance()};
-				if(candidate_values.distance.absolute() < current.distance.absolute())
+				if (candidate_values.distance.absolute() < current.distance.absolute())
 					{
 					current = candidate_values;
 					current_is_vertex = current.closest == shape.vertices.ends_aware_access(last_index);
-					if(current_is_vertex)
+					if (current_is_vertex)
 						{
 						current_index = last_index;
 						}
 					}
+				index++;
 				});
 
 			if constexpr (shape.ends.is_closed())
@@ -85,7 +86,7 @@ namespace utils::math::geometry::shape::generic
 				const float distance_a{line_a.sdf(point).minimum_distance()};
 				const float distance_b{line_b.sdf(point).minimum_distance()};
 		
-				const bool               return_first{distance_a > distance_b};
+				const bool                return_first{distance_a > distance_b};
 				const geometry::sdf::side side{(return_first ? line_a : line_b).sdf(point).side()};
 		
 				current.distance = geometry::sdf::signed_distance{current.distance.absolute() * side};
@@ -94,17 +95,15 @@ namespace utils::math::geometry::shape::generic
 			return current;
 			}
 
-
-		//
-		//utils_gpu_available constexpr geometry::sdf::side side() const noexcept
-		//	{
-		//	return closest_with_signed_distance(shape, point).distance.side();
-		//	}
-		//
-		//utils_gpu_available constexpr geometry::sdf::signed_distance signed_distance() const noexcept
-		//	{
-		//	return closest_with_signed_distance(shape, point).distance;
-		//	}
+		utils_gpu_available constexpr geometry::sdf::side side() const noexcept
+			{
+			return closest_with_signed_distance().distance.side();
+			}
+		
+		utils_gpu_available constexpr geometry::sdf::signed_distance signed_distance() const noexcept
+			{
+			return closest_with_signed_distance().distance;
+			}
 		};
 	}
 

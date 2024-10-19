@@ -8,7 +8,7 @@
 
 namespace utils::containers
 	{
-	template<template<typename> typename Container_type, typename T>
+	template<template<typename> class Container_type, typename T>
 	struct container_emplace_helper
 		{};
 

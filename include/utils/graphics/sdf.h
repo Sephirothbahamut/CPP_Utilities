@@ -1,5 +1,6 @@
 #pragma once
 
+#include <cmath>
 #include <algorithm>
 #include <execution>
 #include <filesystem>
@@ -19,6 +20,135 @@
 
 namespace utils::graphics::sdf
 	{
+	template <typename T>
+	using per_pixel_signature = void(T&, const utils::math::vec2f& coords_f);
+	template <typename T>
+	using per_pixel_callback = std::function<per_pixel_signature<T>>;
+
+	template <typename T>
+	struct callback_at_coords
+		{
+		const utils::math::transform2 camera_transform{};
+		const float supersampling{1.f};
+		const per_pixel_callback<T>& per_pixel_callback;
+		utils::matrix<T>& image;
+
+		T& operator()(size_t index) noexcept
+			{
+			return operator()(image.sizes().index_to_coords(index));
+			}
+		T& operator()(const utils::math::vec2s coords_indices) noexcept
+			{
+			const utils::math::vec2f coords_f
+				{
+				utils::math::vec2f
+					{
+					static_cast<float>(coords_indices.x()),
+					static_cast<float>(coords_indices.y())
+					}
+				.transform(camera_transform)
+				.scale(1.f / supersampling)
+				};
+
+			T& value_at_pixel{image[coords_indices]};
+			per_pixel_callback(value_at_pixel, coords_f);
+			return value_at_pixel;
+			}
+		};
+	
+	template <typename T, bool parallel = true>
+	constexpr utils::matrix<T>& evaluate_full_image
+		(
+		const utils::math::transform2& camera_transform,
+		const per_pixel_callback<T>& per_pixel_callback,
+		utils::matrix<T>& image,
+		float supersampling = 1.f
+		) noexcept
+		{
+		const size_t indices_end{image.sizes().sizes_to_size()};
+		std::ranges::iota_view indices(size_t{0}, indices_end);
+
+		callback_at_coords<T> callback_at_coords
+			{
+			.camera_transform  {camera_transform  },
+			.supersampling     {supersampling     },
+			.per_pixel_callback{per_pixel_callback},
+			.image             {image}
+			};
+
+		if constexpr (parallel)
+			{
+			std::for_each(std::execution::par, indices.begin(), indices.end(), callback_at_coords);
+			}
+		else if constexpr (!parallel)
+			{
+			std::for_each(indices.begin(), indices.end(), callback_at_coords);
+			}
+		}
+
+	template <typename T, bool parallel = true>
+	constexpr utils::matrix<T>& evaluate_in_region
+		(
+		const utils::math::transform2& camera_transform,
+		const per_pixel_callback<T>& per_pixel_callback,
+		const utils::math::geometry::shape::aabb& pixels_region_f,
+		utils::matrix<T>& image,
+		float supersampling = 1.f
+		) noexcept
+		{
+		const utils::math::rect<size_t> pixels_region
+			{
+			utils::math::rect<size_t>
+				{
+				         utils::math::cast_clamp<size_t>(std::floor(pixels_region_f.ll())),
+				         utils::math::cast_clamp<size_t>(std::floor(pixels_region_f.up())),
+				std::min(utils::math::cast_clamp<size_t>(std::ceil (pixels_region_f.rr())), image.sizes().x()),
+				std::min(utils::math::cast_clamp<size_t>(std::ceil (pixels_region_f.dw())), image.sizes().y())
+				}
+			};
+		const size_t indices_end{pixels_region.size().sizes_to_size()};
+		std::ranges::iota_view indices(size_t{0}, indices_end);
+		
+		callback_at_coords<T> callback_at_coords
+			{
+			.camera_transform  {camera_transform  },
+			.supersampling     {supersampling     },
+			.per_pixel_callback{per_pixel_callback},
+			.image             {image}
+			};
+
+		const auto callback_at_coords_wrapper{[&](size_t index)
+			{
+			const utils::math::vec2s coords_indices{pixels_region.ul() + pixels_region.size().index_to_coords(index)};
+			callback_at_coords(coords_indices);
+			}};
+		
+		if constexpr (parallel)
+			{
+			std::for_each(std::execution::par, indices.begin(), indices.end(), callback_at_coords_wrapper);
+			}
+		else if constexpr (!parallel)
+			{
+			std::for_each(indices.begin(), indices.end(), callback_at_coords_wrapper);
+			}
+
+		return image;
+		}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 	using sample_gsdf_signature = utils::math::geometry::sdf::gradient_signed_distance(const utils::math::vec2f& coords_f);
 	using sample_gsdf_callback  = std::function<sample_gsdf_signature>;
 
@@ -194,6 +324,7 @@ namespace utils::graphics::sdf
 				if (bounding_box.contains(coords_f))
 					{
 					const auto ret{shape_ptr->sdf(coords_f).gradient_signed_distance()};
+					return ret;
 					}
 				return {};
 				}
@@ -208,7 +339,7 @@ namespace utils::graphics::sdf
 				float supersampling = 1.f
 				) noexcept
 				{
-				const utils::math::rect<float> pixels_region_f{bounding_box.transform(camera_transform).scale(1.f / supersampling)};
+				const utils::math::rect<float> pixels_region_f{bounding_box.transform(camera_transform).scale(supersampling)};
 				const utils::math::rect<size_t> pixels_region
 					{
 					utils::math::rect<size_t>
@@ -254,9 +385,11 @@ namespace utils::graphics::sdf
 				return gradient_signed_distance_field;
 				}
 
+			utils::math::geometry::shape::aabb get_bounding_box() const noexcept { return bounding_box; }
+			shape_t get_shape() const noexcept { return *shape_ptr; }
 		private:
 			const shape_t* shape_ptr;
 			const utils::math::geometry::shape::aabb bounding_box;
 		};
-
+	
 	}
