@@ -6,6 +6,7 @@
 
 #include "../compilation/gpu.h"
 #include "../memory.h"
+#include "constants.h"
 
 namespace utils::math
 	{
@@ -34,6 +35,16 @@ namespace utils::math
 	utils_gpu_available constexpr T abs(const T& value) noexcept
 		{
 		return value < T{0} ? -value : value;
+		}
+
+	template <std::floating_point T>
+	utils_gpu_available constexpr bool almost_equal(T a, T b, T minimum_delta = utils::math::constants::epsilon) noexcept
+		{
+		if (a == b) { return true; }
+
+		const auto delta{abs(a - b)};
+
+		return delta < minimum_delta;
 		}
 
 	template <typename T>

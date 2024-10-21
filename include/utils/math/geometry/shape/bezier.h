@@ -251,6 +251,68 @@ namespace utils::math::geometry::shape::generic
 		utils_gpu_available constexpr auto get_edges            (size_t divisions) const noexcept { return edges_view<false>{*this, divisions}; }
 		utils_gpu_available constexpr auto get_edges_equidistant(size_t divisions) const noexcept { return edges_view<true >{*this, divisions}; }
 
+
+
+
+
+
+		utils_gpu_available constexpr bool is_quadratic_elevated_to_cubic() const noexcept
+			requires(extent == 4)
+			{
+			//If this is 0, this is a quadratic curve represented with cubic control points.
+			//If so, store it as quadratic for better algorithms performance.
+			const auto quadratic_as_cubic_test{-vertices[0] + vertices[1] * 3.f - vertices[2] * 3.f + vertices[3]};
+			return 
+				(
+				utils::math::almost_equal(quadratic_as_cubic_test.x(), 0.f, 0.000001f * std::max({std::abs(vertices[0].x()), std::abs(vertices[1].x()), std::abs(vertices[2].x()), std::abs(vertices[3].x())})) &&
+				utils::math::almost_equal(quadratic_as_cubic_test.y(), 0.f, 0.000001f * std::max({std::abs(vertices[0].y()), std::abs(vertices[1].y()), std::abs(vertices[2].y()), std::abs(vertices[3].y())}))
+				);
+			}
+
+		utils_gpu_available constexpr bool is_quadratic_elevated_to_cubic() const noexcept
+			requires(extent == std::dynamic_extent)
+			{
+			if (vertices.size() == 4)
+				{
+				//If this is 0, this is a quadratic curve represented with cubic control points.
+				//If so, store it as quadratic for better algorithms performance.
+				const auto quadratic_as_cubic_test{-vertices[0] + vertices[1] * 3.f - vertices[2] * 3.f + vertices[3]};
+				return 
+					(
+					utils::math::almost_equal(quadratic_as_cubic_test.x(), 0.f, 0.000001f * std::max({std::abs(vertices[0].x()), std::abs(vertices[1].x()), std::abs(vertices[2].x()), std::abs(vertices[3].x())})) &&
+					utils::math::almost_equal(quadratic_as_cubic_test.y(), 0.f, 0.000001f * std::max({std::abs(vertices[0].y()), std::abs(vertices[1].y()), std::abs(vertices[2].y()), std::abs(vertices[3].y())}))
+					);
+				}
+			return false;
+			}
+		
+		utils_gpu_available constexpr bezier<storage::type::create::owner(), 3, optional_ends> revert_quadratic_elevated_to_cubic() const noexcept
+			{
+			static_assert(extent == 4 || extent == std::dynamic_extent);
+			assert(vertices.size() == 4);
+		
+			// https://stackoverflow.com/questions/3162645/convert-a-quadratic-bezier-to-a-cubic-one
+			// CP1 = QP0 + 2 / 3 * (QP1 - QP0)
+			// CP2 = QP2 + 2 / 3 * (QP1 - QP2)
+		
+			// Bringing back my math memories I extracted this inverting the previous formulas
+			// QP1 = (CP1 - QP0)3/2 + QP0
+			// QP1 = (CP2 - QP2)3/2 + QP2
+		
+			const auto quadratic_p1_from_cubic_p0{(vertices[1] - vertices[0]) * 3.f / 2.f + vertices[0]};
+			const auto quadratic_p1_from_cubic_p3{(vertices[2] - vertices[3]) * 3.f / 2.f + vertices[3]};
+			//Since they're not always equal or almost_equal (with math::constants:epsilon) due to
+			// sweet floating point error accumulation, I'm averaging them.
+			const auto quadratic_p1{(quadratic_p1_from_cubic_p0 + quadratic_p1_from_cubic_p3) / 2.f};
+		
+			const bezier<storage::type::create::owner(), 3, optional_ends> ret
+				{
+				vertices[0], quadratic_p1, vertices[3]
+				};
+			return ret;
+			}
+
+
 		#include "sdf/common_declaration.inline.h"
 		#include "bounds/common_declaration.inline.h"
 		};

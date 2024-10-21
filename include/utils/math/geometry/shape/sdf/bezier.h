@@ -1,18 +1,70 @@
 #pragma once
 #include "return_types.h"
+#include "point.h"
 #include "../bezier.h"
 
-#include "bezier/all.h"
+namespace utils::math::geometry::sdf::details::bezier
+	{
+	namespace _3pt
+		{
+		template <ends::ab ends>
+		utils_gpu_available constexpr float closest_t(const utils::math::vec2f& point, const shape::concepts::bezier auto& shape) noexcept;
+		}
+	namespace _4pt
+		{
+		template <ends::ab ends>
+		utils_gpu_available constexpr float closest_t(const utils::math::vec2f& point, const shape::concepts::bezier auto& shape) noexcept;
+		}
+	namespace other
+		{
+		template <ends::ab ends>
+		utils_gpu_available constexpr float closest_t(const utils::math::vec2f& point, const shape::concepts::bezier auto& shape) noexcept;
+		}
+	}
 
 namespace utils::math::geometry::shape::generic
 	{
 	template<storage::type storage_type, size_t extent, geometry::ends::optional_ab optional_ends>
-	struct bezier<storage_type, extent, optional_ends>::sdf_proxy : geometry::sdf::details::bezier::proxy_t<storage_type, extent, optional_ends>
+	struct bezier<storage_type, extent, optional_ends>::sdf_proxy
 		{
-		using proxy_t = geometry::sdf::details::bezier::proxy_t<storage_type, extent, optional_ends>;
-		using proxy_t::sdf_proxy;
-		using proxy_t::shape;
-		using proxy_t::point;
+		using shape_t = bezier<storage_type, extent, optional_ends>;
+		#include "common.inline.h"
+
+		template <ends::ab ends>
+		utils_gpu_available constexpr float closest_t() const noexcept
+			requires(extent != std::dynamic_extent)
+			{
+			if constexpr (extent == 3)
+				{
+				return utils::math::geometry::sdf::details::bezier::_3pt::closest_t<ends>(point, shape);
+				}
+			else if constexpr (extent == 4)
+				{
+				return utils::math::geometry::sdf::details::bezier::_4pt::closest_t<ends>(point, shape);
+				}
+			else if constexpr (extent != 3 && extent != 4)
+				{
+				return utils::math::geometry::sdf::details::bezier::other::closest_t<ends>(point, shape);
+				}
+			}
+
+		template <ends::ab ends>
+		utils_gpu_available constexpr float closest_t() const noexcept
+			requires(extent == std::dynamic_extent)
+			{
+			if (shape.vertices.size() == 3)
+				{
+				return utils::math::geometry::sdf::details::bezier::_3pt::closest_t<ends>(point, shape);
+				}
+			else if (shape.vertices.size() == 4)
+				{
+				return utils::math::geometry::sdf::details::bezier::_4pt::closest_t<ends>(point, shape);
+				}
+			else if (shape.vertices.size() != 3 && shape.vertices.size() != 4)
+				{
+				return utils::math::geometry::sdf::details::bezier::other::closest_t<ends>(point, shape);
+				}
+			}
 
 		template <ends::ab ends>
 		utils_gpu_available constexpr float closest_t() const noexcept
@@ -23,7 +75,7 @@ namespace utils::math::geometry::shape::generic
 		utils_gpu_available constexpr float closest_t() const noexcept
 			requires(optional_ends.has_value())
 			{
-			return closest_t<shape.optional_ends.value()>();
+			return closest_t<optional_ends.value()>();
 			}
 
 		template <ends::ab ends>
@@ -35,7 +87,7 @@ namespace utils::math::geometry::shape::generic
 			}
 
 		template <ends::ab ends>
-		utils_gpu_available constexpr shape::point closest_point()const noexcept
+		utils_gpu_available constexpr shape::point closest_point() const noexcept
 			{
 			const auto proxy{closest_proxy<ends>()};
 			return proxy.point();
@@ -103,50 +155,43 @@ namespace utils::math::geometry::shape::generic
 		utils_gpu_available constexpr auto closest_proxy() const noexcept
 			requires(optional_ends.has_value())
 			{
-			return closest_proxy<shape.optional_ends.value()>();
+			return closest_proxy<optional_ends.value()>();
 			}
 
 		utils_gpu_available constexpr shape::point closest_point() const noexcept
 			requires(optional_ends.has_value())
 			{
-			return closest_point<shape.optional_ends.value()>();
+			return closest_point<optional_ends.value()>();
 			}
 
 		utils_gpu_available constexpr float minimum_distance() const noexcept
 			requires(optional_ends.has_value())
 			{
-			return minimum_distance<shape.optional_ends.value()>();
+			return minimum_distance<optional_ends.value()>();
 			}
 
 		utils_gpu_available constexpr geometry::sdf::closest_point_with_distance closest_with_distance() const noexcept
 			requires(optional_ends.has_value())
 			{
-			return closest_with_distance<shape.optional_ends.value()>();
+			return closest_with_distance<optional_ends.value()>();
 			}
 
 		utils_gpu_available constexpr geometry::sdf::side side() const noexcept
 			requires(optional_ends.has_value())
 			{
-			return side<shape.optional_ends.value()>();
+			return side<optional_ends.value()>();
 			}
 
 		utils_gpu_available constexpr geometry::sdf::signed_distance signed_distance() const noexcept
 			requires(optional_ends.has_value())
 			{
-			return signed_distance<shape.optional_ends.value()>();
+			return signed_distance<optional_ends.value()>();
 			}
 
 		utils_gpu_available constexpr geometry::sdf::closest_point_with_signed_distance closest_with_signed_distance() const noexcept
 			requires(optional_ends.has_value())
 			{
-			return closest_with_signed_distance<shape.optional_ends.value()>();
-			}
-
-
-		geometry::sdf::gradient_signed_distance gradient_signed_distance() noexcept
-			{
-			const auto closest_with_signed_distance_value{closest_with_signed_distance()};
-			return geometry::sdf::gradient_signed_distance::create(closest_with_signed_distance_value, point);
+			return closest_with_signed_distance<optional_ends.value()>();
 			}
 		};
 	}
@@ -159,3 +204,5 @@ namespace utils::math::geometry::shape::generic
 		return {*this, point};
 		}
 	}
+
+#include "bezier/all.h"

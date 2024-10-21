@@ -8,7 +8,7 @@
 #include "../../details/base_types.h"
 #include "ab.h"
 #include "point.h"
-#include "vertices.h"
+#include "../vertices.h"
 
 // Note: exact distance for 4 control points here: https://github.com/nrtaylor/CubicSplineClosestPoint/tree/master
 // TODO: understand math and get exact t parameter instead of just distance so we can get tangent and normal as well

@@ -19,4 +19,8 @@ namespace utils::math::constants
 	inline constexpr float  inf  = finf;
 	inline constexpr float  inff = finf;
 	inline constexpr float  infd = dinf;
+
+	inline constexpr double dnan = std::numeric_limits<double>::quiet_NaN();
+	inline constexpr float  fnan = std::numeric_limits<float >::quiet_NaN();
+	inline constexpr float  nan = fnan;
 	}
