@@ -269,7 +269,7 @@ namespace utils::storage
 			requires(concepts::span<inner_storage_t>) :
 			storage{first, count} {}
 
-		template <concepts::multiple other_t>
+		template <bool allow_memberwise_cast, concepts::multiple other_t>
 		static inner_storage_t inner_create(other_t& other) noexcept
 			requires 
 				(
@@ -317,10 +317,31 @@ namespace utils::storage
 						{
 						static constexpr size_t ret_extent{extent == std::dynamic_extent ? other_t::extent : extent};
 
+						auto getter{[&other](size_t i)
+							{
+							if constexpr (other_may_have_less)
+								{
+								if (i >= other.storage.size()) 
+									{
+									return inner_value_type{};
+									}
+								}
+							if constexpr (allow_memberwise_cast)
+								{
+								return static_cast<inner_value_type>(other[i]);
+								}
+							else if constexpr (!allow_memberwise_cast)
+								{
+								return other[i];
+								}
+							}};
+
 						return[&]<std::size_t... is>(std::index_sequence<is...>)
 							{
-							if constexpr (other_may_have_less) { return inner_storage_t{(is < other.storage.size() ? inner_value_type{other[is]} : inner_value_type{})...}; }
-							else                               { return inner_storage_t{                             inner_value_type{other[is]}                      ...}; }
+							return inner_storage_t{getter(is)...};
+							//
+							//if constexpr (other_may_have_less) { return inner_storage_t{(is < other.storage.size() ? static_cast<inner_value_type>(other[is]) : inner_value_type{})...}; }
+							//else                               { return inner_storage_t{                             static_cast<inner_value_type>(other[is])                      ...}; }
 							}(std::make_index_sequence<ret_extent>());
 						}
 					}
@@ -331,17 +352,16 @@ namespace utils::storage
 					}
 				}
 			}
-
-		utils_gpu_available constexpr multiple(const concepts::multiple auto& other) noexcept requires(storage_type.can_construct_from_const()) : storage{inner_create(other)} {}
-		utils_gpu_available constexpr multiple(      concepts::multiple auto& other) noexcept : storage{inner_create(other)} {}
+		
+		//TODO set inner_create<true> to inner_create<false>
+		//force static_cast if user wants inner_create<true>
+		utils_gpu_available constexpr multiple(const concepts::multiple auto& other) noexcept requires(storage_type.can_construct_from_const()) : storage{inner_create<true>(other)} {}
+		utils_gpu_available constexpr multiple(      concepts::multiple auto& other) noexcept : storage{inner_create<true>(other)} {}
 
 		//template <concepts::multiple other_t>
-		//utils_gpu_available constexpr multiple& operator=(other_t& other) noexcept
+		//explicit operator other_t() noexcept
 		//	{
-		//	for (size_t i = 0; i < length; i++)
-		//		{
-		//
-		//		}
+		//	return other_t{other_t::inner_create<true>(*this)};
 		//	}
 		};
 	}

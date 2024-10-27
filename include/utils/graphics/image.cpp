@@ -15,6 +15,33 @@
 
 namespace utils::graphics::image
 	{
+	utils::matrix<utils::graphics::colour::rgba_u> load_from_file(const std::filesystem::path& path)
+		{
+		int width, height, channels;
+		unsigned char* bytes{stbi_load(path.string().c_str(), &width, &height, &channels, 0)};
+
+		utils::matrix<utils::graphics::colour::rgba_u> ret{utils::math::vec2s{static_cast<size_t>(width), static_cast<size_t>(height)}};
+
+		size_t bytes_index{0};
+		for (size_t y = 0; y < height; y ++)
+			{
+			for (size_t x = 0; x < width; x++)
+				{
+				const utils::math::vec2s coords{{x, y}};
+				auto& pixel{ret[coords]};
+
+				for (size_t c = 0; c < channels; c++)
+					{
+					pixel[c] = bytes[bytes_index];
+					bytes_index++;
+					}
+				}
+			}
+
+		return ret;
+		}
+
+
 	void save_to_file(const utils::matrix<utils::graphics::colour::rgba_u>& image, const std::filesystem::path& path)
 		{
 		stbi_write_png(path.string().c_str(), static_cast<int>(image.width()), static_cast<int>(image.height()), 4, image.data(), static_cast<int>(image.width() * 4));

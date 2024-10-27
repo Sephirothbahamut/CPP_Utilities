@@ -11,15 +11,12 @@
 #include "../math/geometry/shape/bezier.h"
 #include "../math/geometry/shape/transform/vertices.h"
 
-//TODO remove Utilities_MS dependency
-#include "../../../../../CPP_Utilities_MS/include/utils/MS/graphics/d2d.h"
-
 #ifndef utils_compilation_os_windows
 #error Only windows supported so far because text.cpp relies on DirectWrite. 
 //DirectWriteCore should be cross platform but I couldn't figure out how to include it properly and I don't really use linux so that's low priority.
 //TODO user DirectWriteCore and remove windows only-ness
 #endif
-
+/*
 
 #include <Windows.h>
 #include <dcomp.h>
@@ -491,3 +488,4 @@ namespace utils::graphics::text
 		return glyphs;
 		}
 	}
+	*/
