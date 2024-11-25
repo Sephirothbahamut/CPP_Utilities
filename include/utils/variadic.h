@@ -1,8 +1,8 @@
 #pragma once
 
+#include <tuple>
 #include <memory>
 #include <type_traits>
-#include <tuple>
 
 //TODO clean when you have the courage :)
 
@@ -10,10 +10,22 @@ namespace utils
 	{
 	namespace tuple
 		{
+		// F is void(auto& value)
 		template<typename... Ts, typename F>
 		void for_each_in_tuple(std::tuple<Ts...>& t, F f)
 			{
 			std::apply([=](auto& ...x) { (..., f(x)); }, t);
+			}
+
+		// F is void(auto& value, size_t index)
+		template<typename... Ts, typename F>
+		void for_each_index(std::tuple<Ts...>& t, F f)
+			{
+			[&] <std::size_t... Is>(std::index_sequence<Is...>) 
+				{
+				(f(std::get<Is>(t), Is), ...);
+				}
+				(std::make_index_sequence<std::tuple_size_v<std::decay_t<decltype(t)>>>{});
 			}
 		}
 

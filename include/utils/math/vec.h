@@ -198,7 +198,19 @@ namespace utils::math
 
 		utils_gpu_available constexpr self_t& set_length(value_type value) noexcept requires(!storage_type.is_const()) { *this = normalize() * value; return *this; }
 
-		utils_gpu_available constexpr nonref_self_t normalize() const noexcept { return get_length() ? nonref_self_t{*this} / get_length() : nonref_self_t{*this}; }
+		utils_gpu_available constexpr nonref_self_t normalize() const noexcept 
+			{
+			const nonref_self_t copy{*this};
+			const auto length2{get_length2()};
+			if (length2 != value_type{0} && length2 != value_type{1})
+				{
+				const auto length{std::sqrt(length2)};
+				const auto length_inverse{value_type{1} / length};
+				const auto ret{copy * length_inverse};
+				return ret;
+				}
+			return copy;
+			}
 		utils_gpu_available constexpr self_t& normalize_self() noexcept requires(!storage_type.is_const()) { return *this = normalize(); }
 		
 		/// <summary> Evaluate distance^2 in the size of this vec. Missing coordinates are considered 0. </summary>

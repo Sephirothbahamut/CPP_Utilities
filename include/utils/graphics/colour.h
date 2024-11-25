@@ -235,6 +235,16 @@ namespace utils::graphics::colour
 
 			utils_gpu_available constexpr hsv(const concepts::rgb auto& rgb) noexcept
 				requires(storage_type.is_owner());
+
+			utils_gpu_available constexpr hsv(const utils::math::angle::degf& hue, const float& saturation, const float& value) noexcept
+				requires(storage_type.is_owner()) : 
+				base_t
+					{
+					::utils::math::angle::base<const_aware_value_type, range::full_value>{hue}.value,
+					saturation, 
+					value
+					}
+					{};
 			
 			utils_gpu_available constexpr ::utils::math::angle::base<const const_aware_value_type&, range::full_value> h() const noexcept { return {(*this)[0]}; }
 			utils_gpu_available constexpr ::utils::math::angle::base<      const_aware_value_type&, range::full_value> h()       noexcept { return {(*this)[0]}; }

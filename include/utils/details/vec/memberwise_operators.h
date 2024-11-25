@@ -131,6 +131,25 @@ namespace utils::details::vector
 				self().operator_self_assign<[](auto& a, const auto& b) { a = b; }>(other);
 				return self();
 				}
+
+
+			//TODO change all operators as members with deducing thiis
+			//should solve all the times the operators weren't visible from other bodies (like `std::optional<vec2f> == vec2f` failing)
+			template <typename self_t, utils::details::vector::concepts::compatible_vector<self_t> other_t>
+			utils_gpu_available constexpr bool operator==(this const self_t& self, const other_t& other) noexcept
+				{
+				size_t i{0};
+				for (; i < std::min(self_t::extent, other_t::extent); i++)
+					{
+					if (self[i] != other[i]) { return false; }
+					}
+			
+				if constexpr (self_t::extent > other_t::extent) { for (; i < self_t::extent; i++) { if (self[i] != typename self_t::value_type{}) { return false; } } }
+				else
+					if constexpr (self_t::extent < other_t::extent) { for (; i < other_t::extent; i++) { if (other[i] != typename other_t::value_type{}) { return false; } } }
+			
+				return true;
+				}
 		};
 	}
 
@@ -174,20 +193,20 @@ namespace utils::details::vector
 	template <utils::details::vector::concepts::vector a_t, utils::details::vector::concepts::compatible_vector<a_t> b_t> utils_gpu_available constexpr auto operator| (const a_t& a, const b_t& b) noexcept { return a.operator_to_new     <[](const auto& a, const auto& b) { return a |  b; }>(b); }
 	template <utils::details::vector::concepts::vector a_t, utils::details::vector::concepts::compatible_vector<a_t> b_t> utils_gpu_available constexpr auto operator& (const a_t& a, const b_t& b) noexcept { return a.operator_to_new     <[](const auto& a, const auto& b) { return a &  b; }>(b); }
 	template <utils::details::vector::concepts::vector a_t, utils::details::vector::concepts::compatible_vector<a_t> b_t> utils_gpu_available constexpr bool operator!=(const a_t& a, const b_t& b) noexcept { return !(a == b); }
-	template <utils::details::vector::concepts::vector a_t, utils::details::vector::concepts::compatible_vector<a_t> b_t> utils_gpu_available constexpr bool operator==(const a_t& a, const b_t& b) noexcept
-		{
-		size_t i{0};
-		for (; i < std::min(a_t::extent, b_t::extent); i++)
-			{
-			if (a[i] != b[i]) { return false; }
-			}
-
-		if constexpr (a_t::extent > b_t::extent) { for (; i < a_t::extent; i++) { if (a[i] != typename a_t::value_type{}) { return false; } } }
-		else
-		if constexpr (a_t::extent < b_t::extent) { for (; i < b_t::extent; i++) { if (b[i] != typename b_t::value_type{}) { return false; } } }
-
-		return true;
-		}
+	//template <utils::details::vector::concepts::vector a_t, utils::details::vector::concepts::compatible_vector<a_t> b_t> utils_gpu_available constexpr bool operator==(const a_t& a, const b_t& b) noexcept
+	//	{
+	//	size_t i{0};
+	//	for (; i < std::min(a_t::extent, b_t::extent); i++)
+	//		{
+	//		if (a[i] != b[i]) { return false; }
+	//		}
+	//
+	//	if constexpr (a_t::extent > b_t::extent) { for (; i < a_t::extent; i++) { if (a[i] != typename a_t::value_type{}) { return false; } } }
+	//	else
+	//	if constexpr (a_t::extent < b_t::extent) { for (; i < b_t::extent; i++) { if (b[i] != typename b_t::value_type{}) { return false; } } }
+	//
+	//	return true;
+	//	}
 	//template <utils::details::vector::concepts::compatible_array<derived_t> T2> constexpr derived_t& operator =(const T2& b) noexcept { for (size_t i{0}; i < std::min(crtp::derived().size(), b.size()); i++) { crtp::derived()[i] = b[i]; } return *this; }
 #pragma endregion array
 

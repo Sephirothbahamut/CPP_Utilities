@@ -16,11 +16,29 @@ namespace utils::containers
 		};
 
 	template <typename T>
+	class regions;
+
+	namespace concepts
+		{
+		template <typename T>
+		concept regions = std::same_as<std::remove_cvref_t<T>, containers::regions<typename std::remove_cvref_t<T>::value_type>>;
+		}
+
+	template <typename T>
 	class regions
 		{
+		bool opt_eq(const std::optional<T>& a, const T& b) const noexcept
+			{
+			if (!a.has_value()) { return false; }
+			return a == b;
+			}
+
 		public:
-			struct slot { size_t begin{0}; std::optional<T> value_opt{std::nullopt}; };
-			struct read_slot { const region region; std::optional<std::reference_wrapper<T>> value_opt_ref; };
+			using value_type = T;
+
+			struct slot            { size_t begin{0}; std::optional<T> value_opt{std::nullopt}; };
+			struct read_slot       { using value_type = T; const region region; std::optional<std::reference_wrapper<T      >> value_opt_ref; };
+			struct read_const_slot { using value_type = T; const region region; std::optional<std::reference_wrapper<const T>> value_opt_ref; };
 			std::vector<slot> slots;
 
 			void add(const T& new_value, region fill_region) noexcept
@@ -56,7 +74,7 @@ namespace utils::containers
 					{
 					const auto& lbb{slots[lbb_index]};
 					const bool lbb_ends_after{!lbe_is_valid};
-					const bool lbb_shares_value{lbb.value_opt == new_value};
+					const bool lbb_shares_value{opt_eq(lbb.value_opt, new_value)};
 					if (lbb_shares_value)
 						{
 						if (lbb_ends_after)
@@ -71,7 +89,7 @@ namespace utils::containers
 						if (fae_is_valid)
 							{
 							auto& fae{slots[fae_index]};
-							const bool fae_shares_value{fae.value_opt == new_value};
+							const bool fae_shares_value{opt_eq(fae.value_opt, new_value)};
 							if (fae.begin == fill_region.end() && fae_shares_value)
 								{
 								fae.begin = fill_region.begin;
@@ -98,7 +116,7 @@ namespace utils::containers
 				if (lbe_is_valid)
 					{
 					auto& lbe{slots[lbe_index]};
-					const bool lbe_shares_value{lbe.value_opt == new_value};
+					const bool lbe_shares_value{opt_eq(lbe.value_opt, new_value)};
 
 					if (!extend_lbb && lbe_shares_value)
 						{
@@ -108,7 +126,6 @@ namespace utils::containers
 						}
 					else
 						{
-
 						//if fae is strictly after fill.region.end(), lbe has at least 1 element after fill_region.end()
 						//if fae isn't valid, lbe extends indefinitely
 						if (at_least_one_element_after_region_before_fae)
@@ -153,7 +170,7 @@ namespace utils::containers
 					//assert(fae_is_valid); //impossible otherwise, if all are invalid slots.size() == 0
 					
 					auto& fae{slots[fae_index]};
-					const bool fae_shares_value{fae.value_opt == new_value};
+					const bool fae_shares_value{opt_eq(fae.value_opt, new_value)};
 					if (fae.begin == fill_region.end() && fae_shares_value)
 						{
 						fae.begin = fill_region.begin;
@@ -167,119 +184,8 @@ namespace utils::containers
 						}
 					}
 				}
-		//void add(T new_value, region fill_region) noexcept
-		//	{
-		//	if (slots.size() == 0)
-		//		{
-		//		auto& emplaced_begin{slots.emplace_back(fill_region.begin, new_value   )};
-		//		auto& emplaced_end  {slots.emplace_back(fill_region.end(), std::nullopt)};
-		//		//return {fill_region, emplaced_begin.value_opt.value()};
-		//		return;
-		//		}
-		//	
-		//	size_t index{0};
-		//
-		//	size_t last_before_begin_index{slots.size()};
-		//	size_t last_before_end_index {slots.size()};
-		//	size_t first_after_end_index  {slots.size()};
-		//
-		//	while (index < slots.size())
-		//		{
-		//		const auto& slot{slots[index]};
-		//		if (slot.begin <= fill_region.begin)
-		//			{
-		//			last_before_begin_index = index;
-		//			}
-		//		if (slot.begin <= fill_region.end())
-		//			{
-		//			last_before_end_index  = index;
-		//			}
-		//		else if (slot.begin >= fill_region.end())
-		//			{
-		//			first_after_end_index = index;
-		//			break;
-		//			}
-		//		index++;
-		//		}
-		//
-		//	const bool last_before_begin__is_valid        {last_before_begin_index != slots.size()};
-		//	const bool last_before_begin__has_value       {last_before_begin__is_valid  && slots[last_before_begin_index].value_opt.has_value()};
-		//	const bool last_before_begin__begin_matches   {last_before_begin__is_valid  && slots[last_before_begin_index].begin == fill_region.begin};
-		//	const bool last_before_begin__value_matches   {last_before_begin__has_value && slots[last_before_begin_index].value_opt.value() == new_value};
-		//	const bool last_before_begin__wraps_new_region{last_before_begin_index == last_before_end_index};
-		//	const bool last_before_begin__starts_before   {last_before_begin__is_valid && slots[last_before_begin_index].begin < fill_region.begin};
-		//
-		//	const bool first_after_end__is_valid                    {first_after_end_index != slots.size()};
-		//	const bool first_after_end__begin_matches_new_region_end{!first_after_end__is_valid || (first_after_end__is_valid && slots[first_after_end_index].begin == fill_region.end())};
-		//	
-		//	const bool last_before_end__is_valid     {last_before_end_index != slots.size()};
-		//	const bool last_before_end__has_value    {last_before_end__is_valid && slots[last_before_end_index].value_opt.has_value()};
-		//	const bool last_before_end__value_matches{last_before_end__has_value && slots[last_before_end_index].value_opt.value() == new_value};
-		//	const bool last_before_end__needed_after {!last_before_end__value_matches && (!first_after_end__is_valid || !first_after_end__begin_matches_new_region_end)};
-		//	
-		//
-		//	// Operations to perform
-		//	const bool do_nothing{last_before_begin__wraps_new_region && last_before_begin__value_matches};
-		//	if (do_nothing) { return; }
-		//
-		//	const bool new_extends_last_before_begin{last_before_begin__value_matches};
-		//
-		//	const bool new_replaces_last_before_end{!new_extends_last_before_begin && !last_before_end__needed_after};
-		//
-		//	const bool emplace_new_after_last_before_begin{!new_extends_last_before_begin && !new_replaces_last_before_end};
-		//
-		//	const bool emplace_last_before_begin_after_new{emplace_new_after_last_before_begin && last_before_begin__wraps_new_region};
-		//
-		//	const bool advance_last_before_end
-		//		{
-		//		!emplace_last_before_begin_after_new/*because if that's true, lbeend == lbbegin*/ && 
-		//		last_before_end__needed_after
-		//		};
-		//	
-		//	const bool remove_last_before_end{new_extends_last_before_begin && !last_before_end__needed_after};
-		//
-		//	const bool emplace_stop_after_new{!emplace_last_before_begin_after_new && !advance_last_before_end && emplace_new_after_last_before_begin && !first_after_end__is_valid};
-		//
-		//
-		//	if (new_replaces_last_before_end)
-		//		{
-		//		auto& slot{slots[last_before_end_index]};
-		//		slot.value_opt = new_value;
-		//		}
-		//	if (advance_last_before_end)
-		//		{
-		//		auto& slot{slots[last_before_end_index]};
-		//		slot.begin = fill_region.end();
-		//		}
-		//	if (remove_last_before_end)
-		//		{
-		//		slots.erase(slots.begin() + last_before_end_index);
-		//		}
-		//	if (emplace_new_after_last_before_begin)
-		//		{
-		//		const size_t emplace_index{last_before_begin_index + 1};
-		//		auto slot_it{slots.emplace(slots.begin() + emplace_index, fill_region.begin, new_value)};
-		//
-		//		if (emplace_stop_after_new)
-		//			{
-		//			//TODO remove assert, it's just for my piece of mind because my brain is too fried to check if it's possible right now
-		//			assert(!emplace_last_before_begin_after_new);
-		//
-		//			const size_t emplace_stop_index{emplace_index + 1};
-		//			auto slot_it{slots.emplace(slots.begin() + emplace_stop_index, fill_region.end(), std::nullopt)};
-		//			}
-		//		if (emplace_last_before_begin_after_new)
-		//			{
-		//			//TODO remove assert, it's just for my piece of mind because my brain is too fried to check if it's possible right now
-		//			assert(!emplace_stop_after_new);
-		//
-		//			const size_t emplace_lbb_copy_index{emplace_index + 1};
-		//			auto slot_it{slots.emplace(slots.begin() + emplace_lbb_copy_index, fill_region.end(), slots[last_before_begin_index].value_opt)};
-		//			}
-		//		}
-		//	}
 
-			read_slot operator[](size_t index) noexcept
+			read_slot value_at(size_t index) noexcept
 				{
 				if (empty())
 					{
@@ -330,13 +236,106 @@ namespace utils::containers
 					};
 				}
 
-			size_t size() const noexcept
+			read_const_slot value_at(size_t index) const noexcept
+				{
+				if (empty())
+					{
+					return read_const_slot
+						{
+						.region{.begin{0}, .count{std::numeric_limits<size_t>::max()}},
+						.value_opt_ref{std::nullopt}
+						};
+					}
+
+				if (index < slots[0].begin)
+					{
+					return read_const_slot
+						{
+						.region{.begin{0}, .count{slots[0].begin}},
+						.value_opt_ref{std::nullopt}
+						};
+					}
+
+				size_t slot_index{0};
+				while (slot_index < slots.size())
+					{
+					const regions::slot& slot{slots[slot_index]};
+					const size_t next_slot_begin{(slot_index < slots.size() - 1) ? slots[slot_index + 1].begin : std::numeric_limits<size_t>::max()};
+					if (slot.begin <= index && next_slot_begin > index) { break; }
+					slot_index++;
+					}
+
+				const size_t next_slot_begin{(slot_index < slots.size() - 1) ? slots[slot_index + 1].begin : std::numeric_limits<size_t>::max()};
+				auto& slot{slots[slot_index]};
+				const size_t region_begin{slot.begin};
+
+				std::optional<std::reference_wrapper<const T>> value_opt_ref{std::nullopt};
+				if (slot.value_opt.has_value()) 
+					{
+					std::reference_wrapper<const T> value_ref{slot.value_opt.value()};
+					value_opt_ref.emplace(value_ref);
+					}
+
+				return read_const_slot
+					{
+					.region
+						{
+						.begin{region_begin},
+						.count{next_slot_begin - region_begin}
+						},
+					.value_opt_ref{value_opt_ref}
+					};
+				}
+
+			size_t values_size() const noexcept
 				{
 				if (slots.empty()) { return 0; }
 				return slots[slots.size() - 1].begin;
 				}
 
-			bool empty() const noexcept { return size() == 0; }
+			read_slot slot_at(size_t index)
+				{
+				assert(index < slots_size());
+
+				auto& slot{slots[index]};
+				auto& slot_next{slots[index + 1]};
+
+				return read_slot
+					{
+					.region
+						{
+						.begin{slot.begin},
+						.count{slot_next.begin - slot.begin}
+						},
+					.value_opt_ref{slot.value_opt.has_value() ? std::optional<std::reference_wrapper<T>>{slot.value_opt.value()} : std::optional<std::reference_wrapper<T>>{std::nullopt}}
+					};
+				}
+
+			read_const_slot slot_at(size_t index) const
+				{
+				assert(index < slots_size());
+
+				const auto& slot{slots[index]};
+				const auto& slot_next{slots[index + 1]};
+
+				return read_const_slot
+					{
+					.region
+						{
+						.begin{slot.begin},
+						.count{slot_next.begin - slot.begin}
+						},
+					.value_opt_ref{slot.value_opt}
+					};
+				}
+
+			size_t slots_size() const noexcept
+				{
+				const size_t inner_size{slots.size()};
+				return (inner_size == 0 ? 0 : (inner_size - 1));
+				}
+
+			bool empty() const noexcept { return slots.empty(); }
 
 			//TODO the view should skip nullopt regions
 			//inline auto get_slots() noexcept //inline auto cause views return types are... heh

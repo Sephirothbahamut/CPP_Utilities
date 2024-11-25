@@ -337,7 +337,7 @@ namespace utils::graphics::sdf
 				const merge_callback& merge_callback,
 				utils::matrix<utils::math::geometry::sdf::gradient_signed_distance>& gradient_signed_distance_field,
 				float supersampling = 1.f
-				) noexcept
+				) const noexcept
 				{
 				const utils::math::rect<float> pixels_region_f{bounding_box.transform(camera_transform).scale(supersampling)};
 				const utils::math::rect<size_t> pixels_region
@@ -392,4 +392,40 @@ namespace utils::graphics::sdf
 			const utils::math::geometry::shape::aabb bounding_box;
 		};
 	
+
+
+	inline utils::graphics::colour::rgba_f debug_sample_gradient_sdf(utils::math::geometry::sdf::gradient_signed_distance gdist)
+		{
+		if (gdist.distance.value ==  utils::math::constants::finf) { return {1.f, 1.f, 1.f, 0.f}; }
+		if (gdist.distance.value == -utils::math::constants::finf) { return {0.f, 0.f, 0.f, 0.f}; }
+
+		const auto smoothstep{[](float edge0, float edge1, float x) -> float
+			{
+			// Scale, bias and saturate x to 0..1 range
+			x = std::clamp((x - edge0) / (edge1 - edge0), 0.0f, 1.0f);
+			// Evaluate polynomial
+			return x * x * (3.f - 2.f * x);
+			}};
+
+		// Inigo Quilez fancy colors
+		gdist.distance.value *= .006f;
+		utils::math::vec3f colour = (gdist.distance.side().is_outside()) ? utils::math::vec3f{.9f, .6f, .3f} : utils::math::vec3f{.4f, .7f, .85f};
+		colour = utils::math::vec3f{gdist.gradient.x() * .5f + .5f, gdist.gradient.y() * .5f + .5f, 1.f};
+		colour *= 1.0f - 0.5f * std::exp(-16.0f * gdist.distance.absolute());
+		colour *= 0.9f + 0.1f * std::cos(150.0f * gdist.distance.value);
+		colour = utils::math::lerp(colour, utils::math::vec3f{1.f}, 1.f - smoothstep(0.f, .01f, gdist.distance.absolute()));
+
+		if (gdist.distance.side().is_inside())
+			{
+			colour *= .5f;
+			}
+
+		return utils::graphics::colour::rgba_f
+			{
+			colour[0],
+			colour[1],
+			colour[2],
+			1.f
+			};
+		}
 	}
