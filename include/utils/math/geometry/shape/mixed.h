@@ -60,22 +60,24 @@ namespace utils::math::geometry::shape::generic
 				utils::math::geometry::vertices_as_field<geometry::ends_aware_vertices<STORAGE_TYPE, ENDS.is_closed(), std::dynamic_extent>>{other},
 				pieces_metadata{other.pieces_metadata} {}
 
-			void clear(const shape::point& first_point) noexcept
+			auto& clear(const shape::point& first_point) noexcept
 				requires(storage_type.is_owner())
 				{
 				vertices.storage.clear();
 				pieces_metadata.storage.clear();
 
 				vertices.storage.emplace_back(first_point);
+				return *this;
 				}
 
-			void add_segment(const shape::point& point) noexcept
+			auto& add_segment(const shape::point& point) noexcept
 				requires(storage_type.is_owner())
 				{
 				vertices.storage.emplace_back(point);
 				add_or_update_metadata(piece_metadata_t::type_t::segment);
+				return *this;
 				}
-			void add_segments(const std::initializer_list<shape::point>& points) noexcept
+			auto& add_segments(const std::initializer_list<shape::point>& points) noexcept
 				requires(storage_type.is_owner())
 				{
 				for (const auto& point : points)
@@ -83,16 +85,18 @@ namespace utils::math::geometry::shape::generic
 					vertices.storage.emplace_back(point);
 					}
 				add_or_update_metadata(piece_metadata_t::type_t::segment);
+				return *this;
 				}
 
-			void add_bezier_3pt(const shape::point& b, const shape::point& c) noexcept
+			auto& add_bezier_3pt(const shape::point& b, const shape::point& c) noexcept
 				requires(storage_type.is_owner())
 				{
 				vertices.storage.emplace_back(b);
 				vertices.storage.emplace_back(c);
 				add_or_update_metadata(piece_metadata_t::type_t::bezier_3pt);
+				return *this;
 				}
-			void add_bezier_3pt(const std::initializer_list<shape::point>& points) noexcept
+			auto& add_bezier_3pt(const std::initializer_list<shape::point>& points) noexcept
 				requires(storage_type.is_owner())
 				{
 				const auto qwe{points.size()};
@@ -104,17 +108,19 @@ namespace utils::math::geometry::shape::generic
 					vertices.storage.emplace_back(point);
 					}
 				add_or_update_metadata(piece_metadata_t::type_t::bezier_3pt);
+				return *this;
 				}
 
-			void add_bezier_4pt(const shape::point& b, const shape::point& c, const shape::point& d) noexcept
+			auto& add_bezier_4pt(const shape::point& b, const shape::point& c, const shape::point& d) noexcept
 				requires(storage_type.is_owner())
 				{
 				vertices.storage.emplace_back(b);
 				vertices.storage.emplace_back(c);
 				vertices.storage.emplace_back(d);
 				add_or_update_metadata(piece_metadata_t::type_t::bezier_4pt);
+				return *this;
 				}
-			void add_bezier_4pt(const std::initializer_list<shape::point>& points) noexcept
+			auto& add_bezier_4pt(const std::initializer_list<shape::point>& points) noexcept
 				requires(storage_type.is_owner())
 				{
 				assert((points.size() % 3) == 0);
@@ -124,9 +130,10 @@ namespace utils::math::geometry::shape::generic
 					vertices.storage.emplace_back(point);
 					}
 				add_or_update_metadata(piece_metadata_t::type_t::bezier_4pt);
+				return *this;
 				}
 
-			void add_bezier(const std::initializer_list<shape::point>& points) noexcept
+			auto& add_bezier(const std::initializer_list<shape::point>& points) noexcept
 				requires(storage_type.is_owner())
 				{
 				if (points.size() == 2) { add_bezier_3pt(points); return; }
@@ -139,9 +146,10 @@ namespace utils::math::geometry::shape::generic
 					vertices.storage.emplace_back(point);
 					}
 				pieces_metadata.storage.emplace_back(piece_metadata_t::type_t::bezier_4pt, vertices.size());
+				return *this;
 				}
 
-			void close() noexcept
+			auto& close() noexcept
 				requires(storage_type.is_owner() && ends.is_closed())
 				{
 				const auto first{vertices[0]};
@@ -150,6 +158,7 @@ namespace utils::math::geometry::shape::generic
 					{
 					vertices.storage.resize(vertices.size() - 1);
 					}
+				return *this;
 				}
 
 			struct pieces_view : ::utils::oop::non_copyable, ::utils::oop::non_movable

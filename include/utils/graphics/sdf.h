@@ -350,12 +350,22 @@ namespace utils::graphics::sdf
 						std::min(utils::math::cast_clamp<size_t>(std::ceil (pixels_region_f.dw())), gradient_signed_distance_field.sizes().y())
 						}
 					};
-				const size_t indices_end{pixels_region.size().sizes_to_size()};
+				const utils::math::rect<size_t> pixels_region_validated
+					{
+					utils::math::rect<size_t>
+						{
+						pixels_region.ll(),
+						pixels_region.up(),
+						utils::math::min(pixels_region.rr(), gradient_signed_distance_field.width ()),
+						utils::math::min(pixels_region.dw(), gradient_signed_distance_field.height())
+						}
+					};
+				const size_t indices_end{pixels_region_validated.size().sizes_to_size()};
 
 				std::ranges::iota_view indices(size_t{0}, indices_end);
 				const auto callback{[&, this](size_t index)
 					{
-					const utils::math::vec2s coords_indices{pixels_region.ul() + pixels_region.size().index_to_coords(index)};
+					const utils::math::vec2s coords_indices{pixels_region_validated.ul() + pixels_region_validated.size().index_to_coords(index)};
 					const utils::math::vec2f coords_f
 						{
 						utils::math::vec2f
