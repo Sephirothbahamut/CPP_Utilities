@@ -57,39 +57,40 @@ namespace utils::math::geometry::shape::generic
 					{
 					current = candidate_values;
 					current_is_vertex = current.closest == shape.vertices.ends_aware_access(last_index);
-					if (current_is_vertex)
-						{
-						current_index = last_index;
-						}
+					current_index = last_index;
 					}
 				index++;
 				});
 
 			if constexpr (shape.ends.is_closed())
 				{
-				if (current.closest == shape.vertices[0] && current_index == 0)
+				if (current.closest == shape.vertices[0])// && current_index == 0)
 					{
 					current_is_vertex = true;
+					current_index = 0;
 					}
 				}
 
-			const bool closed_or_not_last_nor_first{shape.ends.is_closed() || (current_index < shape.vertices.size() - 1 && current_index > 0)};
-			if (closed_or_not_last_nor_first && current_is_vertex)
+			if (current_is_vertex)
 				{
-				const vec2f point_a{shape.vertices.ends_aware_access(current_index > 0 ? current_index - 1 : shape.vertices.size() - 1)};
-				const vec2f point_b{shape.vertices.ends_aware_access(current_index    )};
-				const vec2f point_c{shape.vertices.ends_aware_access(current_index + 1)};
+				const bool closed_or_not_last_nor_first{shape.ends.is_closed() || (current_index < shape.vertices.size() - 1 && current_index > 0)};
+				if (closed_or_not_last_nor_first)
+					{
+					const vec2f point_a{shape.vertices.ends_aware_access(current_index > 0 ? current_index - 1 : shape.vertices.size() - 1)};
+					const vec2f point_b{shape.vertices.ends_aware_access(current_index    )};
+					const vec2f point_c{shape.vertices.ends_aware_access(current_index + 1)};
 		
-				const shape::line line_a{point_a, point_b};
-				const shape::line line_b{point_b, point_c};
+					const shape::line line_a{point_a, point_b};
+					const shape::line line_b{point_b, point_c};
 		
-				const float distance_a{line_a.sdf(point).minimum_distance()};
-				const float distance_b{line_b.sdf(point).minimum_distance()};
+					const float distance_a{line_a.sdf(point).minimum_distance()};
+					const float distance_b{line_b.sdf(point).minimum_distance()};
 		
-				const bool                return_first{distance_a > distance_b};
-				const geometry::sdf::side side{(return_first ? line_a : line_b).sdf(point).side()};
+					const bool                return_first{distance_a > distance_b};
+					const geometry::sdf::side side{(return_first ? line_a : line_b).sdf(point).side()};
 		
-				current.distance = geometry::sdf::signed_distance{current.distance.absolute() * side};
+					current.distance = geometry::sdf::signed_distance{current.distance.absolute() * side};
+					}
 				}
 
 			return current;

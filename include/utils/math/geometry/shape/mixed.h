@@ -136,8 +136,8 @@ namespace utils::math::geometry::shape::generic
 			auto& add_bezier(const std::initializer_list<shape::point>& points) noexcept
 				requires(storage_type.is_owner())
 				{
-				if (points.size() == 2) { add_bezier_3pt(points); return; }
-				if (points.size() == 3) { add_bezier_4pt(points); return; }
+				if (points.size() == 2) { return add_bezier_3pt(points); }
+				if (points.size() == 3) { return add_bezier_4pt(points); }
 				assert(points.size() > 3);
 
 				vertices.storage.reserve(vertices.storage.size() + points.size());

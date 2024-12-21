@@ -339,8 +339,13 @@ namespace utils::graphics::sdf
 				float supersampling = 1.f
 				) const noexcept
 				{
+				const auto pixels_region_max{gradient_signed_distance_field.sizes()};
 				const utils::math::rect<float> pixels_region_f{bounding_box.transform(camera_transform).scale(supersampling)};
-				const utils::math::rect<size_t> pixels_region
+
+				if (pixels_region_f.rr() <  0.f                   || pixels_region_f.dw() <  0.f                  ) { return gradient_signed_distance_field; }
+				if (pixels_region_f.ll() >= pixels_region_max.x() || pixels_region_f.up() >= pixels_region_max.y()) { return gradient_signed_distance_field; }
+
+				const utils::math::rect<size_t> pixels_region_cast
 					{
 					utils::math::rect<size_t>
 						{
@@ -350,22 +355,22 @@ namespace utils::graphics::sdf
 						std::min(utils::math::cast_clamp<size_t>(std::ceil (pixels_region_f.dw())), gradient_signed_distance_field.sizes().y())
 						}
 					};
-				const utils::math::rect<size_t> pixels_region_validated
+				const utils::math::rect<size_t> pixels_region
 					{
 					utils::math::rect<size_t>
 						{
-						pixels_region.ll(),
-						pixels_region.up(),
-						utils::math::min(pixels_region.rr(), gradient_signed_distance_field.width ()),
-						utils::math::min(pixels_region.dw(), gradient_signed_distance_field.height())
+								 pixels_region_cast.ll(),
+								 pixels_region_cast.up(),
+						std::min(pixels_region_cast.rr(), pixels_region_max.x()),
+						std::min(pixels_region_cast.dw(), pixels_region_max.y())
 						}
 					};
-				const size_t indices_end{pixels_region_validated.size().sizes_to_size()};
+				const size_t indices_end{pixels_region.size().sizes_to_size()};
 
 				std::ranges::iota_view indices(size_t{0}, indices_end);
 				const auto callback{[&, this](size_t index)
 					{
-					const utils::math::vec2s coords_indices{pixels_region_validated.ul() + pixels_region_validated.size().index_to_coords(index)};
+					const utils::math::vec2s coords_indices{pixels_region.ul() + pixels_region.size().index_to_coords(index)};
 					const utils::math::vec2f coords_f
 						{
 						utils::math::vec2f

@@ -12,6 +12,7 @@ namespace utils::math::geometry::shape
 	{
 	namespace details::mixed
 		{
+		//TODO check for all piece types, not just segment
 		template <typename T>
 		concept pieces_callable_without_index = requires(T t, geometry::shape::segment edge, size_t first, size_t last) { t(edge); };
 		template <typename T>
