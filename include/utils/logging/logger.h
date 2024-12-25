@@ -9,6 +9,8 @@
 #include "message.h"
 #include "../containers/multithreading/self_consuming_queue.h"
 
+#include "../oop/disable_move_copy.h"
+
 namespace utils::logging
 	{
 	template <typename T>
@@ -25,6 +27,7 @@ namespace utils::logging
 			logger& operator=(      logger&& move) noexcept = default; //could make those (running is already a flag for the instance being alive or not) but I'm lazy
 
 #pragma region Push messages begin
+		public:
 			void operator<<(const value_type& message) noexcept { push(message); }
 			void operator()(const value_type& message) noexcept { push(message); }
 
@@ -44,15 +47,49 @@ namespace utils::logging
 				message_queue.flush();
 				}
 
-			constexpr void inf(const string::concepts::stringlike auto& string) noexcept requires(concepts::message<value_type>) { push(value_type::inf(string)); }
-			constexpr void log(const string::concepts::stringlike auto& string) noexcept requires(concepts::message<value_type>) { push(value_type::log(string)); }
-			constexpr void dgn(const string::concepts::stringlike auto& string) noexcept requires(concepts::message<value_type>) { push(value_type::dgn(string)); }
-			constexpr void err(const string::concepts::stringlike auto& string) noexcept requires(concepts::message<value_type>) { push(value_type::err(string)); }
-			constexpr void wrn(const string::concepts::stringlike auto& string) noexcept requires(concepts::message<value_type>) { push(value_type::wrn(string)); }
+			constexpr void inf(const string::concepts::stringlike auto& string) noexcept requires(concepts::message<value_type>) { push(value_type::inf(string, indents_count)); }
+			constexpr void log(const string::concepts::stringlike auto& string) noexcept requires(concepts::message<value_type>) { push(value_type::log(string, indents_count)); }
+			constexpr void dgn(const string::concepts::stringlike auto& string) noexcept requires(concepts::message<value_type>) { push(value_type::dgn(string, indents_count)); }
+			constexpr void err(const string::concepts::stringlike auto& string) noexcept requires(concepts::message<value_type>) { push(value_type::err(string, indents_count)); }
+			constexpr void wrn(const string::concepts::stringlike auto& string) noexcept requires(concepts::message<value_type>) { push(value_type::wrn(string, indents_count)); }
 #pragma endregion Push messages end
 
+#pragma region Indent management begin
+		private:
+			class section_marker;
+			friend class section;
+			class section_marker : utils::oop::non_copyable, utils::oop::non_movable
+				{
+				private:
+					friend class logger<T>;
+					section_marker(logger<T>&logger, const std::string& name)
+						requires(concepts::message<value_type>) : logger_ptr{&logger}, name{name}
+						{
+						logger.push(value_type::section_enter(name, logger.indents_count));
+						logger.indents_count++; 
+						}
+					logger<T>* logger_ptr{nullptr};
+					std::string name;
+
+				public:
+					~section_marker() noexcept
+						requires(concepts::message<value_type>)
+						{
+						logger_ptr->indents_count--;
+						logger_ptr->push(value_type::section_leave(name, logger_ptr->indents_count));
+						};
+				};
+		public:
+			[[nodiscard]] section_marker section(const std::string& name) noexcept
+				requires(concepts::message<value_type>)
+				{
+				return section_marker{*this, name};
+				}
+
+#pragma endregion Indent management end
 		protected:
 			std::ofstream file;
+			size_t indents_count{0};
 
 			utils::containers::multithreading::self_consuming_queue<T, utils::containers::multithreading::operation_flag_bits::pre> message_queue
 				{
