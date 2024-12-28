@@ -60,7 +60,7 @@ namespace utils::math
 				utils_gpu_available constexpr       self_t& self()       noexcept { return static_cast<      self_t&>(*this); }
 	
 			public:
-				using value_type = typename T;
+				using value_type = T;
 				template <typename T2, size_t size2>
 				using unspecialized_derived_t = unspecialized_derived_T<T2, size2>;
 				using nonref_value_type = typename utils::remove_reference_t<value_type>;
