@@ -9,8 +9,8 @@ namespace utils::details::vector
 		{
 		using storage_t = utils::storage::multiple<T, size, false>;
 
-		template <typename T, size_t size>
-		using unspecialized_derived_t = unspecialized_derived_T<T, size>;
+		template <typename T2, size_t size2>
+		using unspecialized_derived_t = unspecialized_derived_T<T2, size2>;
 
 		using self_t        = unspecialized_derived_t<T, size>;
 		using nonref_self_t = unspecialized_derived_t<typename storage_t::value_type, size>;

@@ -199,13 +199,13 @@ namespace utils::storage
 		//using const_iterator         = base_iterator<typename inner_storage_t::const_iterator        , const const_aware_value_type>;
 		//using const_reverse_iterator = base_iterator<typename inner_storage_t::const_reverse_iterator, const const_aware_value_type>;
 		//until then, keep this uglyness
-		template <typename       T> struct inner_storage_const_iterator            { using type =       typename T::const_iterator        ; };
-		template <typename       T> struct inner_storage_const_reverse_iterator    { using type =       typename T::const_reverse_iterator; };
-		template <concepts::span T> struct inner_storage_const_iterator        <T> { using type = const typename T::      iterator        ; };
-		template <concepts::span T> struct inner_storage_const_reverse_iterator<T> { using type = const typename T::      reverse_iterator; };
+		template <typename       T2> struct inner_storage_const_iterator             { using type =       typename T2::const_iterator        ; };
+		template <typename       T2> struct inner_storage_const_reverse_iterator     { using type =       typename T2::const_reverse_iterator; };
+		template <concepts::span T2> struct inner_storage_const_iterator        <T2> { using type = const typename T2::      iterator        ; };
+		template <concepts::span T2> struct inner_storage_const_reverse_iterator<T2> { using type = const typename T2::      reverse_iterator; };
 
-		template <typename T> using inner_storage_const_iterator_t         = typename inner_storage_const_iterator        <T>::type;
-		template <typename T> using inner_storage_const_reverse_iterator_t = typename inner_storage_const_reverse_iterator<T>::type;
+		template <typename T2> using inner_storage_const_iterator_t         = typename inner_storage_const_iterator        <T2>::type;
+		template <typename T2> using inner_storage_const_reverse_iterator_t = typename inner_storage_const_reverse_iterator<T2>::type;
 
 		using const_iterator         = base_iterator<inner_storage_const_iterator_t        <inner_storage_t>, const const_aware_value_type>;
 		using const_reverse_iterator = base_iterator<inner_storage_const_reverse_iterator_t<inner_storage_t>, const const_aware_value_type>;

@@ -61,8 +61,8 @@ namespace utils::math
 	
 			public:
 				using value_type = typename T;
-				template <typename T, size_t size>
-				using unspecialized_derived_t = unspecialized_derived_T<T, size>;
+				template <typename T2, size_t size2>
+				using unspecialized_derived_t = unspecialized_derived_T<T2, size2>;
 				using nonref_value_type = typename utils::remove_reference_t<value_type>;
 				using nonref_self_t     = unspecialized_derived_t<nonref_value_type, 2>;
 	
@@ -73,8 +73,8 @@ namespace utils::math
 					return self_t{x, y};
 					}
 	
-				template <typename T = float, T f_a_v = 360.f>
-				utils_gpu_available constexpr math::angle::base<T, f_a_v> angle() const noexcept { return math::angle::base<T, f_a_v>::atan2(self().y(), self().x()); }
+				template <typename T2 = float, T2 f_a_v = 360.f>
+				utils_gpu_available constexpr math::angle::base<T2, f_a_v> angle() const noexcept { return math::angle::base<T2, f_a_v>::atan2(self().y(), self().x()); }
 				
 				utils_gpu_available constexpr nonref_self_t operator+ (const math::angle::concepts::angle auto& angle) const noexcept
 					{
@@ -121,8 +121,8 @@ namespace utils::math
 				utils_gpu_available constexpr nonref_self_t perpendicular_clockwise       () const noexcept { return perpendicular_right(); }
 				utils_gpu_available constexpr nonref_self_t perpendicular_counterclockwise() const noexcept { return perpendicular_left (); }
 	
-				#include "geometry/shape/sdf/common_declaration.inline.h"
-				#include "geometry/shape/bounds/common_declaration.inline.h"
+				#include "../../geometry/shape/sdf/common_declaration.inline.h"
+				#include "../../geometry/shape/bounds/common_declaration.inline.h"
 			};
 		}
 	}
