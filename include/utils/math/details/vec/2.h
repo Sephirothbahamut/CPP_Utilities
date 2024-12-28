@@ -1,9 +1,9 @@
 #pragma once
 
-#include "vec.h"
-#include "angle.h"
-#include "../oop/conditional_inheritance.h"
-#include "../math/geometry/details/base_types.h"
+#include "common.h"
+#include "../../angle.h"
+#include "../../../oop/conditional_inheritance.h"
+#include "../../../math/geometry/details/base_types.h"
 
 namespace utils::math
 	{

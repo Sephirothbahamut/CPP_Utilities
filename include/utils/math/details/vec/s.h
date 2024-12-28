@@ -2,8 +2,8 @@
 
 #include <ranges>
 
-#include "vec.h"
-#include "angle.h"
+#include "common.h"
+#include "../../angle.h"
 
 namespace utils::math
 	{

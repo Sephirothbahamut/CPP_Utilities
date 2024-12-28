@@ -1,6 +1,6 @@
 #pragma once
 
-#include "vec.h"
+#include "common.h"
 
 namespace utils::math
 	{
