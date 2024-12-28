@@ -1,5 +1,7 @@
 #pragma once
 
+#include <ranges>
+
 #include "vec.h"
 #include "angle.h"
 
@@ -16,6 +18,11 @@ namespace utils::math
 				utils_gpu_available constexpr       self_t& self()       noexcept { return static_cast<      self_t&>(*this); }
 
 			public:
+				utils_gpu_available constexpr std::ranges::iota_view<size_t, size_t> indices_range() const noexcept
+					{
+					return std::ranges::iota_view<size_t, size_t>(size_t{0}, sizes_to_size());
+					}
+
 				utils_gpu_available constexpr size_t sizes_to_size() const noexcept 
 					{
 					size_t ret{1};

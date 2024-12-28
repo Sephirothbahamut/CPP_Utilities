@@ -1,9 +1,11 @@
 #pragma once
+
+#include <queue>
+#include <mutex>
+#include <thread>
+#include <format>
 #include <fstream>
 #include <iostream>
-#include <queue>
-#include <thread>
-#include <mutex>
 #include <concepts>
 
 #include "message.h"
@@ -63,20 +65,27 @@ namespace utils::logging
 				private:
 					friend class logger<T>;
 					section_marker(logger<T>&logger, const std::string& name)
-						requires(concepts::message<value_type>) : logger_ptr{&logger}, name{name}
+						requires(concepts::message<value_type>) : logger_ptr{&logger}, name{name}, time{std::chrono::system_clock::now()}
 						{
 						logger.push(value_type::section_enter(name, logger.indents_count));
 						logger.indents_count++; 
 						}
+
 					logger<T>* logger_ptr{nullptr};
 					std::string name;
+					std::chrono::time_point<std::chrono::system_clock> time;
 
 				public:
 					~section_marker() noexcept
 						requires(concepts::message<value_type>)
 						{
+						const auto now{std::chrono::system_clock::now()};
+						const auto delta_time{now - time};
+
 						logger_ptr->indents_count--;
-						logger_ptr->push(value_type::section_leave(name, logger_ptr->indents_count));
+						std::stringstream ss;
+						ss << name << ", duration: " << std::format("%T", delta_time);
+						logger_ptr->push(value_type::section_leave(ss.str(), logger_ptr->indents_count));
 						};
 				};
 		public:

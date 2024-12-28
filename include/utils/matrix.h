@@ -25,6 +25,9 @@ namespace utils
 
 		size_t width {1}; 
 		size_t height{1}; 
+		
+		utils_gpu_available constexpr size_t x() const noexcept { return width ; }
+		utils_gpu_available constexpr size_t y() const noexcept { return height; }
 		}; 
 
 	template <typename T, matrix_size EXTENTS = matrix_size::create::dynamic()>

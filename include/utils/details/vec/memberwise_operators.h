@@ -173,8 +173,8 @@ namespace utils::details::vector
 #pragma endregion scalar
 
 #pragma region self
-	template<utils::details::vector::concepts::vector a_t> utils_gpu_available constexpr auto operator!(const a_t& a) noexcept { return a.for_each_to_new<[](const auto& value) { return !value; }>(); }
-	template<utils::details::vector::concepts::vector a_t> utils_gpu_available constexpr auto operator-(const a_t& a) noexcept { return a.for_each_to_new<[](const auto& value) { return -value; }>(); }
+	template<utils::details::vector::concepts::vector a_t> utils_gpu_available constexpr auto operator!(const a_t& a) noexcept { return a.template for_each_to_new<[](const auto& value) { return !value; }>(); }
+	template<utils::details::vector::concepts::vector a_t> utils_gpu_available constexpr auto operator-(const a_t& a) noexcept { return a.template for_each_to_new<[](const auto& value) { return -value; }>(); }
 #pragma endregion self
 
 #pragma region array
@@ -213,13 +213,13 @@ namespace utils::details::vector
 namespace utils::math
 	{
 	template <::utils::details::vector::concepts::vector T>
-	utils_gpu_available constexpr auto abs(const T& v) noexcept { return v.for_each_to_new<[](const auto& value) { return utils::math::abs(value); }>(); }
+	utils_gpu_available constexpr auto abs(const T& v) noexcept { return v.template for_each_to_new<[](const auto& value) { return utils::math::abs(value); }>(); }
 
 	template <::utils::details::vector::concepts::vector T>
-	utils_gpu_available constexpr auto floor(const T& v) noexcept { return v.for_each_to_new<[](const auto& value) { return utils::math::floor(value); }>(); }
+	utils_gpu_available constexpr auto floor(const T& v) noexcept { return v.template for_each_to_new<[](const auto& value) { return utils::math::floor(value); }>(); }
 
 	template <::utils::details::vector::concepts::vector T>
-	utils_gpu_available constexpr auto ceil(const T& v) noexcept { return v.for_each_to_new<[](const auto& value) { return utils::math::ceil(value); }>(); }
+	utils_gpu_available constexpr auto ceil(const T& v) noexcept { return v.template for_each_to_new<[](const auto& value) { return utils::math::ceil(value); }>(); }
 
 	template <::utils::details::vector::concepts::vector T>
 	utils_gpu_available constexpr auto pow(const T& a, const utils::details::vector::concepts::compatible_scalar<T> auto& b)

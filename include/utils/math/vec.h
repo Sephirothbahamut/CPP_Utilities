@@ -129,7 +129,7 @@ namespace utils::math
 		using typename base_t::template_type;
 		using typename base_t::nonref_self_t;
 
-		using base_t::base;
+		using typename base_t::base;
 		using base_t::operator=;
 		utils_gpu_available constexpr vec() noexcept requires(storage_type.is_owner()) : base_t{} {}; //for some reason it doesn't use base_t's default constructor with = default
 
@@ -194,11 +194,21 @@ namespace utils::math
 			base_t::for_each([&ret](const auto& value) { ret += value * value; });
 			return ret; 
 			}
-		utils_gpu_available constexpr value_type get_length () const noexcept { return std::sqrt(get_length2()); }
+		utils_gpu_available constexpr value_type get_length () const noexcept
+			requires (std::floating_point<value_type>)
+			{
+			return std::sqrt(get_length2()); 
+			}
 
-		utils_gpu_available constexpr self_t& set_length(value_type value) noexcept requires(!storage_type.is_const()) { *this = normalize() * value; return *this; }
+		utils_gpu_available constexpr self_t& set_length(value_type value) noexcept
+			requires(!storage_type.is_const() && std::floating_point<value_type>)
+			{
+			*this = normalize() * value;
+			return *this; 
+			}
 
 		utils_gpu_available constexpr nonref_self_t normalize() const noexcept 
+			requires (std::floating_point<value_type>)
 			{
 			const nonref_self_t copy{*this};
 			const auto length2{get_length2()};
@@ -211,11 +221,16 @@ namespace utils::math
 				}
 			return copy;
 			}
-		utils_gpu_available constexpr self_t& normalize_self() noexcept requires(!storage_type.is_const()) { return *this = normalize(); }
+		utils_gpu_available constexpr self_t& normalize_self() noexcept 
+			requires(!storage_type.is_const() && std::floating_point<value_type>)
+			{ 
+			return *this = normalize(); 
+			}
 		
 		/// <summary> Evaluate distance^2 in the size of this vec. Missing coordinates are considered 0. </summary>
 		template <utils::details::vector::concepts::compatible_vector<self_t> a_T, utils::details::vector::concepts::compatible_vector<self_t> b_T>
 		utils_gpu_available static constexpr value_type distance2(const a_T& a, const b_T& b) noexcept
+			requires (std::floating_point<typename a_T::value_type> && std::floating_point<typename b_T::value_type>)
 			{
 			constexpr auto sizes{details::pair_sizes<a_T, b_T>()};
 
@@ -235,6 +250,7 @@ namespace utils::math
 
 		template <utils::details::vector::concepts::compatible_vector<self_t> a_T, utils::details::vector::concepts::compatible_vector<self_t> b_T>
 		utils_gpu_available static constexpr value_type distance2_shared(const a_T& a, const b_T& b) noexcept
+			requires (std::floating_point<typename a_T::value_type>&& std::floating_point<typename b_T::value_type>)
 			{
 			constexpr auto sizes{details::pair_sizes<a_T, decltype(b)>()};
 
@@ -252,6 +268,7 @@ namespace utils::math
 		/// <summary> Evaluate distance in the size of this vec. Missing coordinates are considered 0. </summary>
 		template <utils::details::vector::concepts::compatible_vector<self_t> a_T, utils::details::vector::concepts::compatible_vector<self_t> b_T>
 		utils_gpu_available static constexpr value_type distance(const a_T& a, const b_T& b) noexcept
+			requires (std::floating_point<typename a_T::value_type>&& std::floating_point<typename b_T::value_type>)
 			{
 			return std::sqrt(distance2(a, b)); 
 			}
@@ -259,19 +276,23 @@ namespace utils::math
 		/// <summary> Evaluate distance in all the axes of the smaller vec. </summary>
 		template <utils::details::vector::concepts::compatible_vector<self_t> a_T, utils::details::vector::concepts::compatible_vector<self_t> b_T>
 		utils_gpu_available static constexpr value_type distance_shared(const a_T& a, const b_T& b) noexcept
+			requires (std::floating_point<typename a_T::value_type>&& std::floating_point<typename b_T::value_type>)
 			{
 			return std::sqrt(distance_shared2(a, b)); 
 			}
 
 		utils_gpu_available static constexpr nonref_self_t slerp_fast(const self_t& a, const self_t& b, value_type t) noexcept
+			requires (std::floating_point<value_type>)
 			{
 			return utils::math::lerp(a, b, t).normalize() * (utils::math::lerp(a.get_length(), b.get_length(), t));
 			}
 		utils_gpu_available static constexpr nonref_self_t tlerp_fast(const self_t& a, const self_t& b, value_type t) noexcept
+			requires (std::floating_point<value_type>)
 			{
 			return utils::math::lerp(a, b, t).normalize() * std::sqrt(utils::math::lerp(a.get_length2(), b.get_length2(), t));
 			}
 		utils_gpu_available static constexpr nonref_self_t slerp(const self_t& a, const self_t& b, value_type t) noexcept //TODO test
+			requires (std::floating_point<value_type>)
 			{
 			value_type dot = utils::math::clamp(self_t::dot(a, b), -1.0f, 1.0f);
 			value_type theta = std::acos(dot) * t;
@@ -371,6 +392,3 @@ namespace utils::math
 #include "vec3.h"
 #include "vec4.h"
 #include "vec_s.h"
-
-
-

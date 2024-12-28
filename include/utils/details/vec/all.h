@@ -20,7 +20,7 @@ namespace utils::details::vector
 		using typename definitions<T, SIZE, unspecialized_derived_t>::nonref_self_t;
 		using typename definitions<T, SIZE, unspecialized_derived_t>::storage_t    ;
 
-		using storage_t::multiple;
+		//using typename storage_t::multiple;
 		using storage_t::extent;
 		using storage_t::size;
 		using storage_t::storage_type;
