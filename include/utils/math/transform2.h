@@ -3,7 +3,7 @@
 #include "../console/colour.h"
 #include "math.h"
 #include "angle.h"
-#include "vec2.h"
+#include "vec.h"
 
 namespace utils::math
 	{

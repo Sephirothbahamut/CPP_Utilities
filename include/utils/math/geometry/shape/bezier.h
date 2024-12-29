@@ -27,7 +27,6 @@ namespace utils::math::geometry::shape::generic
 
 		struct at_proxy
 			{
-			template<storage::type STORAGE_TYPE, size_t EXTENT, geometry::ends::optional_ab OPTIONAL_ENDS>
 			friend struct bezier;
 			public:
 				utils_gpu_available constexpr vec2f point() const noexcept

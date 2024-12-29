@@ -211,7 +211,7 @@ namespace utils::math::geometry::shape::generic
 		#include "bounds/common_declaration.inline.h"
 		};
 
-	template <storage::type storage_type, size_t extent = std::dynamic_extent>
+	template <storage::type storage_type, size_t extent>
 	using polygon = polyline<storage_type, ends::closeable::create::closed(), extent>;
 	}
 

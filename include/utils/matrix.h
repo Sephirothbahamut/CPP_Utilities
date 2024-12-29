@@ -1,7 +1,7 @@
 #pragma once
 
 #include "storage.h"
-#include "math/vec2.h"
+#include "math/vec.h"
 #include "compilation/gpu.h"
 #include "compilation/compiler.h"
 #include "oop/disable_move_copy.h"

@@ -1,7 +1,7 @@
 #pragma once
 
 #include "../../details/base_types.h"
-#include "../../../vec2.h"
+#include "../../../vec.h"
 #include "../../../angle.h"
 #include "../../../transform2.h"
 

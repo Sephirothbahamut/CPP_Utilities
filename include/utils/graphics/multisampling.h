@@ -4,9 +4,7 @@
 #include <concepts>
 #include <algorithm>
 
-#include "../math/vec2.h"
-#include "../math/vec3.h"
-#include "../math/vec_s.h"
+#include "../math/vec.h"
 
 namespace utils::graphics
 	{

@@ -11,8 +11,7 @@
 #include "../enum.h"
 #include "../oop/disable_move_copy.h"
 #include "../memory.h"
-#include "../math/vec2.h"
-#include "../math/vec3.h"
+#include "../math/vec.h"
 #include "../containers/object_pool.h"
 
 namespace utils::input_system

@@ -2,8 +2,7 @@
 
 #include "../return_types.h"
 #include "../../bezier.h"
-#include "../../../../vec2.h"
-#include "../../../../vec4.h"
+#include "../../../../vec.h"
 
 namespace utils::math::geometry::sdf::details::bezier::_4pt
 	{

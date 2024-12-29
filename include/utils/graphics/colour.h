@@ -102,7 +102,7 @@ namespace utils::graphics::colour
 			utils_gpu_available constexpr const const_aware_value_type& a() const noexcept { if constexpr (extent == 4) { return (*this)[3]; } else { return range::full_value; } }
 			utils_gpu_available constexpr       const_aware_value_type& a()       noexcept requires(static_has_alpha) { return (*this)[3]; }
 
-			utils_gpu_available constexpr rgb(base base, value_type components_multiplier = range::full_value, value_type alpha = range::full_value) noexcept
+			utils_gpu_available constexpr rgb(enum base base, value_type components_multiplier = range::full_value, value_type alpha = range::full_value) noexcept
 				requires(storage_type.is_owner())
 				{
 				r() = components_multiplier * (base == base::white || base == base::red   || base == base::yellow  || base == base::magenta);
@@ -196,7 +196,7 @@ namespace utils::graphics::colour
 
 			using base_t::base;
 
-			utils_gpu_available constexpr hsv(base base, T components_multiplier = range::full_value, T alpha = range::full_value)
+			utils_gpu_available constexpr hsv(enum base base, T components_multiplier = range::full_value, T alpha = range::full_value)
 				requires(storage_type.is_owner())
 				{
 				if (base != base::black && components_multiplier != T{0.f}) 

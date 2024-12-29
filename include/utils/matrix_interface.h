@@ -2,7 +2,7 @@
 
 #include <ranges>
 
-#include "math/vec2.h"
+#include "math/vec.h"
 #include "console/colour.h"
 #include "compilation/gpu.h"
 #include "compilation/debug.h"

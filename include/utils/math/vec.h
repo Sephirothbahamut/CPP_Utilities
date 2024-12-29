@@ -21,7 +21,7 @@ namespace utils::math
 		using typename base_t::template_type;
 		using typename base_t::nonref_self_t;
 
-		using typename base_t::base;
+		using ::utils::details::vector::base<T, SIZE, vec, details::name_vec>::base;
 		using base_t::operator=;
 		utils_gpu_available constexpr vec() noexcept requires(storage_type.is_owner()) : base_t{} {}; //for some reason it doesn't use base_t's default constructor with = default
 

@@ -10,7 +10,7 @@
 
 #include "../matrix.h"
 #include "../math/rect.h"
-#include "../math/vec2.h"
+#include "../math/vec.h"
 #include "../math/transform2.h"
 #include "../math/geometry/shape/aabb.h"
 #include "../math/geometry/shape/shapes_group.h"

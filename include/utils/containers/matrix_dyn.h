@@ -6,7 +6,7 @@
 #include <initializer_list>
 
 #include "matrix_memory_layout.h"
-#include "../math/vec2.h"
+#include "../math/vec.h"
 #include "../console/colour.h"
 
 //TODO write test cases
