@@ -35,7 +35,7 @@ namespace utils::math
 		using vertex_observer = utils::math::vecref2<const_aware_value_type>;
 		using nonref_self_t   = rect<std::remove_const_t<value_type>>;
 
-		using typename storage_t::multiple;
+		using utils::storage::multiple<T, 4, false>::multiple;
 
 		struct create : ::utils::oop::non_constructible
 			{
