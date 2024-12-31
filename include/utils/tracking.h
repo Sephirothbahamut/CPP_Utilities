@@ -43,8 +43,8 @@ namespace utils
 
 		class trackable_base
 			{
-			template <typename>
-			friend class tracking_ptr;
+			template <typename T>
+			friend class ::utils::tracking_ptr;
 
 			public:
 				trackable_base(void* ptr) noexcept : tracker{std::make_shared<tracker_t>(ptr)} {}
@@ -109,7 +109,7 @@ namespace utils
 		{
 		using tup = details::trackable_base;
 		public:
-			using wrapper<T>::value_type;
+			using typename wrapper<T>::value_type;
 
 			template <typename ...Args>
 			trackable_wrapper(Args&&... args) : wrapper<T>{std::forward<Args>(args)...}, tup{std::addressof(wrapper<T>::element)} {}
@@ -168,10 +168,10 @@ namespace utils
 			tracking_ptr& operator=(tracking_ptr&& move) = default;
 
 
-			const value_type& operator* () const noexcept { if constexpr (compilation::debug) { check_all(); } return static_cast<value_type&>(*tracker->tracked); }
-			      value_type& operator* ()       noexcept { if constexpr (compilation::debug) { check_all(); } return static_cast<value_type&>(*tracker->tracked); }
-			const value_type* operator->() const noexcept { if constexpr (compilation::debug) { check_all(); } return static_cast<value_type*>( tracker->tracked); }
-			      value_type* operator->()       noexcept { if constexpr (compilation::debug) { check_all(); } return static_cast<value_type*>( tracker->tracked); }
+			const value_type& operator* () const noexcept { if constexpr (compilation::debug) { check_all(); } return *static_cast<value_type*>(tracker->tracked); }
+			      value_type& operator* ()       noexcept { if constexpr (compilation::debug) { check_all(); } return *static_cast<value_type*>(tracker->tracked); }
+			const value_type* operator->() const noexcept { if constexpr (compilation::debug) { check_all(); } return  static_cast<value_type*>(tracker->tracked); }
+			      value_type* operator->()       noexcept { if constexpr (compilation::debug) { check_all(); } return  static_cast<value_type*>(tracker->tracked); }
 
 			const T* get() const { check_initialized(); return static_cast<T*>(tracker->tracked); }
 			      T* get()       { check_initialized(); return static_cast<T*>(tracker->tracked); }

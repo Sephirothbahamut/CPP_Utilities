@@ -154,7 +154,7 @@ namespace utils::math::geometry::sdf::details::bezier::_4pt
 		if (ts.size == 0)
 			{
 			const auto quadratic{shape.revert_quadratic_elevated_to_cubic()};
-			return quadratic.sdf(point).closest_t<ends>();
+			return quadratic.sdf(point).template closest_t<ends>();
 			}
 
 		float closest_distance{utils::math::constants::finf};

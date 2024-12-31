@@ -48,7 +48,7 @@ namespace utils
 		template <typename T, matrix_size extents>
 		struct matrix_sizes_interface
 			{
-			utils_gpu_available static consteval utils::math::vec2s sizes () noexcept { return extents    ; }
+			utils_gpu_available static consteval utils::math::vec2s sizes () noexcept { return {width(), height()}; }
 			utils_gpu_available static consteval size_t             width () noexcept { return extents.x(); }
 			utils_gpu_available static consteval size_t             height() noexcept { return extents.y(); }
 			

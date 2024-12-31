@@ -11,7 +11,7 @@ namespace utils::math::geometry
 			using multiple_t = vertices<storage_type, extent>;
 
 		public:
-			using vertices<storage_type, extent>::multiple;
+			using vertices<storage_type, extent>::vertices;
 			inline static constexpr auto closed{CLOSED};
 
 			template <bool closed>

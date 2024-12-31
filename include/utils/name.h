@@ -17,7 +17,7 @@ namespace utils
 			using types = utils::string::types<char_t>;
 
 		private:
-			class names_database
+			class names_database_t
 				{
 				public:
 					template <utils::string::concepts::stringlike<char_t> T>
@@ -54,13 +54,13 @@ namespace utils
 
 			types::view operator*() const noexcept { return names_database[id]; }
 			types::view as_string() const noexcept { return operator*(); }
-			operator types::view() const noexcept { return operator*(); }
+			operator typename types::view() const noexcept { return operator*(); }
 
 			size_t hash() const noexcept { return id; }
 
 		private:
 			id_t id;
-			inline static names_database names_database;
+			inline static names_database_t names_database;
 		};
 	
 	using name    = basic_name<char>;
