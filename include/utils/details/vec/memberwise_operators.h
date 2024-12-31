@@ -132,7 +132,6 @@ namespace utils::details::vector
 				return self();
 				}
 
-
 			//TODO change all operators as members with deducing thiis
 			//should solve all the times the operators weren't visible from other bodies (like `std::optional<vec2f> == vec2f` failing)
 			template <typename self_t, utils::details::vector::concepts::compatible_vector<self_t> other_t>

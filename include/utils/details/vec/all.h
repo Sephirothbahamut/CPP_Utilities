@@ -25,6 +25,14 @@ namespace utils::details::vector
 		using storage_t::size;
 		using storage_t::storage_type;
 		using memberwise_operators<definitions<T, SIZE, unspecialized_derived_t>>::operator=;
+
+		//Forward declare to prevent clang specifically from attempting to instantiate the operator= for base classes that inherit from this one
+		//while the base classes are still incomplete, which causes some concepts to fail.
+		//Thanks #include discord for the help in understanding what was going on here.
+		//The same is done in the base class as well (vec/rgb)
+		//Note that MSVC and Gcc will not report errors without this line, but clang's behaviour is the correct one.
+		//Gcc explicitly states its own behaviour on the matter is non-conforming (see: https://cplusplus.github.io/CWG/issues/1594.html)
+		base<T, SIZE, unspecialized_derived_t, name>& operator=(const base<T, SIZE, unspecialized_derived_t, name>&) noexcept;
 		
 		using typename storage_t::value_type            ;
 		using typename storage_t::const_aware_value_type;

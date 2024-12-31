@@ -5,7 +5,6 @@
 
 #include "../../memory.h"
 #include "../../storage.h"
-#include "../../oop/crtp.h"
 #include "../../compilation/gpu.h"
 #include "../../compilation/compiler.h"
 
