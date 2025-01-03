@@ -15,7 +15,8 @@ namespace utils::math::geometry::shape
 
 	namespace concepts
 		{
-		template <typename T> concept circle = std::same_as<T, shape::generic::circle<T::storage_type>>;
+		template <typename T> 
+		concept circle = concepts::shape<T> && std::same_as<T, shape::generic::circle<T::storage_type>>;
 		}
 	
 	namespace owner 

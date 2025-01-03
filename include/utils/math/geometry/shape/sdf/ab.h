@@ -13,19 +13,19 @@ namespace utils::math::geometry::shape::generic
 		template <ends::ab ends>
 		utils_gpu_available constexpr float closest_t() const noexcept
 			{
-			return shape.projected_percent<ends>(point);
+			return shape.template projected_percent<ends>(point);
 			}
 		utils_gpu_available constexpr float closest_t() const noexcept
 			requires (shape::concepts::ab_ends_aware<shape_t>)
 			{
-			return shape.projected_percent(point);
+			return shape.template projected_percent(point);
 			}
 
 		template <ends::ab ends>
 		utils_gpu_available constexpr vec2f closest_point() const noexcept
 			{
 			const vec2f delta{shape.b - shape.a};
-			const float t{shape.projected_percent(point)};
+			const float t{shape.template projected_percent(point)};
 			if constexpr (ends.is_a_finite()) { if (t <= 0.f) { return shape.a; } }
 			if constexpr (ends.is_b_finite()) { if (t >= 1.f) { return shape.b; } }
 			return {shape.a.x() + t * delta.x(), shape.a.y() + t * delta.y()};
@@ -41,7 +41,7 @@ namespace utils::math::geometry::shape::generic
 			{
 			if constexpr (ends.is_a_finite() || ends.is_b_finite())
 				{
-				const float t{shape.projected_percent<ends::ab::create::infinite()>(point)};
+				const float t{shape.template projected_percent<ends::ab::create::infinite()>(point)};
 				if constexpr (ends.is_a_finite()) { if (t <= 0.f) { return vec2f::distance(shape.a, point); } }
 				if constexpr (ends.is_b_finite()) { if (t >= 1.f) { return vec2f::distance(shape.b, point); } }
 				}
@@ -72,7 +72,7 @@ namespace utils::math::geometry::shape::generic
 			{
 			if constexpr (ends.is_a_finite() || ends.is_b_finite())
 				{
-				const float t{shape.projected_percent<ends>(point)};
+				const float t{shape.template projected_percent<ends>(point)};
 				if constexpr (ends.is_a_finite()) { if (t <= 0.f) { return {vec2f::distance(shape.a, point) * side().sign()}; } }
 				if constexpr (ends.is_b_finite()) { if (t >= 1.f) { return {vec2f::distance(shape.b, point) * side().sign()}; } }
 				}

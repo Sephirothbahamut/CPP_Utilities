@@ -163,7 +163,7 @@ namespace utils::math::geometry::shape::generic
 				const float value_at_max{a * t_max};
 
 				const float q1{(t_max + pre.y()) * std::sqrt(c + pre.z() * t_max + value_at_max * t_max) - (t_min + pre.y()) * std::sqrt(c + pre.z() * t_min + value_at_min * t_min)};
-				const float q2{pre.x() / std::pow(a, 1.5) * (std::asinh((value_at_max + b) / pre.w()) - std::asinh((value_at_min + b) / pre.w()))};
+				const float q2{pre.x() / std::pow(a, 1.5f) * (std::asinh((value_at_max + b) / pre.w()) - std::asinh((value_at_min + b) / pre.w()))};
 
 				return q1 + q2;
 				}

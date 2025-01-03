@@ -83,8 +83,8 @@ namespace utils::math::geometry::shape::generic
 			//static_assert(std::random_access_iterator<iterator>);
 			//static_assert(std::condiguous_iterator   <iterator>);
 
-			template <bool closed> utils_gpu_available constexpr auto ends_aware_access(size_t index) const noexcept                          { return edge<true         >{polyline_ref.vertices.ends_aware_access<closed>(index), polyline_ref.vertices.ends_aware_access<closed>(index + 1)}; }
-			template <bool closed> utils_gpu_available constexpr auto ends_aware_access(size_t index)       noexcept requires(!is_view_const) { return edge<is_view_const>{polyline_ref.vertices.ends_aware_access<closed>(index), polyline_ref.vertices.ends_aware_access<closed>(index + 1)}; }
+			template <bool closed> utils_gpu_available constexpr auto ends_aware_access(size_t index) const noexcept                          { return edge<true         >{polyline_ref.vertices.template ends_aware_access<closed>(index), polyline_ref.vertices.template ends_aware_access<closed>(index + 1)}; }
+			template <bool closed> utils_gpu_available constexpr auto ends_aware_access(size_t index)       noexcept requires(!is_view_const) { return edge<is_view_const>{polyline_ref.vertices.template ends_aware_access<closed>(index), polyline_ref.vertices.template ends_aware_access<closed>(index + 1)}; }
 			utils_gpu_available constexpr auto ends_aware_access(size_t index) const noexcept                          { return ends_aware_access<polyline_ref.vertices.closed>(index); }
 			utils_gpu_available constexpr auto ends_aware_access(size_t index)       noexcept requires(!is_view_const) { return ends_aware_access<polyline_ref.vertices.closed>(index); }
 
@@ -166,22 +166,22 @@ namespace utils::math::geometry::shape::generic
 			template <bool ends_aware = true>
 			utils_gpu_available constexpr shape::point first_point_at(size_t index) const noexcept
 				{
-				return polyline_ref.vertices.ends_aware_access<ends_aware>(index);
+				return polyline_ref.vertices.template ends_aware_access<ends_aware>(index);
 				}
 			template <bool ends_aware = true>
 			utils_gpu_available constexpr shape::point second_point_at(size_t index) const noexcept
 				{
-				return polyline_ref.vertices.ends_aware_access<ends_aware>(index + 1);
+				return polyline_ref.vertices.template ends_aware_access<ends_aware>(index + 1);
 				}
 			template <bool ends_aware = true>
 			utils_gpu_available constexpr shape::point last_point_at(size_t index) const noexcept
 				{
-				return polyline_ref.vertices.ends_aware_access<ends_aware>(index + 1);
+				return polyline_ref.vertices.template ends_aware_access<ends_aware>(index + 1);
 				}
 			template <bool ends_aware = true>
 			utils_gpu_available constexpr shape::point second_last_point_at(size_t index) const noexcept
 				{
-				return polyline_ref.vertices.ends_aware_access<ends_aware>(index);
+				return polyline_ref.vertices.template ends_aware_access<ends_aware>(index);
 				}
 			};
 			

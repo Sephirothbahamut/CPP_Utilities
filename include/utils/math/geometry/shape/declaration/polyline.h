@@ -28,8 +28,10 @@ namespace utils::math::geometry::shape
 	
 	namespace concepts
 		{
-		template <typename T> concept polyline = std::derived_from<T, shape::generic::polyline<T::storage_type, T::ends, T::extent>>;
-		template <typename T> concept polygon  = polyline<T> && T::ends == ends::closeable::create::closed();
+		template <typename T> 
+		concept polyline = concepts::shape<T> && std::derived_from<T, shape::generic::polyline<T::storage_type, T::ends, T::extent>>;
+		template <typename T> 
+		concept polygon  = polyline<T> && T::ends == ends::closeable::create::closed();
 		}
 	
 	namespace owner 

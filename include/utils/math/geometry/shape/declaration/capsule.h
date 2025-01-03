@@ -14,7 +14,8 @@ namespace utils::math::geometry::shape
 
 	namespace concepts
 		{
-		template <typename T> concept capsule = std::same_as<T, shape::generic::capsule<T::storage_type>>;
+		template <typename T> 
+		concept capsule = concepts::shape<T> && std::same_as<T, shape::generic::capsule<T::storage_type>>;
 		}
 	
 	namespace owner 

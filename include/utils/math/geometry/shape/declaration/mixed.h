@@ -33,7 +33,7 @@ namespace utils::math::geometry::shape
 	namespace concepts
 		{
 		template <typename T>
-		concept mixed = std::derived_from<T, shape::generic::mixed<T::storage_type, T::ends>>;
+		concept mixed = concepts::shape<T> && std::derived_from<T, shape::generic::mixed<T::storage_type, T::ends>>;
 		}
 
 	namespace owner 

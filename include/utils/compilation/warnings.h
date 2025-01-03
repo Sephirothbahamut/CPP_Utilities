@@ -15,7 +15,7 @@
     #define utils_disable_warning_clang(name)
 
 #elif defined(utils_compiler_gcc) || defined(utils_compiler_clang)
-#define utils_disable_warnings_all_begin
+    #define utils_disable_warnings_all_begin
 
 	#define utils_pragma_gnu(X) _Pragma(#X)
 	#define utils_disable_warnings_begin utils_pragma_gnu(GCC diagnostic push)
@@ -36,7 +36,7 @@
     #define utils_disable_warning_msvc(msvc_number)
     
 #elif
-#define utils_disable_warnings_all_begin
+    #define utils_disable_warnings_all_begin
     #define utils_disable_warnings_begin
     #define utils_disable_warnings_end
 

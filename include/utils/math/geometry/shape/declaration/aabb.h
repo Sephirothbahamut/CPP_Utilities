@@ -13,7 +13,7 @@ namespace utils::math::geometry::shape
 	namespace concepts
 		{
 		template <typename T>
-		concept aabb = std::same_as<T, shape::generic::aabb<T::storage_type>>;
+		concept aabb = concepts::shape<T> && std::same_as<T, shape::generic::aabb<T::storage_type>>;
 		}
 
 	namespace owner         { using aabb = shape::generic::aabb<storage::type::create::owner         ()>; }

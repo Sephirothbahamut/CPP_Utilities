@@ -25,7 +25,7 @@ namespace utils::math::geometry::shape
 	namespace concepts
 		{
 		template <typename T>
-		concept bezier = std::derived_from<T, shape::generic::bezier<T::storage_type, T::extent, T::optional_ends>>;
+		concept bezier = concepts::shape<T> && std::derived_from<T, shape::generic::bezier<T::storage_type, T::extent, T::optional_ends>>;
 		template <typename T>
 		concept bezier_ends_aware = bezier<T> && T::optional_ends.has_value();
 		}

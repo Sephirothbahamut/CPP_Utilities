@@ -16,7 +16,7 @@ namespace utils::math::geometry::sdf::details::bezier::_3pt
 
 		utils::math::vec2f c1 = point - shape.vertices[0];
 
-		const auto test{shape.vertices[1].operator_to_new<[](const auto& a, const auto& b) { return a + b; }>(2.f)};
+		const auto test{shape.vertices[1].template operator_to_new<[](const auto& a, const auto& b) { return a + b; }>(2.f)};
 
 		using ::operator*; //TODO understand why `side * float` in `return_types` namespace hides `vec<float, extent> * float` that's declared in global namespace
 

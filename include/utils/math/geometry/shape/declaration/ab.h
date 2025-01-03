@@ -27,7 +27,7 @@ namespace utils::math::geometry::shape
 
 	namespace concepts
 		{
-		template <typename T> concept ab            = std::derived_from<T, shape::generic::ab<T::storage_type, T::optional_ends>>;
+		template <typename T> concept ab            = concepts::shape<T> && std::derived_from<T, shape::generic::ab<T::storage_type, T::optional_ends>>;
 		template <typename T> concept ab_ends_aware = ab<T> && T::optional_ends.has_value();
 		template <typename T> concept line          = ab_ends_aware<T> && std::same_as<T, shape::generic::line       <T::storage_type>>;
 		template <typename T> concept ray           = ab_ends_aware<T> && std::same_as<T, shape::generic::ray        <T::storage_type>>;

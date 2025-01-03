@@ -20,7 +20,7 @@ namespace utils::math::geometry::shape::generic
 		utils_gpu_available constexpr float minimum_distance() const noexcept
 			{
 			float ret{utils::math::constants::finf};
-			shape.get_edges().for_each([&point, &ret](const auto& edge)
+			shape.get_edges().for_each([this, &ret](const auto& edge)
 				{
 				const auto candidate{minimum_distance(edge, point)};
 				ret = std::min(ret, candidate);
@@ -31,7 +31,7 @@ namespace utils::math::geometry::shape::generic
 		utils_gpu_available constexpr geometry::sdf::closest_point_with_distance closest_with_distance() const noexcept
 			{
 			geometry::sdf::closest_point_with_distance ret;
-			shape.get_edges().for_each([&point, &ret](const auto& edge)
+			shape.get_edges().for_each([this, &ret](const auto& edge)
 				{
 				const auto candidate{closest_with_distance(edge, point)};
 				ret.set_to_closest(candidate);
@@ -81,9 +81,9 @@ namespace utils::math::geometry::shape::generic
 			const bool closed_or_not_last{shape.ends.is_closed() || (current_index < edges.size() - 1)};
 			if (current_t >= 1.f && closed_or_not_last)
 				{
-				const vec2f point_a{edges.second_last_point_at<true>(current_index)};
-				const vec2f point_b{edges.last_point_at       <true>(current_index)};
-				const vec2f point_c{edges.second_point_at     <true>(current_index + 1)};
+				const vec2f point_a{edges.template second_last_point_at<true>(current_index)};
+				const vec2f point_b{edges.template last_point_at       <true>(current_index)};
+				const vec2f point_c{edges.template second_point_at     <true>(current_index + 1)};
 		
 				const shape::line line_a{point_a, point_b};
 				const shape::line line_b{point_b, point_c};

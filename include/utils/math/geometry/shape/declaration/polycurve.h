@@ -25,7 +25,8 @@ namespace utils::math::geometry::shape
 	
 	namespace concepts
 		{
-		template <typename T, size_t piece_vertices_count> concept polycurve_of = std::derived_from<T, shape::generic::polycurve<piece_vertices_count, T::storage_type, T::ends, T::extent>>;
+		template <typename T, size_t piece_vertices_count> 
+		concept polycurve_of = concepts::shape<T> && std::derived_from<T, shape::generic::polycurve<piece_vertices_count, T::storage_type, T::ends, T::extent>>;
 		template <typename T> concept polycurve = polycurve_of<T, T::piece_vertices_count>;
 		}
 	

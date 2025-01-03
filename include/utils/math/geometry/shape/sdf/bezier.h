@@ -64,12 +64,13 @@ namespace utils::math::geometry::shape::generic
 				{
 				return utils::math::geometry::sdf::details::bezier::other::closest_t<ends>(point, shape);
 				}
+			std::unreachable();
 			}
 
 		template <ends::ab ends>
 		utils_gpu_available constexpr float closest_t() const noexcept
 			{
-			return this->proxy_t::closest_t<ends>();
+			return this->at_proxy::template closest_t<ends>();
 			}
 
 		utils_gpu_available constexpr float closest_t() const noexcept

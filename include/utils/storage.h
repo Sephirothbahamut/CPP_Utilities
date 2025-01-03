@@ -188,9 +188,9 @@ namespace utils::storage
 
 			utils_gpu_available constexpr auto operator<=>(const self_t& other) const noexcept { return inner_iterator <=> other.inner_iterator; }
 			utils_gpu_available constexpr bool operator== (const self_t& other) const noexcept { return inner_iterator ==  other.inner_iterator; }
-			
-			utils_gpu_available constexpr reference operator* () noexcept { return static_cast<reference>(inner_iterator.operator* ()); }
-			utils_gpu_available constexpr pointer   operator->() noexcept { return static_cast<pointer  >(inner_iterator.operator->()); }
+
+			utils_gpu_available constexpr reference operator* () noexcept { return  *inner_iterator; }
+			utils_gpu_available constexpr pointer   operator->() noexcept { return &*inner_iterator; }
 			};
 
 		using iterator               = base_iterator<typename inner_storage_t::iterator              ,       const_aware_value_type>;
