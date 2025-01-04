@@ -18,14 +18,14 @@ namespace utils::math::geometry::shape::generic
 		utils_gpu_available constexpr float closest_t() const noexcept
 			requires (shape::concepts::ab_ends_aware<shape_t>)
 			{
-			return shape.template projected_percent(point);
+			return shape.template projected_percent<shape.optional_ends.value()>(point);
 			}
 
 		template <ends::ab ends>
 		utils_gpu_available constexpr vec2f closest_point() const noexcept
 			{
 			const vec2f delta{shape.b - shape.a};
-			const float t{shape.template projected_percent(point)};
+			const float t{shape.template projected_percent<ends::ab::create::infinite()>(point)};
 			if constexpr (ends.is_a_finite()) { if (t <= 0.f) { return shape.a; } }
 			if constexpr (ends.is_b_finite()) { if (t >= 1.f) { return shape.b; } }
 			return {shape.a.x() + t * delta.x(), shape.a.y() + t * delta.y()};

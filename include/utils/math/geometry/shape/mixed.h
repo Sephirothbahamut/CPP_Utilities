@@ -3,6 +3,7 @@
 #include <span>
 
 #include "declaration/mixed.h"
+#include "bezier.h"
 #include "vertices.h"
 
 namespace utils::math::geometry::shape::generic

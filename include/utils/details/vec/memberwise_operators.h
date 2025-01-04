@@ -121,14 +121,14 @@ namespace utils::details::vector
 			utils_gpu_available constexpr self_t& operator=(const concepts::compatible_vector<self_t> auto& other) noexcept
 				requires(!storage_type.is_const())
 				{
-				self().operator_self_assign<[](auto& a, const auto& b) { a = b; }>(other);
+				self().template operator_self_assign<[](auto& a, const auto& b) { a = b; }>(other);
 				return self();
 				}
 
 			utils_gpu_available constexpr self_t& operator=(const concepts::compatible_scalar<self_t> auto& other) noexcept
 				requires(!storage_type.is_const())
 				{
-				self().operator_self_assign<[](auto& a, const auto& b) { a = b; }>(other);
+				self().template operator_self_assign<[](auto& a, const auto& b) { a = b; }>(other);
 				return self();
 				}
 

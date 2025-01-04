@@ -26,7 +26,7 @@
 	#define utils_disable_warning_gnu(name) utils_pragma_gnu(GCC diagnostic ignored name)
 
     #if defined(utils_compiler_clang)
-        #define utils_disable_warning_clang(name) utils_pragma_gnu(GCC diagnostic ignored name)
+        #define utils_disable_warning_clang(name) utils_pragma_gnu(clang diagnostic ignored name)
         #define utils_disable_warning_gcc(name)
     #else
         #define utils_disable_warning_gcc(name) utils_pragma_gnu(GCC diagnostic ignored name)

@@ -10,6 +10,8 @@
 #include "shape/point.h"
 #include "shape/aabb.h"
 
+#include "../../details/warnings_pre.inline.h"
+
 namespace utils::math::geometry::sdf
 	{
 	class side
@@ -188,3 +190,5 @@ namespace utils::math::geometry::sdf
 			}
 		};
 	}
+
+#include "../../details/warnings_post.inline.h"

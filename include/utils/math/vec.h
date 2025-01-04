@@ -241,6 +241,11 @@ namespace utils::math
 		utils_gpu_available constexpr auto& translate_self(const vec2f& translation) noexcept;
 		};
 	
+	template<typename T, size_t SIZE>
+	vec<T, SIZE>& vec<T, SIZE>::operator=(const vec<T, SIZE>& copy) noexcept 
+		{
+		return ::utils::details::vector::memberwise_operators<::utils::details::vector::definitions<T, SIZE, vec>>::operator=(copy);
+		}
 
 	namespace operators
 		{

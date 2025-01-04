@@ -13,8 +13,8 @@ namespace utils::compilation
 	inline constexpr os_t os
 #ifdef utils_compilation_os_windows
 		{os_t::Windows};
-#elif utils_compilation_os_linux
-		{OS::Linux};
+#elif defined(utils_compilation_os_linux)
+		{os_t::Linux};
 #else
 #error Compilation target OS not recognized.
 #endif

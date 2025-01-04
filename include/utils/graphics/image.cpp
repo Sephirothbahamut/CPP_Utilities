@@ -15,6 +15,7 @@
 
 namespace utils::graphics::image
 	{
+	template <>
 	utils::matrix<utils::graphics::colour::rgba_u> load_from_file(const std::filesystem::path& path)
 		{
 		int width, height, channels;

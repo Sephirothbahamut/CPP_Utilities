@@ -185,6 +185,12 @@ namespace utils::graphics::colour
 			//	}
 			};
 
+		template<utils::math::concepts::undecorated_number T, size_t SIZE>
+		rgb<T, SIZE>& rgb<T, SIZE>::operator=(const rgb<T, SIZE>& copy) noexcept
+			{
+			return ::utils::details::vector::memberwise_operators<::utils::details::vector::definitions<T, SIZE, rgb>>::operator=(copy);
+			}
+
 		template <utils::math::concepts::undecorated_floating_point T, size_t size>
 		struct hsv : ::utils::details::vector::base<T, size, hsv, details::name_hsv>
 			{
