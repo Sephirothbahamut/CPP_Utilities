@@ -36,7 +36,7 @@ namespace utils
 	namespace concepts
 		{
 		template <typename T>
-		concept matrix = std::same_as<std::remove_cvref_t<T>, utils::matrix<typename std::remove_cvref_t<T>::template_type, std::remove_cvref_t<T>::extents>>;
+		concept matrix = std::same_as<std::remove_cvref_t<T>, utils::matrix<typename std::remove_cvref_t<T>::template_type, std::remove_cvref_t<T>::_extents>>;
 		}
 	
 
@@ -79,6 +79,7 @@ namespace utils
 	template <typename T, matrix_size EXTENTS>
 	struct utils_oop_empty_bases matrix : details::evaluate_multiple_t<T, EXTENTS>, details::matrix_sizes_interface<T, EXTENTS>
 		{
+		utils_gpu_available inline static constexpr matrix_size _extents{EXTENTS};
 		utils_gpu_available inline static constexpr utils::math::vec2s extents{EXTENTS.width, EXTENTS.height};
 		using multiple_t = details::evaluate_multiple_t<T, EXTENTS>;
 		using sizes_inerface_t = details::matrix_sizes_interface<T, EXTENTS>;

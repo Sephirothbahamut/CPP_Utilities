@@ -84,7 +84,7 @@ namespace utils::logging
 
 						logger_ptr->indents_count--;
 						std::stringstream ss;
-						ss << name << ", duration: " << std::format("%T", delta_time);
+						ss << name << ", duration: " << std::format("{:%T}", delta_time);
 						logger_ptr->push(value_type::section_leave(ss.str(), logger_ptr->indents_count));
 						};
 				};
