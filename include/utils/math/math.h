@@ -153,11 +153,16 @@ namespace utils::math
 			if constexpr (std::same_as<value_type, typename other::value_type>)
 				{
 				if constexpr (full_value == other::full_value) { return value; }
+				return value / full_value * other::full_value;
 				}
+			else if constexpr (!std::same_as<value_type, typename other::value_type>)
+				{
+				//using tmp_t = std::conditional_t<(std::numeric_limits<value_type>::max() > std::numeric_limits<typename other::value_type>::max()), value_type, typename other::value_type>;
+				using tmp_t = std::conditional_t<(static_cast<unsigned long long>(std::numeric_limits<value_type>::max()) > static_cast<unsigned long long>(std::numeric_limits<typename other::value_type>::max())), value_type, typename other::value_type>;
+				tmp_t tmp{(static_cast<tmp_t>(value) / static_cast<tmp_t>(full_value)) * static_cast<tmp_t>(other::full_value)};
 
-			using tmp_t = std::conditional_t<(std::numeric_limits<value_type>::max() > std::numeric_limits<typename other::value_type>::max()), value_type, typename other::value_type>;
-			tmp_t tmp{(static_cast<tmp_t>(value) / static_cast<tmp_t>(full_value)) * static_cast<tmp_t>(other::full_value)};
-			return static_cast<other::value_type>(tmp);
+				return static_cast<other::value_type>(tmp);
+				}
 			}
 		};
 	}

@@ -29,21 +29,22 @@ namespace utils::graphics::colour
 	namespace details
 		{
 		template <utils::math::concepts::undecorated_number T, size_t size>
-		struct rgb;
+		struct additive;
 
 		template <utils::math::concepts::undecorated_floating_point T, size_t size>
 		struct hsv;
 		}
 
-	template <utils::math::concepts::undecorated_number T = float, bool has_alpha = false>
-	using rgb    = details::rgb<T, has_alpha ? 4 : 3>;
-	using rgba   = rgb<float  , true >;
-	using rgb_f  = rgb<float  , false>;
-	using rgb_d  = rgb<double , false>;
-	using rgb_u  = rgb<uint8_t, false>;
-	using rgba_f = rgb<float  , true >;
-	using rgba_d = rgb<double , true >;
-	using rgba_u = rgb<uint8_t, true >;
+	template <utils::math::concepts::undecorated_number T = float>
+	using rgb    = details::additive<T, 3>;
+	using rgb_f  = rgb<float  >;
+	using rgb_d  = rgb<double >;
+	using rgb_u  = rgb<uint8_t>;
+	template <utils::math::concepts::undecorated_number T = float>
+	using rgba   = details::additive<T, 4>;
+	using rgba_f = rgba<float  >;
+	using rgba_d = rgba<double >;
+	using rgba_u = rgba<uint8_t>;
 
 	template <utils::math::concepts::undecorated_floating_point T = float, bool has_alpha = false>
 	using hsv    = details::hsv<T, has_alpha ? 4 : 3>;
@@ -56,9 +57,11 @@ namespace utils::graphics::colour
 	namespace concepts
 		{
 		template <typename T>
-		concept rgb = std::same_as<T, colour::rgb<typename T::value_type, T::static_has_alpha>>;
+		concept additive = std::same_as<T, details::additive<typename T::value_type, T::extent>>;
 		template <typename T>
-		concept rgba = std::same_as<T, colour::rgb<typename T::value_type, true>>;
+		concept rgba = additive<T> &&  T::static_has_alpha;
+		template <typename T>
+		concept rgb  = additive<T> && !T::static_has_alpha;
 
 		template <typename T>
 		concept hsv = std::same_as<T, colour::hsv<typename T::value_type, T::static_has_alpha>>;
@@ -66,20 +69,20 @@ namespace utils::graphics::colour
 		concept hsva = std::same_as<T, colour::hsv<typename T::value_type, true>>;
 
 		template <typename T>
-		concept colour = rgb<T> || hsv<T>;
+		concept colour = additive<T> || hsv<T>;
 		}
 
 	namespace details
 		{
 		inline extern constexpr const char name_rgb[]{"rgb"};
-		inline extern constexpr const char name_hsv[]{"rgb"};
+		inline extern constexpr const char name_hsv[]{"hsv"};
 
 		template<utils::math::concepts::undecorated_number T, size_t size>
-		struct utils_oop_empty_bases rgb : ::utils::details::vector::base<T, size, rgb, details::name_rgb>
+		struct utils_oop_empty_bases additive : ::utils::details::vector::base<T, size, additive, details::name_rgb>
 			{
 			static_assert(size == 3 || size == 4);
 
-			using base_t = ::utils::details::vector::base<T, size, rgb, details::name_rgb>;
+			using base_t = ::utils::details::vector::base<T, size, additive, details::name_rgb>;
 			using base_t::extent;
 			using base_t::storage_type;
 			using typename base_t::self_t;
@@ -91,7 +94,7 @@ namespace utils::graphics::colour
 			using range = utils::math::type_based_numeric_range<value_type>;
 			inline static constexpr bool static_has_alpha{size == 4};
 
-			using ::utils::details::vector::base<T, size, rgb, details::name_rgb>::base;
+			using ::utils::details::vector::base<T, size, additive, details::name_rgb>::base;
 
 			//Forward declare to prevent clang specifically from attempting to instantiate the operator= for base classes that inherit from this one
 			//while the base classes are still incomplete, which causes some concepts to fail.
@@ -99,7 +102,7 @@ namespace utils::graphics::colour
 			//The same is done in the base class as well (vec/rgb)
 			//Note that MSVC and Gcc will not report errors without this line, but clang's behaviour is the correct one.
 			//Gcc explicitly states its own behaviour on the matter is non-conforming (see: https://cplusplus.github.io/CWG/issues/1594.html)
-			rgb<T, size>& operator=(const rgb<T, size>&) noexcept;
+			additive<T, size>& operator=(const additive<T, size>&) noexcept;
 
 			utils_gpu_available constexpr const const_aware_value_type& r() const noexcept { return (*this)[0]; }
 			utils_gpu_available constexpr       const_aware_value_type& r()       noexcept { return (*this)[0]; }
@@ -109,8 +112,10 @@ namespace utils::graphics::colour
 			utils_gpu_available constexpr       const_aware_value_type& b()       noexcept { return (*this)[2]; }
 			utils_gpu_available constexpr const const_aware_value_type& a() const noexcept { if constexpr (extent == 4) { return (*this)[3]; } else { return range::full_value; } }
 			utils_gpu_available constexpr       const_aware_value_type& a()       noexcept requires(static_has_alpha) { return (*this)[3]; }
+			utils_gpu_available constexpr const additive<const const_aware_value_type&, 3> rgb() const noexcept { return {r(), g(), b()}; }
+			utils_gpu_available constexpr       additive<      const_aware_value_type&, 3> rgb()       noexcept { return {r(), g(), b()}; }
 
-			utils_gpu_available constexpr rgb(enum base base, value_type components_multiplier = range::full_value, value_type alpha = range::full_value) noexcept
+			utils_gpu_available constexpr additive(enum base base, value_type components_multiplier = range::full_value, value_type alpha = range::full_value) noexcept
 				requires(storage_type.is_owner())
 				{
 				r() = components_multiplier * (base == base::white || base == base::red   || base == base::yellow  || base == base::magenta);
@@ -119,26 +124,37 @@ namespace utils::graphics::colour
 				if constexpr (static_has_alpha) { a() = alpha; }
 				}
 
-			utils_gpu_available constexpr rgb(const concepts::rgb auto& other) noexcept
+			utils_gpu_available constexpr additive(const concepts::additive auto& other) noexcept
 				requires(storage_type.is_owner())
 				{
+				using other_range = std::remove_cvref_t<decltype(other)>::range;
+
 				for (size_t i = 0; i < 3; i++)
 					{
-					using other_range = std::remove_cvref_t<decltype(other)>::range;
 					(*this)[i] = other_range::template cast_to<range>(other[i]);
 					}
-				if constexpr (static_has_alpha) { a() = other.a(); }
+				if constexpr (static_has_alpha)
+					{
+					if constexpr (other.static_has_alpha)
+						{
+						a() = other_range::template cast_to<range>(other.a());
+						}
+					else
+						{
+						a() = range::full_value;
+						}
+					}
 				}
 
-			utils_gpu_available constexpr rgb(const concepts::hsv auto& hsv) noexcept
+			utils_gpu_available constexpr additive(const concepts::hsv auto& hsv) noexcept
 				requires(storage_type.is_owner());
 
 			utils_gpu_available constexpr nonref_self_t blend(const concepts::colour auto& foreground) const noexcept
 				requires(std::remove_cvref_t<decltype(foreground)>::static_has_alpha)
 				{
 				using floating_t = std::conditional_t<std::floating_point<value_type>, value_type, float>;
-				using rgba_t = rgb<floating_t, 4>;
-				const rgba_t remapped_foreground{foreground};
+				using rgba_t = additive<floating_t, 4>;
+				const rgba_t remapped_foreground{static_cast<rgba_t>(foreground)};
 				const rgba_t remapped_self{*this};
 
 				rgba_t remapped_ret;
@@ -186,9 +202,27 @@ namespace utils::graphics::colour
 			};
 
 		template<utils::math::concepts::undecorated_number T, size_t SIZE>
-		rgb<T, SIZE>& rgb<T, SIZE>::operator=(const rgb<T, SIZE>& copy) noexcept
+		additive<T, SIZE>& additive<T, SIZE>::operator=(const additive<T, SIZE>& copy) noexcept
 			{
-			return ::utils::details::vector::memberwise_operators<::utils::details::vector::definitions<T, SIZE, rgb>>::operator=(copy);
+			using other_range = std::remove_cvref_t<decltype(copy)>::range;
+
+			for (size_t i{0}; i < 3; i++)
+				{
+				(*this)[i] = other_range::template cast_to<range>(copy[i]);
+				}
+			if constexpr (static_has_alpha)
+				{
+				if constexpr (copy.static_has_alpha)
+					{
+					a() = other_range::template cast_to<range>(copy.a());
+					}
+				else
+					{
+					a() = range::full_value;
+					}
+				}
+			return *this;
+			//return ::utils::details::vector::memberwise_operators<::utils::details::vector::definitions<T, SIZE, rgb>>::operator=(copy);
 			}
 
 		template <utils::math::concepts::undecorated_floating_point T, size_t size>
@@ -271,7 +305,7 @@ namespace utils::graphics::colour
 			};
 
 		template<utils::math::concepts::undecorated_number T, size_t size>
-		utils_gpu_available constexpr rgb<T, size>::rgb(const concepts::hsv auto& hsv) noexcept
+		utils_gpu_available constexpr additive<T, size>::additive(const concepts::hsv auto& hsv) noexcept
 			requires(storage_type.is_owner())
 			{
 			if (hsv.s() == 0)
@@ -320,7 +354,7 @@ namespace utils::graphics::colour
 			requires(storage_type.is_owner())
 			{//https://stackoverflow.com/questions/3018313/algorithm-to-convert-rgb-to-hsv-and-hsv-to-rgb-in-range-0-255-for-both
 			using from_t = std::remove_cvref_t<decltype(rgb)>;
-			const colour::rgb<value_type, static_has_alpha> remapped_rgb{rgb};
+			const details::additive<value_type, static_has_alpha> remapped_rgb{rgb};
 
 			const value_type min{std::min({remapped_rgb.r(), remapped_rgb.g(), remapped_rgb.b()})};
 			const value_type max{std::max({remapped_rgb.r(), remapped_rgb.g(), remapped_rgb.b()})};
