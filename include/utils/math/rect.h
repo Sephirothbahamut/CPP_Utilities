@@ -553,8 +553,8 @@ namespace utils::math
 		
 		struct sdf_proxy;
 		utils_gpu_available sdf_proxy sdf(const vec2f& point) const noexcept requires(std::same_as<value_type, float>);
-		#include "geometry/shape/bounds/common_declaration.inline.h"
-		#include "geometry/shape/transform/common_declaration.inline.h"
+		#include "geometry/bounds/common_declaration.inline.h"
+		#include "geometry/transform/common_declaration.inline.h"
 		};
 	}
 

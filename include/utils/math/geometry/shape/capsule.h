@@ -36,9 +36,9 @@ namespace utils::math::geometry::shape::generic
 			requires(storage::constness_matching<self_t, decltype(other)>::compatible_constness) :
 			ab{other.ab}, radius{other.radius} {}
 
-		#include "sdf/common_declaration.inline.h"
-		#include "bounds/common_declaration.inline.h"
-		#include "transform/common_declaration.inline.h"
+		#include "../sdf/common_declaration.inline.h"
+		#include "../bounds/common_declaration.inline.h"
+		#include "../transform/common_declaration.inline.h"
 		};
 	}
 

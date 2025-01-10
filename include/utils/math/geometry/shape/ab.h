@@ -18,11 +18,11 @@ namespace utils::math::geometry::shape::generic
 
 		utils_gpu_available constexpr ab() noexcept = default;
 
-		utils_gpu_available constexpr ab(const utils::math::concepts::vec_size<2> auto& a, const utils::math::concepts::vec_size<2> auto& b) noexcept
+		utils_gpu_available constexpr ab(const utils::math::vec2f& a, const utils::math::vec2f& b) noexcept
 			requires(storage_type.can_construct_from_const()) : 
 			a{a}, b{b} {}
 			
-		utils_gpu_available constexpr ab(utils::math::concepts::vec_size<2> auto& a, utils::math::concepts::vec_size<2> auto& b) noexcept :
+		utils_gpu_available constexpr ab(utils::math::vec2f& a, utils::math::vec2f& b) noexcept :
 			a{a}, b{b} {}
 
 		utils_gpu_available constexpr ab(concepts::ab auto& other) noexcept
@@ -111,9 +111,9 @@ namespace utils::math::geometry::shape::generic
 			return closest_point_at<optional_ends.value()>(t); 
 			}
 
-		#include "sdf/common_declaration.inline.h"
-		#include "bounds/common_declaration.inline.h"
-		#include "transform/common_declaration.inline.h"
+		#include "../sdf/common_declaration.inline.h"
+		#include "../bounds/common_declaration.inline.h"
+		#include "../transform/common_declaration.inline.h"
 		};
 	}
 

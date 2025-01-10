@@ -44,8 +44,8 @@ namespace utils::math::geometry
 			utils_gpu_available inline consteval bool is_finite    () const noexcept { return  finite_a && finite_b; }
 			utils_gpu_available inline consteval bool is_infinite  () const noexcept { return !is_finite(); }
 
-
 			utils_gpu_available inline consteval bool operator==(const ab& other) const noexcept = default;
+
 			};
 
 		template <ab ends>
@@ -53,6 +53,13 @@ namespace utils::math::geometry
 			{
 			if (ends.is_a_finite()) { if (t < 0.f) { return 0.f; } }
 			if (ends.is_b_finite()) { if (t > 1.f) { return 1.f; } }
+			return t;
+			}
+		template <ab ends>
+		utils_gpu_available inline static constexpr float t_or(float t, float if_invalid) noexcept
+			{
+			if (ends.is_a_finite()) { if (t < 0.f) { return if_invalid; } }
+			if (ends.is_b_finite()) { if (t > 1.f) { return if_invalid; } }
 			return t;
 			}
 

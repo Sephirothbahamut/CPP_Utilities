@@ -224,20 +224,62 @@ namespace utils::storage
 		utils_gpu_available constexpr const_reverse_iterator  rend  () const noexcept { return {storage. rend  ()}; }
 		utils_gpu_available constexpr const_reverse_iterator crend  ()       noexcept { if constexpr (!concepts::span<inner_storage_t>) { return {storage.crend  ()}; } else { return {storage.crend  ()}; } }
 
+		//struct create : utils::oop::non_constructible, utils::oop::non_copyable, utils::oop::non_movable
+		//	{
+		//	using ret_t = multiple<T, extent, sequential_observer>;
+		//	utils_gpu_available inline static constexpr ret_t _default() noexcept requires(storage_type.is_owner()) { return ret_t{}; }
+		//	utils_gpu_available inline static constexpr ret_t from_other_storage(const concepts::multiple auto& other) noexcept requires(storage_type.can_construct_from_const()) { return ret_t{.storage{inner_create(other)}}; }
+		//	utils_gpu_available inline static constexpr ret_t from_other_storage(      concepts::multiple auto& other) noexcept { return ret_t{.storage{inner_create(other)}}; }
+		//	utils_gpu_available inline static constexpr ret_t size(const size_t& size) noexcept
+		//		requires(storage_type.is_owner() && concepts::vector<inner_storage_t>)
+		//		{
+		//		return ret_t{.storage(size)};
+		//		}
+		//	utils_gpu_available inline static constexpr ret_t size(const size_t& size) noexcept
+		//		requires(storage_type.is_owner() && concepts::array<inner_storage_t>)
+		//		{
+		//		assert(size == extent);
+		//		return ret_t{};
+		//		}
+		//	
+		//	template <concepts::can_construct_value_type<typename inner_storage_t::value_type> ...Args>
+		//	utils_gpu_available inline static constexpr ret_t data(Args&&... args) noexcept
+		//		requires
+		//			(
+		//			concepts::vector<inner_storage_t> || 
+		//				(
+		//				concepts::array<inner_storage_t> &&
+		//					(
+		//					(storage_type.is_owner   () && sizeof...(Args) <= extent) ||
+		//					(storage_type.is_observer() && sizeof...(Args) == extent)
+		//					)
+		//				)
+		//			) 
+		//		{
+		//		return ret_t{.storage{std::forward<Args>(args)...}};
+		//		}
+		//	};
+
+
 		utils_gpu_available constexpr multiple() requires(storage_type.is_owner()) = default;
-
+		
 		utils_gpu_available constexpr multiple(inner_storage_t&& storage) : storage{storage} {}
-
+		
+		utils_gpu_available constexpr multiple(const multiple<T, extent, sequential_observer>&  copy) noexcept : storage{          copy.storage } {}
+		utils_gpu_available constexpr multiple(      multiple<T, extent, sequential_observer>&& move) noexcept : storage{std::move(move.storage)} {}
+		utils_gpu_available constexpr multiple& operator=(const multiple<T, extent, sequential_observer>&  copy) noexcept { storage =           copy.storage ; return *this; }
+		utils_gpu_available constexpr multiple& operator=(      multiple<T, extent, sequential_observer>&& move) noexcept { storage = std::move(move.storage); return *this; }
+		
 		utils_gpu_available constexpr multiple(size_t size)
-			requires(storage_type.is_owner() && concepts::vector<inner_storage_t>) : 
+			requires(storage_type.is_owner() && (concepts::array<inner_storage_t> || concepts::vector<inner_storage_t>)) :
 			multiple{utils::storage::construct_flag_size, size}
 			{};
-
+		
 		template <concepts::can_construct_value_type<typename inner_storage_t::value_type> ...Args>
 			requires((!std::same_as<utils::storage::construct_flag_data_t, Args>) && ...)
 		utils_gpu_available constexpr multiple(Args&&... args) : multiple{utils::storage::construct_flag_data, std::forward<Args>(args)...}
 			{}
-
+		
 		utils_gpu_available constexpr multiple(utils::storage::construct_flag_size_t, size_t size)
 			requires(storage_type.is_owner() && concepts::vector<inner_storage_t>) :
 			storage(size)
@@ -247,7 +289,7 @@ namespace utils::storage
 			{
 			assert(size == extent);
 			};
-
+		
 		template <concepts::can_construct_value_type<typename inner_storage_t::value_type> ...Args>
 		utils_gpu_available constexpr multiple(utils::storage::construct_flag_data_t, Args&&... args)
 			requires
@@ -357,6 +399,17 @@ namespace utils::storage
 		//force static_cast if user wants inner_create<true>
 		utils_gpu_available constexpr multiple(const concepts::multiple auto& other) noexcept requires(storage_type.can_construct_from_const()) : storage{inner_create<true>(other)} {}
 		utils_gpu_available constexpr multiple(      concepts::multiple auto& other) noexcept : storage{inner_create<true>(other)} {}
+
+		//template <concepts::multiple other_t>
+		//utils_gpu_available constexpr multiple& operator=(const other_t& other) noexcept
+		//	requires requires(value_type value, typename other_t::value_type other_value) { { value = other_value }; }
+		//	{
+		//	for (size_t i{0}; i < utils::math::min(size(), other.size()); i++)
+		//		{
+		//		operator[](i) = other[i];
+		//		}
+		//	return *this;
+		//	}
 
 		//template <concepts::multiple other_t>
 		//explicit operator other_t() noexcept

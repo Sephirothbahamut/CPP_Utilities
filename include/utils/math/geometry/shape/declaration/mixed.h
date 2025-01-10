@@ -14,11 +14,28 @@ namespace utils::math::geometry::shape
 		{
 		//TODO check for all piece types, not just segment
 		template <typename T>
-		concept pieces_callable_without_index = requires(T t, geometry::shape::segment edge, size_t first, size_t last) { t(edge); };
+		concept pieces_callable_without_index =
+			requires(T t, geometry::shape::segment   edge) { t(edge); } ||
+			requires(T t, geometry::shape::bezier<3> edge) { t(edge); } ||
+			requires(T t, geometry::shape::bezier<4> edge) { t(edge); };
 		template <typename T>
-		concept pieces_callable_with_index    = requires(T t, geometry::shape::segment edge, size_t first, size_t last) { t(edge, first, last); };
+		concept pieces_callable_with_index    =
+			requires(T t, geometry::shape::segment   edge, size_t first, size_t last) { t(edge, first, last); } ||
+			requires(T t, geometry::shape::bezier<3> edge, size_t first, size_t last) { t(edge, first, last); } ||
+			requires(T t, geometry::shape::bezier<4> edge, size_t first, size_t last) { t(edge, first, last); }; 
 		template <typename T>
 		concept pieces_callable = pieces_callable_without_index<T> || pieces_callable_with_index<T>;
+		template <typename T>
+		concept pieces_pair_callable_without_index =
+			requires(T t, geometry::shape::segment   a, geometry::shape::segment   b) { t(a, b); } ||
+			requires(T t, geometry::shape::segment   a, geometry::shape::bezier<3> b) { t(a, b); } ||
+			requires(T t, geometry::shape::segment   a, geometry::shape::bezier<4> b) { t(a, b); } ||
+			requires(T t, geometry::shape::bezier<3> a, geometry::shape::bezier<3> b) { t(a, b); } ||
+			requires(T t, geometry::shape::bezier<3> a, geometry::shape::bezier<4> b) { t(a, b); } ||
+			requires(T t, geometry::shape::bezier<4> a, geometry::shape::bezier<4> b) { t(a, b); } ||
+			requires(T t, geometry::shape::bezier<3> a, geometry::shape::segment   b) { t(a, b); } ||
+			requires(T t, geometry::shape::bezier<4> a, geometry::shape::segment   b) { t(a, b); } ||
+			requires(T t, geometry::shape::bezier<4> a, geometry::shape::bezier<3> b) { t(a, b); };
 		}
 
 	namespace generic

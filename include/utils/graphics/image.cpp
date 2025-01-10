@@ -28,7 +28,7 @@ namespace utils::graphics::image
 			{
 			for (size_t x = 0; x < width; x++)
 				{
-				const utils::math::vec2s coords{{x, y}};
+				const utils::math::vec2s coords{x, y};
 				auto& pixel{ret[coords]};
 
 				for (size_t c = 0; c < channels; c++)

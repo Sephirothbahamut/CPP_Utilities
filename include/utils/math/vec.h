@@ -22,7 +22,7 @@ namespace utils::math
 		using typename base_t::nonref_self_t;
 
 		using ::utils::details::vector::base<T, SIZE, vec, details::name_vec>::base;
-		using base_t::operator=;
+		//using base_t::operator=;
 		utils_gpu_available constexpr vec() noexcept requires(storage_type.is_owner()) : base_t{} {}; //for some reason it doesn't use base_t's default constructor with = default
 
 		//Forward declare to prevent clang specifically from attempting to instantiate the operator= for base classes that inherit from this one
@@ -242,7 +242,7 @@ namespace utils::math
 		};
 	
 	template<typename T, size_t SIZE>
-	vec<T, SIZE>& vec<T, SIZE>::operator=(const vec<T, SIZE>& copy) noexcept 
+	vec<T, SIZE>& vec<T, SIZE>::operator=(const vec<T, SIZE>& copy) noexcept
 		{
 		return ::utils::details::vector::memberwise_operators<::utils::details::vector::definitions<T, SIZE, vec>>::operator=(copy);
 		}

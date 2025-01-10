@@ -105,8 +105,6 @@ namespace utils::math::geometry::shape::generic
 			};
 
 		using coefficients_t = utils::storage::multiple<storage::storage_type_for<geometry::shape::point, utils::storage::type::create::owner()>, extent, true>;
-		//using coefficients_t = utils::storage::multiple<storage::storage_type_for<geometry::shape::point, storage_type>, extent, true>;
-		//using coefficients_t = std::array<geometry::shape::point, 4>;
 		utils_gpu_available constexpr coefficients_t coefficients() const noexcept
 			{
 			coefficients_t ret{utils::storage::construct_flag_size, vertices.size()};
@@ -141,6 +139,7 @@ namespace utils::math::geometry::shape::generic
 		utils_gpu_available constexpr float t_to_equidistant_t(float t) const noexcept
 			{
 			//TODO
+			assert(false);
 			return t;
 			}
 
@@ -250,8 +249,53 @@ namespace utils::math::geometry::shape::generic
 		utils_gpu_available constexpr auto get_edges            (size_t divisions) const noexcept { return edges_view<false>{*this, divisions}; }
 		utils_gpu_available constexpr auto get_edges_equidistant(size_t divisions) const noexcept { return edges_view<true >{*this, divisions}; }
 
+		inline static constexpr auto partition_ends_first {optional_ends.has_value() ? utils::math::geometry::ends::optional_ab::create::value(utils::math::geometry::ends::ab{optional_ends.value().finite_a, true}) : optional_ends};
+		inline static constexpr auto partition_ends_second{optional_ends.has_value() ? utils::math::geometry::ends::optional_ab::create::value(utils::math::geometry::ends::ab{true, optional_ends.value().finite_b}) : optional_ends};
 
+		using partition_first_t  = bezier<utils::storage::type::create::owner(), extent, partition_ends_first >;
+		using partition_second_t = bezier<utils::storage::type::create::owner(), extent, partition_ends_second>;
+		using partitions_t = std::pair<partition_first_t, partition_second_t>;
+		utils_gpu_available constexpr partitions_t partition(const float& t) const noexcept
+			{//https://github.com/oysteinmyrmo/bezier
+			utils::storage::multiple<utils::math::vec2f, extent, true> l(vertices.size());
+			utils::storage::multiple<utils::math::vec2f, extent, true> r(vertices.size());
+			l[0] = vertices[0];
+			r[0] = vertices[vertices.size() - 1];
+			
+			utils::storage::multiple<utils::math::vec2f, extent, true> prev{vertices};
+			utils::storage::multiple<utils::math::vec2f, extent, true> curr{utils::storage::construct_flag_size_t{}, vertices.size()};
+			
+			// de Casteljau: https://pomax.github.io/bezierinfo/#splitting
+			const size_t N{vertices.size() - 1};
+			size_t subs{0};
+			while (subs < N)
+				{
+				for (size_t i{0}; i < N - subs; i++)
+					{
+					curr[i].x() = (1.f - t) * prev[i].x() + t * prev[i + 1].x();
+					curr[i].y() = (1.f - t) * prev[i].y() + t * prev[i + 1].y();
+					if (i == 0)
+						{
+						l[subs + 1] = curr[i];
+						}
+					if (i == (N - subs - 1))
+						{
+						r[subs + 1] = curr[i];
+						}
+					}
+				std::swap(prev.storage, curr.storage);//TODO check if .storage is necessary
+				subs++;
+				}
 
+			partition_first_t  first (vertices.size());
+			partition_second_t second(vertices.size());
+			for (size_t i{0}; i < vertices.size(); i++)
+				{
+				first .vertices[i] = l[i];
+				second.vertices[i] = r[vertices.size() - 1 - i];
+				}
+			return {first, second};
+			}
 
 
 
@@ -312,8 +356,8 @@ namespace utils::math::geometry::shape::generic
 			}
 
 
-		#include "sdf/common_declaration.inline.h"
-		#include "bounds/common_declaration.inline.h"
+		#include "../sdf/common_declaration.inline.h"
+		#include "../bounds/common_declaration.inline.h"
 		};
 	}
 

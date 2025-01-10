@@ -33,7 +33,7 @@ namespace utils::details::vector
 		//Note that MSVC and Gcc will not report errors without this line, but clang's behaviour is the correct one.
 		//Gcc explicitly states its own behaviour on the matter is non-conforming (see: https://cplusplus.github.io/CWG/issues/1594.html)
 		base<T, SIZE, unspecialized_derived_t, name>& operator=(const base<T, SIZE, unspecialized_derived_t, name>&) noexcept;
-		
+
 		using typename storage_t::value_type            ;
 		using typename storage_t::const_aware_value_type;
 		using typename storage_t::iterator              ;

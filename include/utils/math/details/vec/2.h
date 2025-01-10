@@ -121,8 +121,8 @@ namespace utils::math
 				utils_gpu_available constexpr nonref_self_t perpendicular_clockwise       () const noexcept { return perpendicular_right(); }
 				utils_gpu_available constexpr nonref_self_t perpendicular_counterclockwise() const noexcept { return perpendicular_left (); }
 	
-				#include "../../geometry/shape/sdf/common_declaration.inline.h"
-				#include "../../geometry/shape/bounds/common_declaration.inline.h"
+				#include "../../geometry/sdf/common_declaration.inline.h"
+				#include "../../geometry/bounds/common_declaration.inline.h"
 			};
 		}
 	}

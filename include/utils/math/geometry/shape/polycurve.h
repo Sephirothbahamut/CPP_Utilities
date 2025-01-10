@@ -215,8 +215,8 @@ namespace utils::math::geometry::shape::generic
 		/// </summary>
 		utils_gpu_available constexpr auto get_edges() noexcept { return pieces_view<storage_type.is_const()>{*this}; }
 
-		#include "sdf/common_declaration.inline.h"
-		#include "bounds/common_declaration.inline.h"
+		#include "../sdf/common_declaration.inline.h"
+		#include "../bounds/common_declaration.inline.h"
 		};
 	}
 

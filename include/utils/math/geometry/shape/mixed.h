@@ -6,6 +6,10 @@
 #include "bezier.h"
 #include "vertices.h"
 
+#include "../interactions/ab_ab.h"
+#include "../interactions/ab_bezier.h"
+#include "../interactions/bezier_bezier.h"
+
 namespace utils::math::geometry::shape::generic
 	{
 	/// <summary> 
@@ -78,6 +82,33 @@ namespace utils::math::geometry::shape::generic
 				add_or_update_metadata(piece_metadata_t::type_t::segment);
 				return *this;
 				}
+			auto& add_segment_cutting_intersection_with_last_element(const shape::point& point) noexcept
+				requires(storage_type.is_owner())
+				{
+				creation_exec_with_last([&](auto shape_a)
+					{
+					if constexpr (concepts::ab<std::remove_cvref_t<decltype(shape_a)>>)
+						{
+						//shouldn't happen
+						}
+					if constexpr (concepts::bezier<std::remove_cvref_t<decltype(shape_a)>>)
+						{
+						const shape::segment shape_b{vertices[vertices.size() - 1], point};
+						const std::pair<float, float> intersections_ts{geometry::interactions(shape_a, shape_b).intersection_ts_approximate_first()};
+						if (intersections_ts.first != utils::math::constants::fnan)
+							{
+							const auto split_a_first_part{shape_a.partition(intersections_ts.first).first};
+							for (size_t i{0}; i < shape_a.vertices.size(); i++)
+								{
+								shape_a.vertices[i] = split_a_first_part.vertices[i];
+								}
+							}
+						}
+					});
+
+				return add_segment(point);
+				}
+
 			auto& add_segments(const std::initializer_list<shape::point>& points) noexcept
 				requires(storage_type.is_owner())
 				{
@@ -97,6 +128,40 @@ namespace utils::math::geometry::shape::generic
 				add_or_update_metadata(piece_metadata_t::type_t::bezier_3pt);
 				return *this;
 				}
+
+			auto& add_bezier_3pt_cutting_intersection_with_last_element(const shape::point& b, const shape::point& c) noexcept
+				requires(storage_type.is_owner())
+				{
+				creation_exec_with_last([&](auto shape_a)
+					{
+					const shape::bezier<3> shape_b{vertices[vertices.size() - 1], b, c};
+					if constexpr (concepts::ab<std::remove_cvref_t<decltype(shape_a)>>)
+						{
+						const std::pair<float, float> intersections_ts{geometry::interactions(shape_a, shape_b).intersection_ts_approximate_first()};
+						if (intersections_ts.first != utils::math::constants::fnan)
+							{
+							const auto split_b_second_part{shape_b.partition(intersections_ts.second).second};
+							shape_a.b = split_b_second_part.vertices[0];
+							return add_bezier_3pt(split_b_second_part.vertices[1], split_b_second_part.vertices[2]);
+							}
+						}
+					if constexpr (concepts::bezier<std::remove_cvref_t<decltype(shape_a)>>)
+						{
+						const std::pair<float, float> intersections_ts{geometry::interactions(shape_a, shape_b).intersection_ts_approximate_first()};
+						if (intersections_ts.first != utils::math::constants::fnan)
+							{
+							const auto split_a_first_part {shape_b.partition(intersections_ts.first ).first };
+							const auto split_b_second_part{shape_b.partition(intersections_ts.second).second};
+							shape_a.vertices = split_a_first_part;
+							return add_bezier_3pt(split_b_second_part.vertices[1], split_b_second_part.vertices[2]);
+							}
+						}
+
+					return add_bezier_3pt(b, c);
+					});
+				return *this;
+				}
+
 			auto& add_bezier_3pt(const std::initializer_list<shape::point>& points) noexcept
 				requires(storage_type.is_owner())
 				{
@@ -121,6 +186,43 @@ namespace utils::math::geometry::shape::generic
 				add_or_update_metadata(piece_metadata_t::type_t::bezier_4pt);
 				return *this;
 				}
+
+			auto& add_bezier_4pt_cutting_intersection_with_last_element(const shape::point& b, const shape::point& c, const shape::point& d) noexcept
+				requires(storage_type.is_owner())
+				{
+				creation_exec_with_last([&](auto shape_a)
+					{
+					const shape::bezier<4> shape_b{utils::storage::construct_flag_data, vertices[vertices.size() - 1], b, c, d};
+					if constexpr (concepts::ab<std::remove_cvref_t<decltype(shape_a)>>)
+						{
+						const std::pair<float, float> intersections_ts{geometry::interactions(shape_a, shape_b).intersection_ts_approximate_first()};
+						if (!std::isnan(intersections_ts.first))
+							{
+							const auto split_b_second_part{shape_b.partition(intersections_ts.second).second};
+							shape_a.b.x() = split_b_second_part.vertices[0].x();
+							shape_a.b.y() = split_b_second_part.vertices[0].y();
+							return add_bezier_4pt(split_b_second_part.vertices[1], split_b_second_part.vertices[2], split_b_second_part.vertices[3]);
+							}
+						}
+					if constexpr (concepts::bezier<std::remove_cvref_t<decltype(shape_a)>>)
+						{
+						const std::pair<float, float> intersections_ts{geometry::interactions(shape_a, shape_b).intersection_ts_approximate_first()};
+						if (!std::isnan(intersections_ts.first))
+							{
+							const auto split_a_first_part {shape_a.partition(intersections_ts.first ).first};
+							const auto split_b_second_part{shape_b.partition(intersections_ts.second).second};
+							for (size_t i{0}; i < shape_a.vertices.size(); i++)
+								{
+								shape_a.vertices[i] = split_a_first_part.vertices[i];
+								}
+							return add_bezier_4pt(split_b_second_part.vertices[1], split_b_second_part.vertices[2], split_b_second_part.vertices[3]);
+							}
+						}
+					return add_bezier_4pt(b, c, d);
+					});
+				return *this;
+				}
+
 			auto& add_bezier_4pt(const std::initializer_list<shape::point>& points) noexcept
 				requires(storage_type.is_owner())
 				{
@@ -150,12 +252,48 @@ namespace utils::math::geometry::shape::generic
 				return *this;
 				}
 
+			/// <summary> Used to perform operations on the last added element before close()</summary>
+			/// <param name="callback">function(observer piece), do not take as reference</param>
+			void creation_exec_with_last(auto callback) noexcept
+				{
+				if (pieces_metadata.size() < 1) { return; }
+				const piece_metadata_t& metadata{pieces_metadata[pieces_metadata.size() - 1]};
+				const size_t index_end{metadata.end_index};
+				switch (metadata.type)
+					{
+					case piece_metadata_t::type_t::segment   :
+						{
+						shape::observer::segment piece{vertices.storage[index_end - 2], vertices.storage[index_end - 1]};
+						callback(piece);
+						break;
+						}
+					case piece_metadata_t::type_t::bezier_3pt:
+						{
+						shape::observer::bezier<3> piece{vertices.storage.begin() + (index_end - 3), 3};
+						callback(piece);
+						break;
+						}
+					case piece_metadata_t::type_t::bezier_4pt:
+						{
+						shape::observer::bezier<4> piece{vertices.storage.begin() + (index_end - 4), 4};
+						callback(piece);
+						break;
+						}
+					case piece_metadata_t::type_t::bezier:
+						{
+						assert(false);
+						//TODO
+						break;
+						}
+					}
+				}
+
 			auto& close() noexcept
 				requires(storage_type.is_owner() && ends.is_closed())
 				{
 				const auto first{vertices[0]};
 				const auto last {vertices[vertices.size() - 1]};
-				if (first == last)
+				if (utils::math::almost_equal(first.x(), last.x()) && utils::math::almost_equal(first.y(), last.y()))
 					{
 					vertices.storage.resize(vertices.size() - 1);
 					}
@@ -180,6 +318,12 @@ namespace utils::math::geometry::shape::generic
 					utils_gpu_available constexpr size_t empty() const noexcept
 						{
 						return mixed_ref.pieces_metadata.empty();
+						}
+					utils_gpu_available constexpr size_t total_count() const noexcept
+						{
+						size_t ret{0};
+						for_each([&](const auto&) { ret++; });
+						return ret;
 						}
 
 					utils_gpu_available constexpr void for_each(shape::details::mixed::pieces_callable auto callback) const noexcept
@@ -296,8 +440,8 @@ namespace utils::math::geometry::shape::generic
 
 			utils_gpu_available constexpr auto get_pieces() const noexcept { return pieces_view{*this}; }
 
-			#include "sdf/common_declaration.inline.h"
-			#include "bounds/common_declaration.inline.h"
+			#include "../sdf/common_declaration.inline.h"
+			#include "../bounds/common_declaration.inline.h"
 		};
 	}
 
