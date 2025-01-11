@@ -81,50 +81,56 @@ namespace utils::console::colour
 		}
 
 	template <typename char_t, details::concepts::colour colour_t>
-	std::basic_ostream<char_t>& operator<<(std::basic_ostream<char_t>& stream, const colour_t& colour) noexcept
+	inline constexpr std::basic_string<char_t> to_string(const colour_t& colour) noexcept
 		{
+		std::basic_stringstream<char_t> ss;
 		if constexpr (std::same_as<typename colour_t::colour_data_t, utils::console::colour::colour_8>)
 			{
 			if constexpr (concepts::foreground<colour_t>)
 				{
 				switch (colour.data.base)
 					{
-					case utils::graphics::colour::base::black  : return stream << "\x1B[" << (colour.data.is_dark ? "30" : "90") << "m";
-					case utils::graphics::colour::base::red    : return stream << "\x1B[" << (colour.data.is_dark ? "31" : "91") << "m";
-					case utils::graphics::colour::base::green  : return stream << "\x1B[" << (colour.data.is_dark ? "32" : "92") << "m";
-					case utils::graphics::colour::base::yellow : return stream << "\x1B[" << (colour.data.is_dark ? "33" : "93") << "m";
-					case utils::graphics::colour::base::blue   : return stream << "\x1B[" << (colour.data.is_dark ? "34" : "94") << "m";
-					case utils::graphics::colour::base::magenta: return stream << "\x1B[" << (colour.data.is_dark ? "35" : "95") << "m";
-					case utils::graphics::colour::base::cyan   : return stream << "\x1B[" << (colour.data.is_dark ? "36" : "96") << "m";
-					case utils::graphics::colour::base::white  : return stream << "\x1B[" << (colour.data.is_dark ? "37" : "97") << "m";
+					case utils::graphics::colour::base::black  : ss << "\x1B[" << (colour.data.is_dark ? "30" : "90") << "m"; break;
+					case utils::graphics::colour::base::red    : ss << "\x1B[" << (colour.data.is_dark ? "31" : "91") << "m"; break;
+					case utils::graphics::colour::base::green  : ss << "\x1B[" << (colour.data.is_dark ? "32" : "92") << "m"; break;
+					case utils::graphics::colour::base::yellow : ss << "\x1B[" << (colour.data.is_dark ? "33" : "93") << "m"; break;
+					case utils::graphics::colour::base::blue   : ss << "\x1B[" << (colour.data.is_dark ? "34" : "94") << "m"; break;
+					case utils::graphics::colour::base::magenta: ss << "\x1B[" << (colour.data.is_dark ? "35" : "95") << "m"; break;
+					case utils::graphics::colour::base::cyan   : ss << "\x1B[" << (colour.data.is_dark ? "36" : "96") << "m"; break;
+					case utils::graphics::colour::base::white  : ss << "\x1B[" << (colour.data.is_dark ? "37" : "97") << "m"; break;
 					}
 				}
 			else if constexpr (concepts::background<colour_t>)
 				{
 				switch (colour.data.base)
 					{
-					case utils::graphics::colour::base::black  : return stream << "\x1B[" << (colour.data.is_dark ? "40" : "100") << "m";
-					case utils::graphics::colour::base::red    : return stream << "\x1B[" << (colour.data.is_dark ? "41" : "101") << "m";
-					case utils::graphics::colour::base::green  : return stream << "\x1B[" << (colour.data.is_dark ? "42" : "102") << "m";
-					case utils::graphics::colour::base::yellow : return stream << "\x1B[" << (colour.data.is_dark ? "43" : "103") << "m";
-					case utils::graphics::colour::base::blue   : return stream << "\x1B[" << (colour.data.is_dark ? "44" : "104") << "m";
-					case utils::graphics::colour::base::magenta: return stream << "\x1B[" << (colour.data.is_dark ? "45" : "105") << "m";
-					case utils::graphics::colour::base::cyan   : return stream << "\x1B[" << (colour.data.is_dark ? "46" : "106") << "m";
-					case utils::graphics::colour::base::white  : return stream << "\x1B[" << (colour.data.is_dark ? "47" : "107") << "m";
+					case utils::graphics::colour::base::black  : ss << "\x1B[" << (colour.data.is_dark ? "40" : "100") << "m"; break;
+					case utils::graphics::colour::base::red    : ss << "\x1B[" << (colour.data.is_dark ? "41" : "101") << "m"; break;
+					case utils::graphics::colour::base::green  : ss << "\x1B[" << (colour.data.is_dark ? "42" : "102") << "m"; break;
+					case utils::graphics::colour::base::yellow : ss << "\x1B[" << (colour.data.is_dark ? "43" : "103") << "m"; break;
+					case utils::graphics::colour::base::blue   : ss << "\x1B[" << (colour.data.is_dark ? "44" : "104") << "m"; break;
+					case utils::graphics::colour::base::magenta: ss << "\x1B[" << (colour.data.is_dark ? "45" : "105") << "m"; break;
+					case utils::graphics::colour::base::cyan   : ss << "\x1B[" << (colour.data.is_dark ? "46" : "106") << "m"; break;
+					case utils::graphics::colour::base::white  : ss << "\x1B[" << (colour.data.is_dark ? "47" : "107") << "m"; break;
 					}
 				}
 			}
 		else if constexpr (std::same_as<typename colour_t::colour_data_t, utils::graphics::colour::rgb_u>)
 			{
-			stream << "\033[";
-			if constexpr (concepts::foreground<colour_t>) { stream << "38"; }
-			else if constexpr (concepts::background<colour_t>) { stream << "48"; }
+			ss << "\033[";
+			if constexpr (concepts::foreground<colour_t>) { ss << "38"; }
+			else if constexpr (concepts::background<colour_t>) { ss << "48"; }
 
-			return stream << ";2;" << +colour.data.r() << ";" << +colour.data.g() << ";" << +colour.data.b() << "m";
+			ss << ";2;" << +colour.data.r() << ";" << +colour.data.g() << ";" << +colour.data.b() << "m";
 			}
 
-		//Unreachable code warning, but missing return error if removed, so... I guess it stays
-		return stream;
+		return ss.str();
+		}
+
+	template <typename char_t, details::concepts::colour colour_t>
+	std::basic_ostream<char_t>& operator<<(std::basic_ostream<char_t>& stream, const colour_t& colour) noexcept
+		{
+		return stream << to_string<char_t>(colour);
 		}
 
 	inline static constexpr details::restore_defaults_t restore_defaults;

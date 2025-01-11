@@ -100,6 +100,16 @@ namespace utils
 			details::matrix_sizes_interface<T, EXTENTS>{sizes}
 			{
 			}
+			
+		utils_gpu_available constexpr matrix(utils::math::vec2s sizes, const T default_value) requires(EXTENTS.is_dynamic() && storage_type.is_owner()) :
+			multiple_t(sizes.sizes_to_size()),
+			details::matrix_sizes_interface<T, EXTENTS>{sizes}
+			{
+			for (size_t i = 0; i < sizes.sizes_to_size(); i++)
+				{
+				operator[](i) = default_value;
+				}
+			}
 
 		template <typename ...Args>
 		utils_gpu_available constexpr matrix(utils::math::vec2s sizes, Args&&... args) requires(EXTENTS.is_dynamic() && storage_type.is_owner()) :

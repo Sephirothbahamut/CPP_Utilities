@@ -6,13 +6,21 @@
 #include <cassert>
 #include <algorithm>
 
+#include "../compilation/gpu.h"
+#include "../oop/disable_move_copy.h"
+
 namespace utils::containers
 	{
 	struct region
 		{
 		size_t begin{0};
 		size_t count{1};
-		size_t end() const noexcept { return begin + count; }
+		utils_gpu_available inline constexpr size_t end() const noexcept { return begin + count; }
+
+		struct create : utils::oop::non_constructible
+			{
+			inline static constexpr region full_range() noexcept { return region{0, std::numeric_limits<size_t>::max()}; };
+			};
 		};
 
 	template <typename T>
