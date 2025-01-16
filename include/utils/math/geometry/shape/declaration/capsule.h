@@ -32,10 +32,4 @@ namespace utils::math::geometry::shape
 		{
 		using capsule = shape::generic::capsule<storage::type::create::const_observer()>;
 		}
-
-	template <concepts::capsule T, storage::type desired_storage_type>
-	struct cast_storage_type<T, desired_storage_type>
-		{
-		using type = generic::capsule<desired_storage_type>;
-		};
 	}

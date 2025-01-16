@@ -11,6 +11,7 @@ namespace utils::math::geometry::shape::generic
 		inline static constexpr auto optional_ends{OPTIONAL_ENDS};
 
 		using self_t       = ab<storage_type, optional_ends>;
+		using owner_self_t = ab<storage::type::create::owner(), optional_ends>;
 
 		using vertex_t = generic::point<storage_type>;
 		template <bool is_function_const>

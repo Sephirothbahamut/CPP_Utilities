@@ -3,10 +3,10 @@
 #include "common.h"
 #include "../shape/point.h"
 
-namespace utils::math::details
+namespace utils::math
 	{
-	template<typename T, template <typename, size_t> class unspecialized_derived_T>
-	struct vec_sized_specialization<T, 2, unspecialized_derived_T>::sdf_proxy
+	template<typename T, size_t SIZE>
+	struct vec<T, SIZE>::sdf_proxy
 		{
 		using shape_t = vec<T, 2>;
 		#include "common.inline.h"
@@ -42,10 +42,13 @@ namespace utils::math::details
 			}
 		};
 
-	template<typename T, template <typename, size_t> class unspecialized_derived_T>
-	vec_sized_specialization<T, 2, unspecialized_derived_T>::sdf_proxy vec_sized_specialization<T, 2, unspecialized_derived_T>::sdf(const vec<float, 2>& point) const noexcept 
+
+
+	template<typename T, size_t SIZE>
+	utils_gpu_available vec<T, SIZE>::sdf_proxy vec<T, SIZE>::sdf(const vec<float, 2>& point) const noexcept
+		requires(std::convertible_to<value_type, float> && extent == 2)
 		{
-		//self() instead of this because vec_sized_specialization is a CRTP parent of the actual vec.
-		return {self(), point};
+		static_assert(std::same_as<value_type, float> && SIZE == 2);
+		return {*this, point};
 		}
 	}

@@ -29,8 +29,8 @@ namespace utils::math::geometry::shape::generic
 		inline static constexpr auto extent              {EXTENT};
 		inline static constexpr auto piece_vertices_count{PIECE_VERTICES_COUNT};
 
-		using self_t        = polycurve<piece_t, storage_type, ends, extent>;
-		using nonref_self_t = polycurve<piece_t, storage::type::create::owner(), ends, extent>;
+		using self_t       = polycurve<piece_t, storage_type, ends, extent>;
+		using owner_self_t = polycurve<piece_t, storage::type::create::owner(), ends, extent>;
 
 		using          utils::math::geometry::vertices_as_field<geometry::ends_aware_vertices<storage_type, ends.is_closed(), extent>>::vertices;
 		using typename utils::math::geometry::vertices_as_field<geometry::ends_aware_vertices<storage_type, ends.is_closed(), extent>>::vertices_t;

@@ -1,7 +1,7 @@
 #pragma once
 
-#include <type_traits>
 #include <concepts>
+#include <type_traits>
 
 namespace utils::concepts
 	{
@@ -53,4 +53,7 @@ namespace utils::concepts
 				{ *t.end  () } -> same_as_undecorated<typename T::value_type>;
 				{  t.size () } -> std::same_as<size_t>;
 		};
+
+	template <typename T>
+	concept non_const = !(std::is_const<T>::value);
 	}

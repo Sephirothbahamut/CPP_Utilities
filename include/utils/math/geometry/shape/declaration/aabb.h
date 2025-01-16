@@ -19,10 +19,4 @@ namespace utils::math::geometry::shape
 	namespace owner         { using aabb = shape::generic::aabb<storage::type::create::owner         ()>; }
 	namespace observer      { using aabb = shape::generic::aabb<storage::type::create::observer      ()>; }
 	namespace const_observer{ using aabb = shape::generic::aabb<storage::type::create::const_observer()>; }
-	
-	template <concepts::aabb T, storage::type desired_storage_type>
-	struct cast_storage_type<T, desired_storage_type>
-		{
-		using type = generic::aabb<desired_storage_type>;
-		};
 	}

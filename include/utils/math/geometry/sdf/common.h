@@ -137,6 +137,7 @@ namespace utils::math::geometry::sdf
 			const vec2f ret_gradient{utils::math::lerp(a.gradient, b.gradient, (a.distance.value < b.distance.value) ? n : 1.f - n)};
 			return {ret_distance, ret_gradient};
 			}
+		utils_gpu_available constexpr gradient_signed_distance operator-() const noexcept { return {-distance, gradient}; }
 		};
 
 	struct closest_point_with_signed_distance

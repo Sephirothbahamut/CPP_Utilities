@@ -9,8 +9,8 @@ namespace utils::math::geometry::shape::generic
 		{
 		inline static constexpr auto storage_type{STORAGE_TYPE};
 
-		using self_t        = capsule<storage_type                  >;
-		using nonref_self_t = capsule<storage::type::create::owner()>;
+		using self_t       = capsule<storage_type                  >;
+		using owner_self_t = capsule<storage::type::create::owner()>;
 
 		using edge_t   = generic::segment<storage_type>;
 		using radius_t = storage::single<storage::storage_type_for<float, storage_type>>;

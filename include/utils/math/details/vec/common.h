@@ -6,7 +6,8 @@
 
 #include "../../math.h"
 #include "../../../memory.h"
-#include "../../../details/vec/all.h"
+#include "../../../storage.h"
+#include "../../../compilation/compiler.h"
 #include "../../../oop/disable_move_copy.h"
 #include "../../../math/geometry/details/base_types.h"
 
@@ -60,27 +61,11 @@ namespace utils::math
 
 		template <typename T, typename value_type>
 		concept vec_type = vec<T> && std::same_as<typename std::remove_cvref_t<T>::value_type, value_type>;
-		template <typename T, typename value_type>
-		concept vec_compatible_type = vec<T> && std::convertible_to<typename std::remove_cvref_t<T>::value_type, value_type>;
 		}
 
 	namespace details
 		{
 		inline extern constexpr const char name_vec[]{"vec"};
-
-		template<typename T, size_t size, template <typename, size_t> class unspecialized_derived_T>
-		class utils_oop_empty_bases vec_sized_specialization {};
-		template<typename T, size_t size, template <typename, size_t> class unspecialized_derived_T>
-		class utils_oop_empty_bases vec_typed_specialization {};
-		
-		//Forward declare the type/size based extensions, so an error appears if the respective headers weren't included
-		//Otherwise this is an ODR violation, or IFNDR, I don't remember, since the same specialization risks not being available in all .cpps
-		
-		template<typename T, template <typename, size_t> class unspecialized_derived_T>
-		class utils_oop_empty_bases vec_sized_specialization<T, 2, unspecialized_derived_T>;
-		template<size_t size, template <typename, size_t> class unspecialized_derived_T>
-		class utils_oop_empty_bases vec_typed_specialization<size_t, size, unspecialized_derived_T>;
-
 
 		struct pair_sizes_t
 			{

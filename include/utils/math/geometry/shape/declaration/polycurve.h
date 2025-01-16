@@ -45,10 +45,4 @@ namespace utils::math::geometry::shape
 		template <size_t piece_vertices_count, geometry::ends::closeable ends = geometry::ends::closeable::create::open(), size_t extent = std::dynamic_extent>
 		using polycurve = shape::generic::polycurve<piece_vertices_count, storage::type::create::const_observer(), ends, extent>;
 		}
-
-	template <concepts::polycurve T, storage::type desired_storage_type>
-	struct cast_storage_type<T, desired_storage_type>
-		{
-		using type = generic::polycurve<desired_storage_type, T::ends, T::extent>; 
-		};
 	}

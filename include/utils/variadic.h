@@ -115,7 +115,7 @@ namespace utils
 
 
 	template <typename T, typename Object>
-	inline constexpr auto contains_child_of_type(Object& object) { return std::is_base_of_v<T, Object::value_type>; }
+	inline constexpr auto contains_child_of_type(Object& object) { return std::is_base_of_v<T, typename Object::value_type>; }
 
 
 	template<typename Container_T>

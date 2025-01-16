@@ -9,6 +9,8 @@
 #include "../compilation/gpu.h"
 #include "../oop/disable_move_copy.h"
 
+#include "../details/warnings_pre.inline.h"
+
 namespace utils::containers
 	{
 	struct region
@@ -412,3 +414,5 @@ namespace utils::containers
 				}
 		};
 	}
+
+#include "../details/warnings_post.inline.h"

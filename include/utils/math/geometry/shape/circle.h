@@ -9,8 +9,8 @@ namespace utils::math::geometry::shape::generic
 		{
 		inline static constexpr auto storage_type{STORAGE_TYPE};
 
-		using self_t        = circle<storage_type                  >;
-		using nonref_self_t = circle<storage::type::create::owner()>;
+		using self_t       = circle<storage_type                  >;
+		using owner_self_t = circle<storage::type::create::owner()>;
 
 		using vertex_t = generic::point<storage_type>;
 		using radius_t = storage::single<storage::storage_type_for<float, storage_type>>;

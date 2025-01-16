@@ -11,7 +11,7 @@
 namespace utils::math
 	{
 	template <typename T>
-	concept vec_range = std::ranges::range<T> && utils::math::concepts::vec_size<typename T::value_type, 2> && utils::math::concepts::vec_compatible_type<typename T::value_type, float>;
+	concept vec_range = std::ranges::range<T> && utils::math::concepts::vec_size<typename T::value_type, 2> && storage::concepts::storage_compatible_with_type<typename T::value_type, float>;
 
 	template <typename T>
 	struct rect;
@@ -23,17 +23,18 @@ namespace utils::math
 		}
 
 	template <typename T = float>
-	struct utils_oop_empty_bases rect : utils::storage::multiple<T, 4, false>, utils::math::geometry::shape_flag
+	struct utils_oop_empty_bases rect final : utils::storage::multiple<T, 4, false>, utils::math::geometry::shape_flag
 		{
 		using storage_t = utils::storage::multiple<T, 4, false>;
 
-		using self_t = rect<T>;
 		using typename storage_t::value_type;
 		using typename storage_t::const_aware_value_type;
 		using storage_t::storage_type;
 		using vertex_owner    = utils::math::vec2<value_type>;
 		using vertex_observer = utils::math::vecref2<const_aware_value_type>;
-		using nonref_self_t   = rect<std::remove_const_t<value_type>>;
+		
+		using self_t       = rect<value_type>;
+		using owner_self_t = rect<value_type>;
 
 		using utils::storage::multiple<T, 4, false>::multiple;
 
@@ -151,19 +152,6 @@ namespace utils::math
 			return *this;
 			}
 		self_t merge(const self_t& other) const noexcept { self_t tmp{*this}; return tmp.merge_self(other); }
-
-		nonref_self_t operator+(const self_t& other) const noexcept
-			{
-			const nonref_self_t ret
-				{
-				ll() + other.ll(),
-				up() + other.up(),
-				rr() + other.rr(),
-				dw() + other.dw()
-				};
-			return ret;
-			}
-
 
 		utils_gpu_available const const_aware_value_type& ll() const noexcept { return (*this)[0]; }
 		utils_gpu_available       const_aware_value_type& ll()       noexcept { return (*this)[0]; }

@@ -6,8 +6,6 @@
 
 namespace utils::math::geometry::sdf::details::bezier::_4pt
 	{
-	using ::operator*;
-	
 	////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 	// Slower but comprehensible
 	// https://www.shadertoy.com/view/sdjXRy
@@ -118,8 +116,6 @@ namespace utils::math::geometry::sdf::details::bezier::_4pt
 
 	utils_gpu_available inline constexpr simple_static_vector<float, 5> solved_quintic(const utils::math::vec2f point, const utils::math::vec2f v1, const utils::math::vec2f v2, const utils::math::vec2f v3, const utils::math::vec2f v4) noexcept
 		{
-		using ::operator*; //TODO understand why `side * float` in `return_types` namespace hides `vec<float, extent> * float` that's declared in global namespace
-
 		// Convert to power basis
 		const utils::math::vec2f a = v4 + (v2 - v3) * 3.f - v1;
 		const utils::math::vec2f b = (v1 - v2 * 2.f + v3) * 3.f;

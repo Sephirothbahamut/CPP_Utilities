@@ -37,6 +37,12 @@ namespace utils::math
 		return value < T{0} ? -value : value;
 		}
 
+	template <typename T>
+	utils_gpu_available constexpr auto floor(const T& value) noexcept { return std::floor(value); }
+
+	template <typename T>
+	utils_gpu_available constexpr auto ceil(const T& value) noexcept { return std::ceil(value); }
+
 	template <std::floating_point T>
 	utils_gpu_available constexpr bool almost_equal(T a, T b, T minimum_delta = utils::math::constants::epsilon) noexcept
 		{

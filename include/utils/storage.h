@@ -6,17 +6,22 @@
 #include <memory>
 #include <cassert>
 #include <concepts>
+#include <type_traits>
 
 #include "math/math.h"
 #include "compilation/debug.h"
 #include "oop/disable_move_copy.h"
+#include "concepts.h"
 
 namespace utils::storage
 	{
 	namespace concepts
 		{
-		template <typename T, typename value_type>
-		concept compatible_value_type = std::convertible_to<utils::remove_const_reference_t<T>, utils::remove_const_reference_t<value_type>>;
+		template <typename storage_type, typename value_type>
+		concept storage_compatible_with_type = std::convertible_to<typename utils::remove_const_reference_t<storage_type>::value_type, utils::remove_const_reference_t<value_type>>;
+		template <typename value_type, typename storage_type>
+		concept type_compatible_with_storage = std::convertible_to<utils::remove_const_reference_t<value_type>, typename utils::remove_const_reference_t<storage_type>::value_type>;
+
 		template <typename T, typename value_type>
 		concept can_construct_value_type = std::constructible_from<value_type, T>;
 
@@ -108,6 +113,12 @@ namespace utils::storage
 		{
 		template <typename T>
 		concept multiple = std::derived_from<std::remove_cvref_t<T>, utils::storage::multiple<typename std::remove_cvref_t<T>::template_type, std::remove_cvref_t<T>::extent, std::remove_cvref_t<T>::sequential_observer>>;
+		
+		template <typename T, typename other_T>
+		concept compatible_multiple = multiple<T> && multiple<other_T> && storage_compatible_with_type<T, typename std::remove_cvref_t<other_T>::value_type>;
+
+		template <typename T, typename storage_type>
+		concept operator_parameter = compatible_multiple<T, std::remove_cvref_t<storage_type>> || type_compatible_with_storage<T, std::remove_cvref_t<storage_type>>;
 		}
 
 	struct construct_flag_data_t {};
@@ -116,6 +127,21 @@ namespace utils::storage
 	inline static constexpr construct_flag_data_t construct_flag_data;
 	inline static constexpr construct_flag_size_t construct_flag_size;
 
+
+	/// <summary>
+	/// Abstracts storage as static, dynamic owners, static and dynamic observers transparently. 
+	/// A single templated class implementation inheriting from or containing one multiple can be used with each storage type across the program program.
+	/// Given a class that inherits from multiple, the available operators will return a multiple with the same properties if "owner_self_t" is not defined.
+	/// Given a class that inherits from multiple and defines owner_self_t as itself, the available operators will return that same class.
+	///		For this to work reliably, that class should also expose multiple's constructors
+	/// </summary>
+	/// <typeparam name="T">
+	/// T can be a pure value type, but also have constness defined and/or be a reference.
+	/// In case T is a reference, the internal storage will use std::reference_wrapper&lt;T&gt;, however the access operators and iterators of the class will
+	/// transparently behave as though they were pure references.
+	/// </typeparam>
+	/// <typeparam name="EXTENT"></typeparam>
+	/// <typeparam name="SEQUENTIAL_OBSERVER">If the storage is an observer, specify wether the observed content is sequential in memory (std::span&lt;T&gt;) or spread in arbitrary locations (std::vector&lt;std::reference_wrapper&lt;T&gt;&gt;)</typeparam>
 	template <typename T, size_t EXTENT = std::dynamic_extent, bool SEQUENTIAL_OBSERVER = true>
 	struct multiple
 		{
@@ -125,6 +151,7 @@ namespace utils::storage
 		inline static constexpr type storage_type{utils::storage::type::create::from<T>()};
 		inline static constexpr bool sequential_observer{SEQUENTIAL_OBSERVER};
 		inline static constexpr size_t extent{EXTENT};
+		using multiple_t      = multiple<T                      , extent, sequential_observer>;
 		using self_t          = multiple<T                      , extent, sequential_observer>;
 		using owner_self_t    = multiple<value_type             , extent, sequential_observer>;
 		using observer_self_t = multiple<const_aware_value_type&, extent, sequential_observer>;
@@ -265,10 +292,10 @@ namespace utils::storage
 		
 		utils_gpu_available constexpr multiple(inner_storage_t&& storage) : storage{storage} {}
 		
-		utils_gpu_available constexpr multiple(const multiple<T, extent, sequential_observer>&  copy) noexcept : storage{          copy.storage } {}
-		utils_gpu_available constexpr multiple(      multiple<T, extent, sequential_observer>&& move) noexcept : storage{std::move(move.storage)} {}
-		utils_gpu_available constexpr multiple& operator=(const multiple<T, extent, sequential_observer>&  copy) noexcept { storage =           copy.storage ; return *this; }
-		utils_gpu_available constexpr multiple& operator=(      multiple<T, extent, sequential_observer>&& move) noexcept { storage = std::move(move.storage); return *this; }
+		//utils_gpu_available constexpr multiple(const multiple<T, extent, sequential_observer>&  copy) noexcept : storage{          copy.storage } {}
+		//utils_gpu_available constexpr multiple(      multiple<T, extent, sequential_observer>&& move) noexcept : storage{std::move(move.storage)} {}
+		//utils_gpu_available constexpr multiple& operator=(const multiple<T, extent, sequential_observer>&  copy) noexcept { storage =           copy.storage ; return *this; }
+		//utils_gpu_available constexpr multiple& operator=(      multiple<T, extent, sequential_observer>&& move) noexcept { storage = std::move(move.storage); return *this; }
 		
 		utils_gpu_available constexpr multiple(size_t size)
 			requires(storage_type.is_owner() && (concepts::array<inner_storage_t> || concepts::vector<inner_storage_t>)) :
@@ -399,22 +426,144 @@ namespace utils::storage
 		//force static_cast if user wants inner_create<true>
 		utils_gpu_available constexpr multiple(const concepts::multiple auto& other) noexcept requires(storage_type.can_construct_from_const()) : storage{inner_create<true>(other)} {}
 		utils_gpu_available constexpr multiple(      concepts::multiple auto& other) noexcept : storage{inner_create<true>(other)} {}
+			
+		utils_gpu_available constexpr void for_each(this auto& self, auto callback) noexcept { for (auto& value : self) { callback(value); } }
 
-		//template <concepts::multiple other_t>
-		//utils_gpu_available constexpr multiple& operator=(const other_t& other) noexcept
-		//	requires requires(value_type value, typename other_t::value_type other_value) { { value = other_value }; }
-		//	{
-		//	for (size_t i{0}; i < utils::math::min(size(), other.size()); i++)
-		//		{
-		//		operator[](i) = other[i];
-		//		}
-		//	return *this;
-		//	}
+		template <typename self_t>
+		utils_gpu_available constexpr auto for_each_to_new(this self_t& self, auto callback) noexcept
+			{
+			typename self_t::owner_self_t ret;
+			for (size_t i{0}; i < extent; i++)
+				{
+				ret[i] = callback(self[i]);
+				}
+			return ret;
+			}
 
-		//template <concepts::multiple other_t>
-		//explicit operator other_t() noexcept
-		//	{
-		//	return other_t{other_t::inner_create<true>(*this)};
-		//	}
+		template <typename self_t>
+		utils_gpu_available constexpr auto& operator_self_assign(this self_t& self, const concepts::type_compatible_with_storage<self_t> auto& other, auto callback) noexcept
+			{
+			for (auto& value : self) { callback(value, other); }
+			return self;
+			}
+
+		template <typename self_t, typename T2, size_t EXTENT2, bool SEQUENTIAL_OBSERVER2>
+		utils_gpu_available constexpr auto& operator_self_assign(this self_t& self, const multiple<T2, EXTENT2, SEQUENTIAL_OBSERVER2>& other, auto callback) noexcept
+			requires (concepts::compatible_multiple<self_t, multiple<T2, EXTENT2, SEQUENTIAL_OBSERVER2>>)
+			{
+			const size_t indices{utils::math::min(self.multiple::size(), other.size())};
+			for (size_t i{0}; i < indices; i++)
+				{
+				callback(self[i], other[i]);
+				}
+			return self;
+			}
+
+		template <typename self_t>
+		utils_gpu_available constexpr auto operator_to_new(this const self_t& self, const concepts::type_compatible_with_storage<self_t> auto& other, auto callback) noexcept
+			{
+			typename self_t::owner_self_t ret;
+			const size_t indices{self.multiple::size()};
+			for (size_t i{0}; i < indices; i++)
+				{
+				ret[i] = callback(self[i], other);
+				}
+			return ret;
+			}
+
+		template <typename self_t, typename T2, size_t EXTENT2, bool SEQUENTIAL_OBSERVER2>
+		utils_gpu_available constexpr auto operator_to_new(this const self_t& self, const multiple<T2, EXTENT2, SEQUENTIAL_OBSERVER2>& other, auto callback) noexcept
+			requires (concepts::compatible_multiple<self_t, multiple<T2, EXTENT2, SEQUENTIAL_OBSERVER2>>)
+			{
+			typename self_t::owner_self_t ret;
+			const size_t indices{utils::math::min(self.multiple::size(), other.size())};
+			for (size_t i{0}; i < indices; i++)
+				{
+				ret[i] = callback(self[i], other[i]);
+				}
+			return ret;
+			}
+
+		template <utils::concepts::non_const self_t>
+		utils_gpu_available constexpr self_t& operator=(this self_t& self, const concepts::type_compatible_with_storage<self_t> auto& other) noexcept
+			requires(!storage_type.is_const())
+			{
+			self.operator_self_assign(other, [](auto& a, const auto& b) { a = b; });
+			return self;
+			}
+		
+		utils_gpu_available constexpr auto& operator+=(this utils::concepts::non_const auto& self, const concepts::operator_parameter<decltype(self)> auto& other) noexcept requires(!storage_type.is_const()) { return self.operator_self_assign(other, [](      auto& a, const auto& b) {        a += b; }); }
+		utils_gpu_available constexpr auto& operator-=(this utils::concepts::non_const auto& self, const concepts::operator_parameter<decltype(self)> auto& other) noexcept requires(!storage_type.is_const()) { return self.operator_self_assign(other, [](      auto& a, const auto& b) {        a -= b; }); }
+		utils_gpu_available constexpr auto& operator*=(this utils::concepts::non_const auto& self, const concepts::operator_parameter<decltype(self)> auto& other) noexcept requires(!storage_type.is_const()) { return self.operator_self_assign(other, [](      auto& a, const auto& b) {        a *= b; }); }
+		utils_gpu_available constexpr auto& operator/=(this utils::concepts::non_const auto& self, const concepts::operator_parameter<decltype(self)> auto& other) noexcept requires(!storage_type.is_const()) { return self.operator_self_assign(other, [](      auto& a, const auto& b) {        a /= b; }); }
+		utils_gpu_available constexpr auto& operator%=(this utils::concepts::non_const auto& self, const concepts::operator_parameter<decltype(self)> auto& other) noexcept requires(!storage_type.is_const()) { return self.operator_self_assign(other, [](      auto& a, const auto& b) {        a %= b; }); }
+		utils_gpu_available constexpr auto& operator|=(this utils::concepts::non_const auto& self, const concepts::operator_parameter<decltype(self)> auto& other) noexcept requires(!storage_type.is_const()) { return self.operator_self_assign(other, [](      auto& a, const auto& b) {        a |= b; }); }
+		utils_gpu_available constexpr auto& operator&=(this utils::concepts::non_const auto& self, const concepts::operator_parameter<decltype(self)> auto& other) noexcept requires(!storage_type.is_const()) { return self.operator_self_assign(other, [](      auto& a, const auto& b) {        a &= b; }); }
+		utils_gpu_available constexpr auto  operator+ (this                      const auto& self, const concepts::operator_parameter<decltype(self)> auto& other) noexcept                                    { return self.operator_to_new     (other, [](const auto& a, const auto& b) { return a +  b; }); }
+		utils_gpu_available constexpr auto  operator- (this                      const auto& self, const concepts::operator_parameter<decltype(self)> auto& other) noexcept                                    { return self.operator_to_new     (other, [](const auto& a, const auto& b) { return a -  b; }); }
+		utils_gpu_available constexpr auto  operator* (this                      const auto& self, const concepts::operator_parameter<decltype(self)> auto& other) noexcept                                    { return self.operator_to_new     (other, [](const auto& a, const auto& b) { return a *  b; }); }
+		utils_gpu_available constexpr auto  operator/ (this                      const auto& self, const concepts::operator_parameter<decltype(self)> auto& other) noexcept                                    { return self.operator_to_new     (other, [](const auto& a, const auto& b) { return a /  b; }); }
+		utils_gpu_available constexpr auto  operator% (this                      const auto& self, const concepts::operator_parameter<decltype(self)> auto& other) noexcept                                    { return self.operator_to_new     (other, [](const auto& a, const auto& b) { return a %  b; }); }
+		utils_gpu_available constexpr auto  operator| (this                      const auto& self, const concepts::operator_parameter<decltype(self)> auto& other) noexcept                                    { return self.operator_to_new     (other, [](const auto& a, const auto& b) { return a |  b; }); }
+		utils_gpu_available constexpr auto  operator& (this                      const auto& self, const concepts::operator_parameter<decltype(self)> auto& other) noexcept                                    { return self.operator_to_new     (other, [](const auto& a, const auto& b) { return a &  b; }); }
+		utils_gpu_available constexpr bool  operator!=(this                      const auto& self, const concepts::operator_parameter<decltype(self)> auto& other) noexcept                                    { return !self.operator==(other); }
+
+		#pragma region scalar
+		#pragma endregion scalar
+
+		#pragma region self
+			utils_gpu_available constexpr auto operator!(this const auto& self) noexcept { return self.for_each_to_new([](const auto& value) { return !value; }); }
+			utils_gpu_available constexpr auto operator-(this const auto& self) noexcept { return self.for_each_to_new([](const auto& value) { return -value; }); }
+		#pragma endregion self
+
+		#pragma region array
+			template <typename self_t, concepts::compatible_multiple<self_t> other_t> 
+			utils_gpu_available constexpr bool  operator==(this const self_t& self, const other_t& other) noexcept
+				{
+				const size_t indices{utils::math::min(self.size(), other.size())};
+				size_t i{0};
+				for (; i < indices; i++)
+					{
+					if (self[i] != other[i]) { return false; }
+					}
+
+					 if(self.multiple::size() > other.size()) { for (; i < self.multiple::size(); i++) { if (self [i] != typename self_t ::value_type{}) { return false; } } }
+				else if(self.multiple::size() < other.size()) { for (; i < other         .size(); i++) { if (other[i] != typename other_t::value_type{}) { return false; } } }
+
+				return true;
+				}
+		#pragma endregion array
 		};
 	}
+
+
+//Note: intellisense doesn't seem to find the operators in the class, but not finding them doesn't crash it
+//defining the operators outside intellisense just crashes, so... let's keep the errors i guess lol
+
+//template <utils::storage::concepts::multiple multiple_t, utils::storage::concepts::operator_parameter<multiple_t> value_t> utils_gpu_available constexpr auto& operator+=(      multiple_t& storage, const value_t& value) noexcept requires(!multiple_t::storage_type.is_const()) { return storage.operator_self_assign(value, [](      auto& a, const auto& b) {        a += b; }); }
+//template <utils::storage::concepts::multiple multiple_t, utils::storage::concepts::operator_parameter<multiple_t> value_t> utils_gpu_available constexpr auto& operator-=(      multiple_t& storage, const value_t& value) noexcept requires(!multiple_t::storage_type.is_const()) { return storage.operator_self_assign(value, [](      auto& a, const auto& b) {        a -= b; }); }
+//template <utils::storage::concepts::multiple multiple_t, utils::storage::concepts::operator_parameter<multiple_t> value_t> utils_gpu_available constexpr auto& operator*=(      multiple_t& storage, const value_t& value) noexcept requires(!multiple_t::storage_type.is_const()) { return storage.operator_self_assign(value, [](      auto& a, const auto& b) {        a *= b; }); }
+//template <utils::storage::concepts::multiple multiple_t, utils::storage::concepts::operator_parameter<multiple_t> value_t> utils_gpu_available constexpr auto& operator/=(      multiple_t& storage, const value_t& value) noexcept requires(!multiple_t::storage_type.is_const()) { return storage.operator_self_assign(value, [](      auto& a, const auto& b) {        a /= b; }); }
+//template <utils::storage::concepts::multiple multiple_t, utils::storage::concepts::operator_parameter<multiple_t> value_t> utils_gpu_available constexpr auto& operator%=(      multiple_t& storage, const value_t& value) noexcept requires(!multiple_t::storage_type.is_const()) { return storage.operator_self_assign(value, [](      auto& a, const auto& b) {        a %= b; }); }
+//template <utils::storage::concepts::multiple multiple_t, utils::storage::concepts::operator_parameter<multiple_t> value_t> utils_gpu_available constexpr auto& operator|=(      multiple_t& storage, const value_t& value) noexcept requires(!multiple_t::storage_type.is_const()) { return storage.operator_self_assign(value, [](      auto& a, const auto& b) {        a |= b; }); }
+//template <utils::storage::concepts::multiple multiple_t, utils::storage::concepts::operator_parameter<multiple_t> value_t> utils_gpu_available constexpr auto& operator&=(      multiple_t& storage, const value_t& value) noexcept requires(!multiple_t::storage_type.is_const()) { return storage.operator_self_assign(value, [](      auto& a, const auto& b) {        a &= b; }); }
+//template <utils::storage::concepts::multiple multiple_t, utils::storage::concepts::operator_parameter<multiple_t> value_t> utils_gpu_available constexpr auto  operator+ (const multiple_t& storage, const value_t& value) noexcept                                                { return storage.operator_to_new     (value, [](const auto& a, const auto& b) { return a +  b; }); }
+//template <utils::storage::concepts::multiple multiple_t, utils::storage::concepts::operator_parameter<multiple_t> value_t> utils_gpu_available constexpr auto  operator- (const multiple_t& storage, const value_t& value) noexcept                                                { return storage.operator_to_new     (value, [](const auto& a, const auto& b) { return a -  b; }); }
+//template <utils::storage::concepts::multiple multiple_t, utils::storage::concepts::operator_parameter<multiple_t> value_t> utils_gpu_available constexpr auto  operator* (const multiple_t& storage, const value_t& value) noexcept                                                { return storage.operator_to_new     (value, [](const auto& a, const auto& b) { return a *  b; }); }
+//template <utils::storage::concepts::multiple multiple_t, utils::storage::concepts::operator_parameter<multiple_t> value_t> utils_gpu_available constexpr auto  operator/ (const multiple_t& storage, const value_t& value) noexcept                                                { return storage.operator_to_new     (value, [](const auto& a, const auto& b) { return a /  b; }); }
+//template <utils::storage::concepts::multiple multiple_t, utils::storage::concepts::operator_parameter<multiple_t> value_t> utils_gpu_available constexpr auto  operator% (const multiple_t& storage, const value_t& value) noexcept                                                { return storage.operator_to_new     (value, [](const auto& a, const auto& b) { return a %  b; }); }
+//template <utils::storage::concepts::multiple multiple_t, utils::storage::concepts::operator_parameter<multiple_t> value_t> utils_gpu_available constexpr auto  operator| (const multiple_t& storage, const value_t& value) noexcept                                                { return storage.operator_to_new     (value, [](const auto& a, const auto& b) { return a |  b; }); }
+//template <utils::storage::concepts::multiple multiple_t, utils::storage::concepts::operator_parameter<multiple_t> value_t> utils_gpu_available constexpr auto  operator& (const multiple_t& storage, const value_t& value) noexcept                                                { return storage.operator_to_new     (value, [](const auto& a, const auto& b) { return a &  b; }); }
+//template <utils::storage::concepts::multiple multiple_t, utils::storage::concepts::operator_parameter<multiple_t> value_t> utils_gpu_available constexpr bool  operator!=(const multiple_t& storage, const value_t& value) noexcept                                                { return !storage.operator==(other); }
+
+	
+template <utils::storage::concepts::multiple multiple_t, utils::storage::concepts::type_compatible_with_storage<multiple_t> value_t> utils_gpu_available constexpr auto  operator+ (const value_t& value, const multiple_t& storage) noexcept { return storage.operator_to_new(value, [](const auto& a, const auto& b) { return b + a; }); }
+template <utils::storage::concepts::multiple multiple_t, utils::storage::concepts::type_compatible_with_storage<multiple_t> value_t> utils_gpu_available constexpr auto  operator- (const value_t& value, const multiple_t& storage) noexcept { return storage.operator_to_new(value, [](const auto& a, const auto& b) { return b - a; }); }
+template <utils::storage::concepts::multiple multiple_t, utils::storage::concepts::type_compatible_with_storage<multiple_t> value_t> utils_gpu_available constexpr auto  operator* (const value_t& value, const multiple_t& storage) noexcept { return storage.operator_to_new(value, [](const auto& a, const auto& b) { return b * a; }); }
+template <utils::storage::concepts::multiple multiple_t, utils::storage::concepts::type_compatible_with_storage<multiple_t> value_t> utils_gpu_available constexpr auto  operator/ (const value_t& value, const multiple_t& storage) noexcept { return storage.operator_to_new(value, [](const auto& a, const auto& b) { return b / a; }); }
+template <utils::storage::concepts::multiple multiple_t, utils::storage::concepts::type_compatible_with_storage<multiple_t> value_t> utils_gpu_available constexpr auto  operator% (const value_t& value, const multiple_t& storage) noexcept { return storage.operator_to_new(value, [](const auto& a, const auto& b) { return b % a; }); }
+template <utils::storage::concepts::multiple multiple_t, utils::storage::concepts::type_compatible_with_storage<multiple_t> value_t> utils_gpu_available constexpr auto  operator| (const value_t& value, const multiple_t& storage) noexcept { return storage.operator_to_new(value, [](const auto& a, const auto& b) { return b | a; }); }
+template <utils::storage::concepts::multiple multiple_t, utils::storage::concepts::type_compatible_with_storage<multiple_t> value_t> utils_gpu_available constexpr auto  operator& (const value_t& value, const multiple_t& storage) noexcept { return storage.operator_to_new(value, [](const auto& a, const auto& b) { return b & a; }); }
+
+#pragma region scalar
+#pragma endregion scalar

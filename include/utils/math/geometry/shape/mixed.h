@@ -24,8 +24,8 @@ namespace utils::math::geometry::shape::generic
 			inline static constexpr auto storage_type{STORAGE_TYPE};
 			inline static constexpr auto ends        {ENDS};
 
-			using self_t        = mixed<storage_type, ends>;
-			using nonref_self_t = mixed<storage::type::create::owner(), ends>;
+			using self_t       = mixed<storage_type, ends>;
+			using owner_self_t = mixed<storage::type::create::owner(), ends>;
 
 			using          utils::math::geometry::vertices_as_field<geometry::ends_aware_vertices<storage_type, ends.is_closed(), std::dynamic_extent>>::vertices;
 			using typename utils::math::geometry::vertices_as_field<geometry::ends_aware_vertices<storage_type, ends.is_closed(), std::dynamic_extent>>::vertices_t;

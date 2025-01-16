@@ -68,10 +68,4 @@ namespace utils::math::geometry::shape
 		template <geometry::ends::closeable ends = geometry::ends::closeable::create::closed()>
 		using mixed = shape::generic::mixed<storage::type::create::const_observer(), ends>;
 		}
-
-	template <concepts::mixed T, storage::type desired_storage_type>
-	struct cast_storage_type<T, desired_storage_type>
-		{
-		using type = generic::mixed<desired_storage_type, T::ends>;
-		};
 	}

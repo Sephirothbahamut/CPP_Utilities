@@ -13,7 +13,6 @@
 #include "../math/vec.h"
 #include "../math/transform2.h"
 #include "../math/geometry/shape/aabb.h"
-#include "../math/geometry/shape/shapes_group.h"
 #include "../math/geometry/transform/aabb.h"
 #include "../math/geometry/transform/point.h"
 #include "../math/geometry/sdf/common.h"

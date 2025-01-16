@@ -18,8 +18,8 @@ namespace utils::math::geometry::shape::generic
 		inline static constexpr auto extent       {EXTENT};
 		inline static constexpr auto optional_ends{OPTIONAL_ENDS};
 
-		using self_t = bezier<storage_type, extent, optional_ends>;
-		using nonref_self_t = bezier<storage::type::create::owner(), extent, optional_ends>;
+		using self_t       = bezier<storage_type, extent, optional_ends>;
+		using owner_self_t = bezier<storage::type::create::owner(), extent, optional_ends>;
 
 		using          utils::math::geometry::vertices_as_field<geometry::vertices<STORAGE_TYPE, EXTENT>>::vertices;
 		using typename utils::math::geometry::vertices_as_field<geometry::vertices<STORAGE_TYPE, EXTENT>>::vertices_t;
