@@ -15,24 +15,6 @@
 
 namespace utils::storage
 	{
-	namespace concepts
-		{
-		template <typename storage_type, typename value_type>
-		concept storage_compatible_with_type = std::convertible_to<typename utils::remove_const_reference_t<storage_type>::value_type, utils::remove_const_reference_t<value_type>>;
-		template <typename value_type, typename storage_type>
-		concept type_compatible_with_storage = std::convertible_to<utils::remove_const_reference_t<value_type>, typename utils::remove_const_reference_t<storage_type>::value_type>;
-
-		template <typename T, typename value_type>
-		concept can_construct_value_type = std::constructible_from<value_type, T>;
-
-		template <typename T>
-		concept vector = std::same_as<std::remove_cvref_t<T>, std::vector<typename std::remove_cvref_t<T>::value_type>>;
-		template <typename T>
-		concept array  = std::same_as<std::remove_cvref_t<T>, std::array<typename std::remove_cvref_t<T>::value_type, std::tuple_size<std::remove_cvref_t<T>>::value>>; //Note: using tuple_size_t won't work
-		template <typename T>
-		concept span   = std::same_as<std::remove_cvref_t<T>, std::span<typename std::remove_cvref_t<T>::element_type, std::remove_cvref_t<T>::extent>>;
-		}
-
 	struct type
 		{
 		utils_gpu_available consteval bool is_observer() const noexcept { return !owner_value; }
@@ -81,6 +63,7 @@ namespace utils::storage
 	template <typename T>
 	struct single
 		{
+		using template_type = T;
 		using value_type = std::remove_reference_t<T>;
 		inline static constexpr type storage_type{utils::storage::type::create::from<T>()};
 
@@ -108,9 +91,28 @@ namespace utils::storage
 
 	template <typename T, size_t extent, bool sequential_observer>
 	struct multiple;
-
+	
 	namespace concepts
 		{
+		template <typename T>
+		concept single = std::derived_from<std::remove_cvref_t<T>, utils::storage::single<typename std::remove_cvref_t<T>::template_type>>;
+
+		template <typename storage_type, typename value_type>
+		concept storage_compatible_with_type = std::same_as<typename utils::remove_const_reference_t<storage_type>::value_type, utils::remove_const_reference_t<value_type>>;
+		template <typename value_type, typename storage_type>
+		concept type_compatible_with_storage = std::same_as<utils::remove_const_reference_t<                     value_type>, typename utils::remove_const_reference_t<storage_type>::value_type> ||
+		                (single<value_type> && std::same_as<utils::remove_const_reference_t<typename value_type::value_type>, typename utils::remove_const_reference_t<storage_type>::value_type>);
+
+		template <typename T, typename value_type>
+		concept can_construct_value_type = std::constructible_from<value_type, T>;
+
+		template <typename T>
+		concept vector = std::same_as<std::remove_cvref_t<T>, std::vector<typename std::remove_cvref_t<T>::value_type>>;
+		template <typename T>
+		concept array  = std::same_as<std::remove_cvref_t<T>, std::array<typename std::remove_cvref_t<T>::value_type, std::tuple_size<std::remove_cvref_t<T>>::value>>; //Note: using tuple_size_t won't work
+		template <typename T>
+		concept span   = std::same_as<std::remove_cvref_t<T>, std::span<typename std::remove_cvref_t<T>::element_type, std::remove_cvref_t<T>::extent>>;
+
 		template <typename T>
 		concept multiple = std::derived_from<std::remove_cvref_t<T>, utils::storage::multiple<typename std::remove_cvref_t<T>::template_type, std::remove_cvref_t<T>::extent, std::remove_cvref_t<T>::sequential_observer>>;
 		
@@ -153,8 +155,8 @@ namespace utils::storage
 		inline static constexpr size_t extent{EXTENT};
 		using multiple_t      = multiple<T                      , extent, sequential_observer>;
 		using self_t          = multiple<T                      , extent, sequential_observer>;
-		using owner_self_t    = multiple<value_type             , extent, sequential_observer>;
-		using observer_self_t = multiple<const_aware_value_type&, extent, sequential_observer>;
+		//using owner_self_t    = multiple<value_type             , extent, sequential_observer>;
+		//using observer_self_t = multiple<const_aware_value_type&, extent, sequential_observer>;
 
 		template <typename T2>
 		using owner_storage_t = std::conditional_t<extent == std::dynamic_extent, std::vector<T2>, std::array<T2, extent>>;
@@ -424,8 +426,8 @@ namespace utils::storage
 		
 		//TODO set inner_create<true> to inner_create<false>
 		//force static_cast if user wants inner_create<true>
-		utils_gpu_available constexpr multiple(const concepts::multiple auto& other) noexcept requires(storage_type.can_construct_from_const()) : storage{inner_create<true>(other)} {}
-		utils_gpu_available constexpr multiple(      concepts::multiple auto& other) noexcept : storage{inner_create<true>(other)} {}
+		utils_gpu_available constexpr multiple(const concepts::compatible_multiple<self_t> auto& other) noexcept requires(storage_type.can_construct_from_const()) : storage{inner_create<true>(other)} {}
+		utils_gpu_available constexpr multiple(      concepts::compatible_multiple<self_t> auto& other) noexcept : storage{inner_create<true>(other)} {}
 			
 		utils_gpu_available constexpr void for_each(this auto& self, auto callback) noexcept { for (auto& value : self) { callback(value); } }
 
@@ -484,13 +486,22 @@ namespace utils::storage
 			return ret;
 			}
 
-		template <utils::concepts::non_const self_t>
-		utils_gpu_available constexpr self_t& operator=(this self_t& self, const concepts::type_compatible_with_storage<self_t> auto& other) noexcept
-			requires(!storage_type.is_const())
-			{
-			self.operator_self_assign(other, [](auto& a, const auto& b) { a = b; });
-			return self;
-			}
+		//template <utils::concepts::non_const self_t>
+		//utils_gpu_available constexpr self_t& operator=(this self_t& self, const concepts::type_compatible_with_storage<self_t> auto& other) noexcept
+		//	requires(!storage_type.is_const())
+		//	{
+		//	self.operator_self_assign(other, [](auto& a, const auto& b) { a = b; });
+		//	return self;
+		//	}
+		//
+		//template <utils::concepts::non_const self_t, typename T2, size_t EXTENT2, bool SEQUENTIAL_OBSERVER2>
+		//utils_gpu_available constexpr self_t& operator=(this self_t& self, const multiple<T2, EXTENT2, SEQUENTIAL_OBSERVER2>& other) noexcept
+		//	requires (!storage_type.is_const() && concepts::compatible_multiple<self_t, multiple<T2, EXTENT2, SEQUENTIAL_OBSERVER2>>)
+		//	{
+		//	self.operator_self_assign(other, [](auto& a, const auto& b) { a = b; });
+		//	return self;
+		//	}
+		
 		
 		utils_gpu_available constexpr auto& operator+=(this utils::concepts::non_const auto& self, const concepts::operator_parameter<decltype(self)> auto& other) noexcept requires(!storage_type.is_const()) { return self.operator_self_assign(other, [](      auto& a, const auto& b) {        a += b; }); }
 		utils_gpu_available constexpr auto& operator-=(this utils::concepts::non_const auto& self, const concepts::operator_parameter<decltype(self)> auto& other) noexcept requires(!storage_type.is_const()) { return self.operator_self_assign(other, [](      auto& a, const auto& b) {        a -= b; }); }

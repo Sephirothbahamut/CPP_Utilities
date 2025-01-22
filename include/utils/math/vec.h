@@ -24,7 +24,20 @@ namespace utils::math
 		using owner_self_t = vec<value_type, extent>;
 
 		using utils::storage::multiple<T, SIZE, false>::multiple;
+
 		utils_gpu_available constexpr vec() noexcept requires(storage_type.is_owner()) : base_t{} {}; //for some reason it doesn't use base_t's default constructor with = default
+
+		template <typename T2, size_t SIZE2>
+		utils_gpu_available explicit constexpr operator vec<T2, SIZE2>() const noexcept
+			{
+			vec<T2, SIZE2> ret;
+			const size_t indices{utils::math::min(base_t::size(), ret.base_t::size())};
+			for (size_t i{0}; i < indices; i++)
+				{
+				ret[i] = static_cast<T2>((*this).operator[](i));
+				}
+			return ret;
+			}
 
 		#pragma region fields
 		utils_gpu_available constexpr const const_aware_value_type& x() const noexcept requires(extent >= 1) { return (*this)[0]; }
@@ -80,7 +93,7 @@ namespace utils::math
 		utils_gpu_available constexpr const vec<const       value_type&, 3> zyx() const noexcept requires(extent >= 3) { return {(*this)[2], (*this)[1], (*this)[0]}; }
 		#pragma endregion swizzle
 
-#pragma region distances
+		#pragma region distances
 		utils_gpu_available constexpr value_type get_length2() const noexcept 
 			{
 			value_type ret{0}; 
@@ -173,6 +186,7 @@ namespace utils::math
 			{
 			return std::sqrt(distance_shared2(a, b)); 
 			}
+		#pragma endregion distances
 
 		utils_gpu_available static constexpr owner_self_t slerp_fast(const self_t& a, const self_t& b, value_type t) noexcept
 			requires (std::floating_point<value_type>)
@@ -242,7 +256,6 @@ namespace utils::math
 			using base_t::operator+=;
 			using base_t::operator-;
 			using base_t::operator-=;
-			using base_t::operator=;
 			
 			template <typename T2 = float, T2 f_a_v = 360.f>
 			utils_gpu_available constexpr math::angle::base<T2, f_a_v> angle(this const auto& self) noexcept { return math::angle::base<T2, f_a_v>::atan2(self.y(), self.x()); }
@@ -368,7 +381,7 @@ namespace utils::math
 					index / x()
 					};
 				}
-		#pragma region size_t
+		#pragma endregion size_t
 
 
 

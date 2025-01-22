@@ -14,6 +14,8 @@ namespace utils::math::geometry
 			using vertices<storage_type, extent>::vertices;
 			inline static constexpr auto closed{CLOSED};
 
+			//using vertices<storage_type, extent>::operator=;
+
 			template <bool closed>
 			utils_gpu_available constexpr const auto& ends_aware_access(const size_t index) const noexcept
 				{
@@ -56,12 +58,12 @@ namespace utils::math::geometry
 
 		template <storage::concepts::can_construct_value_type<typename vertices_t::inner_storage_t::value_type>  ...Args>
 		utils_gpu_available constexpr vertices_as_field(Args&&... args) :
-			vertices(utils::storage::construct_flag_data, std::forward<Args>(args)...) {
-			}
+			vertices(utils::storage::construct_flag_data, std::forward<Args>(args)...) 
+			{}
 		template <storage::concepts::can_construct_value_type<typename vertices_t::inner_storage_t::value_type>  ...Args>
 		utils_gpu_available constexpr vertices_as_field(utils::storage::construct_flag_data_t, Args&&... args) :
-			vertices(utils::storage::construct_flag_data, std::forward<Args>(args)...) {
-			}
+			vertices(utils::storage::construct_flag_data, std::forward<Args>(args)...) 
+			{}
 		
 		utils_gpu_available constexpr vertices_as_field(size_t size) : vertices(size) {}
 		

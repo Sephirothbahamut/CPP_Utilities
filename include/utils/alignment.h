@@ -13,7 +13,7 @@ namespace utils
 			{
 			create() = delete;
 
-			inline static alignment centre() noexcept 
+			inline static constexpr alignment centre() noexcept 
 				{
 				return
 					{

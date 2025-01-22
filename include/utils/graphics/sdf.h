@@ -408,7 +408,7 @@ namespace utils::graphics::sdf
 	
 
 
-	inline utils::graphics::colour::rgba_f debug_sample_gradient_sdf(utils::math::geometry::sdf::gradient_signed_distance gdist)
+	inline utils::graphics::colour::rgba_f debug_sample_gradient_sdf_scaled(utils::math::geometry::sdf::gradient_signed_distance gdist, float distance_scale = 1.f)
 		{
 		if (gdist.distance.value ==  utils::math::constants::finf) { return {1.f, 1.f, 1.f, 0.f}; }
 		if (gdist.distance.value == -utils::math::constants::finf) { return {0.f, 0.f, 0.f, 0.f}; }
@@ -422,7 +422,7 @@ namespace utils::graphics::sdf
 			}};
 
 		// Inigo Quilez inspired fancy colors
-		gdist.distance.value *= .006f;
+		gdist.distance.value *= distance_scale;
 		utils::math::vec3f colour{utils::math::vec3f{gdist.gradient.x() * .5f + .5f, gdist.gradient.y() * .5f + .5f, gdist.distance.side().is_inside() ? 1.f : 0.f}};
 		colour *= 1.0f - 0.5f * std::exp(-16.0f * gdist.distance.absolute());
 		colour *= 0.9f + 0.1f * std::cos(150.0f * gdist.distance.value);
@@ -435,5 +435,10 @@ namespace utils::graphics::sdf
 			colour[2],
 			1.f
 			};
+		}
+
+	inline utils::graphics::colour::rgba_f debug_sample_gradient_sdf(utils::math::geometry::sdf::gradient_signed_distance gdist)
+		{
+		return debug_sample_gradient_sdf_scaled(gdist, .006f);
 		}
 	}

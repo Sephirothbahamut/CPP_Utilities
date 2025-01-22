@@ -90,6 +90,7 @@ namespace utils::math::geometry::shape::generic
 						}
 
 					assert(false && "Unsupported amount of control points.");
+					std::unreachable();
 					}
 				utils_gpu_available constexpr vec2f normal() const noexcept
 					{
