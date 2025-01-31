@@ -111,39 +111,39 @@ namespace utils::math::geometry::sdf
 		};
 
 	struct closest_point_with_signed_distance;
-	struct gradient_signed_distance
+	struct direction_signed_distance
 		{
 		// https://iquilezles.org/articles/distgradfunctions2d/
 		signed_distance distance;
-		utils::math::vec2f gradient;
+		utils::math::vec2f direction;
 
-		utils_gpu_available static constexpr gradient_signed_distance create(const closest_point_with_signed_distance& closest_point_with_signed_distance, const shape::concepts::point auto& point) noexcept;
+		utils_gpu_available static constexpr direction_signed_distance create(const closest_point_with_signed_distance& closest_point_with_signed_distance, const shape::concepts::point auto& point) noexcept;
 
-		utils_gpu_available static constexpr gradient_signed_distance merge_absolute(const gradient_signed_distance& a, const gradient_signed_distance& b) noexcept
+		utils_gpu_available static constexpr direction_signed_distance merge_absolute(const direction_signed_distance& a, const direction_signed_distance& b) noexcept
 			{
 			return a.distance.absolute() < b.distance.absolute() ? a : b;
 			}
-		utils_gpu_available static constexpr gradient_signed_distance merge(const gradient_signed_distance& a, const gradient_signed_distance& b) noexcept
+		utils_gpu_available static constexpr direction_signed_distance merge(const direction_signed_distance& a, const direction_signed_distance& b) noexcept
 			{
 			return a.distance.value < b.distance.value ? a : b;
 			}
-		utils_gpu_available static constexpr gradient_signed_distance merge_smooth(const gradient_signed_distance& a, const gradient_signed_distance& b, float smoothness) noexcept
+		utils_gpu_available static constexpr direction_signed_distance merge_smooth(const direction_signed_distance& a, const direction_signed_distance& b, float smoothness) noexcept
 			{
 			smoothness *= 4.f;
 			const float h{utils::math::max(smoothness - utils::math::abs(a.distance.value - b.distance.value), 0.f)};
 			const float m{0.25f * h * h / smoothness};
 			const float n{0.50f * h / smoothness};
 			const signed_distance ret_distance{utils::math::min(a.distance.value, b.distance.value) - m};
-			const vec2f ret_gradient{utils::math::lerp(a.gradient, b.gradient, (a.distance.value < b.distance.value) ? n : 1.f - n)};
-			return {ret_distance, ret_gradient};
+			const vec2f ret_direction{utils::math::lerp(a.direction, b.direction, (a.distance.value < b.distance.value) ? n : 1.f - n)};
+			return {ret_distance, ret_direction};
 			}
-		utils_gpu_available constexpr gradient_signed_distance  operator-() const noexcept { return {-distance, gradient}; }//TODO should invert gradient direction?
-		utils_gpu_available constexpr gradient_signed_distance& operator-=(float value) noexcept { *this = *this - value; return *this; }
-		utils_gpu_available constexpr gradient_signed_distance  operator-(float value) const noexcept 
+		utils_gpu_available constexpr direction_signed_distance  operator-() const noexcept { return {-distance, direction}; }//TODO should invert direction direction?
+		utils_gpu_available constexpr direction_signed_distance& operator-=(float value) noexcept { *this = *this - value; return *this; }
+		utils_gpu_available constexpr direction_signed_distance  operator-(float value) const noexcept 
 			{
 			const auto new_distance{distance.value - value};
-			const auto new_gradient{std::signbit(distance.value) != std::signbit(new_distance) ? -gradient : gradient};
-			return {new_distance, new_gradient};
+			const auto new_direction{std::signbit(distance.value) != std::signbit(new_distance) ? -direction : direction};
+			return {new_distance, new_direction};
 			}
 		};
 
@@ -172,7 +172,7 @@ namespace utils::math::geometry::sdf
 			}
 		};
 
-	utils_gpu_available constexpr gradient_signed_distance gradient_signed_distance::create(const closest_point_with_signed_distance& closest_point_with_signed_distance, const shape::concepts::point auto& point) noexcept
+	utils_gpu_available constexpr direction_signed_distance direction_signed_distance::create(const closest_point_with_signed_distance& closest_point_with_signed_distance, const shape::concepts::point auto& point) noexcept
 		{
 		return
 			{

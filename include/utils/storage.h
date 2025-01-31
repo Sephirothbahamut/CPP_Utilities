@@ -81,9 +81,9 @@ namespace utils::storage
 
 		inner_storage_t storage;
 
-		single() = default;
+		utils_gpu_available constexpr single() = default;
 		template <typename ...Args>
-		single(Args&&... args) : storage{std::forward<Args>(args)...} {}
+		utils_gpu_available constexpr single(Args&&... args) : storage{std::forward<Args>(args)...} {}
 
 		utils_gpu_available constexpr          const value_type& value     () const noexcept                                    { return static_cast<const value_type&>(storage); }
 		utils_gpu_available constexpr                value_type& value     ()       noexcept requires(!storage_type.is_const()) { return static_cast<      value_type&>(storage); }
@@ -345,7 +345,7 @@ namespace utils::storage
 			storage{first, count} {}
 
 		template <bool allow_memberwise_cast, concepts::multiple other_t>
-		static inner_storage_t inner_create(other_t& other) noexcept
+		static constexpr inner_storage_t inner_create(other_t& other) noexcept
 			requires 
 				(
 				std::constructible_from<typename inner_storage_t::value_type, typename other_t::inner_storage_t::reference> 
@@ -507,28 +507,28 @@ namespace utils::storage
 		//	}
 		
 		
-		utils_gpu_available constexpr auto& operator+=(this utils::concepts::non_const auto& self, const concepts::operator_parameter<decltype(self)> auto& other) noexcept requires(!storage_type.is_const()) { return self.operator_self_assign(other, [](      auto& a, const auto& b) {        a += b; }); }
-		utils_gpu_available constexpr auto& operator-=(this utils::concepts::non_const auto& self, const concepts::operator_parameter<decltype(self)> auto& other) noexcept requires(!storage_type.is_const()) { return self.operator_self_assign(other, [](      auto& a, const auto& b) {        a -= b; }); }
-		utils_gpu_available constexpr auto& operator*=(this utils::concepts::non_const auto& self, const concepts::operator_parameter<decltype(self)> auto& other) noexcept requires(!storage_type.is_const()) { return self.operator_self_assign(other, [](      auto& a, const auto& b) {        a *= b; }); }
-		utils_gpu_available constexpr auto& operator/=(this utils::concepts::non_const auto& self, const concepts::operator_parameter<decltype(self)> auto& other) noexcept requires(!storage_type.is_const()) { return self.operator_self_assign(other, [](      auto& a, const auto& b) {        a /= b; }); }
-		utils_gpu_available constexpr auto& operator%=(this utils::concepts::non_const auto& self, const concepts::operator_parameter<decltype(self)> auto& other) noexcept requires(!storage_type.is_const()) { return self.operator_self_assign(other, [](      auto& a, const auto& b) {        a %= b; }); }
-		utils_gpu_available constexpr auto& operator|=(this utils::concepts::non_const auto& self, const concepts::operator_parameter<decltype(self)> auto& other) noexcept requires(!storage_type.is_const()) { return self.operator_self_assign(other, [](      auto& a, const auto& b) {        a |= b; }); }
-		utils_gpu_available constexpr auto& operator&=(this utils::concepts::non_const auto& self, const concepts::operator_parameter<decltype(self)> auto& other) noexcept requires(!storage_type.is_const()) { return self.operator_self_assign(other, [](      auto& a, const auto& b) {        a &= b; }); }
-		utils_gpu_available constexpr auto  operator+ (this                      const auto& self, const concepts::operator_parameter<decltype(self)> auto& other) noexcept                                    { return self.operator_to_new     (other, [](const auto& a, const auto& b) { return a +  b; }); }
-		utils_gpu_available constexpr auto  operator- (this                      const auto& self, const concepts::operator_parameter<decltype(self)> auto& other) noexcept                                    { return self.operator_to_new     (other, [](const auto& a, const auto& b) { return a -  b; }); }
-		utils_gpu_available constexpr auto  operator* (this                      const auto& self, const concepts::operator_parameter<decltype(self)> auto& other) noexcept                                    { return self.operator_to_new     (other, [](const auto& a, const auto& b) { return a *  b; }); }
-		utils_gpu_available constexpr auto  operator/ (this                      const auto& self, const concepts::operator_parameter<decltype(self)> auto& other) noexcept                                    { return self.operator_to_new     (other, [](const auto& a, const auto& b) { return a /  b; }); }
-		utils_gpu_available constexpr auto  operator% (this                      const auto& self, const concepts::operator_parameter<decltype(self)> auto& other) noexcept                                    { return self.operator_to_new     (other, [](const auto& a, const auto& b) { return a %  b; }); }
-		utils_gpu_available constexpr auto  operator| (this                      const auto& self, const concepts::operator_parameter<decltype(self)> auto& other) noexcept                                    { return self.operator_to_new     (other, [](const auto& a, const auto& b) { return a |  b; }); }
-		utils_gpu_available constexpr auto  operator& (this                      const auto& self, const concepts::operator_parameter<decltype(self)> auto& other) noexcept                                    { return self.operator_to_new     (other, [](const auto& a, const auto& b) { return a &  b; }); }
+		utils_gpu_available constexpr auto& operator+=(this utils::concepts::non_const auto& self, const concepts::operator_parameter<decltype(self)> auto& other) noexcept requires(!storage_type.is_const()) { return self.operator_self_assign(other, [](      auto& a, const auto& b) constexpr {        a += b; }); }
+		utils_gpu_available constexpr auto& operator-=(this utils::concepts::non_const auto& self, const concepts::operator_parameter<decltype(self)> auto& other) noexcept requires(!storage_type.is_const()) { return self.operator_self_assign(other, [](      auto& a, const auto& b) constexpr {        a -= b; }); }
+		utils_gpu_available constexpr auto& operator*=(this utils::concepts::non_const auto& self, const concepts::operator_parameter<decltype(self)> auto& other) noexcept requires(!storage_type.is_const()) { return self.operator_self_assign(other, [](      auto& a, const auto& b) constexpr {        a *= b; }); }
+		utils_gpu_available constexpr auto& operator/=(this utils::concepts::non_const auto& self, const concepts::operator_parameter<decltype(self)> auto& other) noexcept requires(!storage_type.is_const()) { return self.operator_self_assign(other, [](      auto& a, const auto& b) constexpr {        a /= b; }); }
+		utils_gpu_available constexpr auto& operator%=(this utils::concepts::non_const auto& self, const concepts::operator_parameter<decltype(self)> auto& other) noexcept requires(!storage_type.is_const()) { return self.operator_self_assign(other, [](      auto& a, const auto& b) constexpr {        a %= b; }); }
+		utils_gpu_available constexpr auto& operator|=(this utils::concepts::non_const auto& self, const concepts::operator_parameter<decltype(self)> auto& other) noexcept requires(!storage_type.is_const()) { return self.operator_self_assign(other, [](      auto& a, const auto& b) constexpr {        a |= b; }); }
+		utils_gpu_available constexpr auto& operator&=(this utils::concepts::non_const auto& self, const concepts::operator_parameter<decltype(self)> auto& other) noexcept requires(!storage_type.is_const()) { return self.operator_self_assign(other, [](      auto& a, const auto& b) constexpr {        a &= b; }); }
+		utils_gpu_available constexpr auto  operator+ (this                      const auto& self, const concepts::operator_parameter<decltype(self)> auto& other) noexcept                                    { return self.operator_to_new     (other, [](const auto& a, const auto& b) constexpr { return a +  b; }); }
+		utils_gpu_available constexpr auto  operator- (this                      const auto& self, const concepts::operator_parameter<decltype(self)> auto& other) noexcept                                    { return self.operator_to_new     (other, [](const auto& a, const auto& b) constexpr { return a -  b; }); }
+		utils_gpu_available constexpr auto  operator* (this                      const auto& self, const concepts::operator_parameter<decltype(self)> auto& other) noexcept                                    { return self.operator_to_new     (other, [](const auto& a, const auto& b) constexpr { return a *  b; }); }
+		utils_gpu_available constexpr auto  operator/ (this                      const auto& self, const concepts::operator_parameter<decltype(self)> auto& other) noexcept                                    { return self.operator_to_new     (other, [](const auto& a, const auto& b) constexpr { return a /  b; }); }
+		utils_gpu_available constexpr auto  operator% (this                      const auto& self, const concepts::operator_parameter<decltype(self)> auto& other) noexcept                                    { return self.operator_to_new     (other, [](const auto& a, const auto& b) constexpr { return a %  b; }); }
+		utils_gpu_available constexpr auto  operator| (this                      const auto& self, const concepts::operator_parameter<decltype(self)> auto& other) noexcept                                    { return self.operator_to_new     (other, [](const auto& a, const auto& b) constexpr { return a |  b; }); }
+		utils_gpu_available constexpr auto  operator& (this                      const auto& self, const concepts::operator_parameter<decltype(self)> auto& other) noexcept                                    { return self.operator_to_new     (other, [](const auto& a, const auto& b) constexpr { return a &  b; }); }
 		utils_gpu_available constexpr bool  operator!=(this                      const auto& self, const concepts::operator_parameter<decltype(self)> auto& other) noexcept                                    { return !self.operator==(other); }
 
 		#pragma region scalar
 		#pragma endregion scalar
 
 		#pragma region self
-			utils_gpu_available constexpr auto operator!(this const auto& self) noexcept { return self.for_each_to_new([](const auto& value) { return !value; }); }
-			utils_gpu_available constexpr auto operator-(this const auto& self) noexcept { return self.for_each_to_new([](const auto& value) { return -value; }); }
+			utils_gpu_available constexpr auto operator!(this const auto& self) noexcept { return self.for_each_to_new([](const auto& value) constexpr { return !value; }); }
+			utils_gpu_available constexpr auto operator-(this const auto& self) noexcept { return self.for_each_to_new([](const auto& value) constexpr { return -value; }); }
 		#pragma endregion self
 
 		#pragma region array

@@ -14,10 +14,10 @@ namespace utils::math::geometry::sdf
 		const iterable_shapes& shapes;
 		const vec2f point;
 
-		geometry::sdf::gradient_signed_distance gradient_signed_distance() noexcept
+		geometry::sdf::direction_signed_distance direction_signed_distance() noexcept
 			{
 			const auto closest_with_signed_distance_value{closest_with_signed_distance()};
-			return geometry::sdf::gradient_signed_distance::create(closest_with_signed_distance_value, point);
+			return geometry::sdf::direction_signed_distance::create(closest_with_signed_distance_value, point);
 			}
 		
 		utils_gpu_available constexpr vec2f closest_point() const noexcept

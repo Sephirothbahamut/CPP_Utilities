@@ -148,10 +148,10 @@ namespace utils::graphics::sdf
 
 
 
-	using sample_gsdf_signature = utils::math::geometry::sdf::gradient_signed_distance(const utils::math::vec2f& coords_f);
-	using sample_gsdf_callback  = std::function<sample_gsdf_signature>;
+	using sample_dsdf_signature = utils::math::geometry::sdf::direction_signed_distance(const utils::math::vec2f& coords_f);
+	using sample_dsdf_callback  = std::function<sample_dsdf_signature>;
 
-	using merge_signature = utils::math::geometry::sdf::gradient_signed_distance(utils::math::geometry::sdf::gradient_signed_distance, utils::math::geometry::sdf::gradient_signed_distance);
+	using merge_signature = utils::math::geometry::sdf::direction_signed_distance(utils::math::geometry::sdf::direction_signed_distance, utils::math::geometry::sdf::direction_signed_distance);
 	using merge_callback  = std::function<merge_signature>;
 
 	template <typename T>
@@ -165,19 +165,19 @@ namespace utils::graphics::sdf
 
 		utils::math::rect<float> shape_padding{-1.f, -1.f, 1.f, 1.f};
 
-		utils_gpu_available constexpr virtual value_type sample(const utils::math::vec2f& coords, const utils::math::geometry::sdf::gradient_signed_distance& gsdf) const noexcept = 0;
+		utils_gpu_available constexpr virtual value_type sample(const utils::math::vec2f& coords, const utils::math::geometry::sdf::direction_signed_distance& dsdf) const noexcept = 0;
 
 		/// <summary>
-		/// Applies the renderer to a precalculated gradient signed distance field.
-		/// Use together with `utils::graphics::sdf::evaluate_gsdf`.
+		/// Applies the renderer to a precalculated direction signed distance field.
+		/// Use together with `utils::graphics::sdf::evaluate_dsdf`.
 		/// </summary>
 		/// <typeparam name="parallel">Self explanatory :)</typeparam>
-		/// <param name="gradient_signed_distance_field"></param>
-		/// <returns>An image with the same resolution as the input gradient signed distance field</returns>
+		/// <param name="direction_signed_distance_field"></param>
+		/// <returns>An image with the same resolution as the input direction signed distance field</returns>
 		template <bool parallel = true>
-		constexpr utils::matrix<T> render(const utils::math::transform2& camera_transform, const utils::matrix<utils::math::geometry::sdf::gradient_signed_distance>& gradient_signed_distance_field, float supersampling = 1.f)
+		constexpr utils::matrix<T> render(const utils::math::transform2& camera_transform, const utils::matrix<utils::math::geometry::sdf::direction_signed_distance>& direction_signed_distance_field, float supersampling = 1.f)
 			{
-			const auto resolution{gradient_signed_distance_field.sizes()};
+			const auto resolution{direction_signed_distance_field.sizes()};
 			utils::matrix<T, matrix_size::create::dynamic()> ret(resolution);
 
 			const auto callback{[&, this](size_t index)
@@ -195,9 +195,9 @@ namespace utils::graphics::sdf
 					};
 
 				auto& pixel{ret[index]};
-				const auto& gradient_signed_distance{gradient_signed_distance_field[index]};
+				const auto& direction_signed_distance{direction_signed_distance_field[index]};
 
-				pixel = sample(coords_f, gradient_signed_distance);
+				pixel = sample(coords_f, direction_signed_distance);
 				}};
 
 			std::ranges::iota_view indices(size_t{0}, resolution.sizes_to_size());
@@ -216,14 +216,14 @@ namespace utils::graphics::sdf
 
 
 		/// <summary>
-		/// Applies the renderer sampling the gradient distances for each pixel all at once.
+		/// Applies the renderer sampling the direction distances for each pixel all at once.
 		/// </summary>
 		/// <typeparam name="parallel"></typeparam>
 		/// <param name="resolution"></param>
-		/// <param name="sample_gsdf_callback">A lambda which takes coordinates to be sampled. It's up to the lambda to capture the shapes and calculate the gradient signed distance and perform spatial optimizations.</param>
+		/// <param name="sample_dsdf_callback">A lambda which takes coordinates to be sampled. It's up to the lambda to capture the shapes and calculate the direction signed distance and perform spatial optimizations.</param>
 		/// <returns></returns>
 		template <bool parallel = true>
-		constexpr utils::matrix<T> render(const utils::math::transform2& camera_transform, const utils::math::vec2s& resolution, sample_gsdf_callback sample_gsdf_callback, float supersampling = 1.f)
+		constexpr utils::matrix<T> render(const utils::math::transform2& camera_transform, const utils::math::vec2s& resolution, sample_dsdf_callback sample_dsdf_callback, float supersampling = 1.f)
 			{
 			utils::matrix<T> ret(resolution);
 
@@ -241,10 +241,10 @@ namespace utils::graphics::sdf
 					.scale    (1.f / supersampling)
 					};
 
-				const utils::math::geometry::sdf::gradient_signed_distance gradient_signed_distance{sample_gsdf_callback(coords_f)};
+				const utils::math::geometry::sdf::direction_signed_distance direction_signed_distance{sample_dsdf_callback(coords_f)};
 
 				T& pixel{ret[index]};
-				pixel = sample(coords_f, gradient_signed_distance);
+				pixel = sample(coords_f, direction_signed_distance);
 				}};
 
 			std::ranges::iota_view indices(size_t{0}, resolution.sizes_to_size());
@@ -273,11 +273,11 @@ namespace utils::graphics::sdf
 
 		utils_gpu_available constexpr debug() noexcept : renderer<utils::graphics::colour::rgba_f>{32.f} {};
 
-		utils_gpu_available constexpr virtual utils::graphics::colour::rgba_f sample(const utils::math::vec2f& coords, const utils::math::geometry::sdf::gradient_signed_distance& gradient_signed_distance) const noexcept final override
+		utils_gpu_available constexpr virtual utils::graphics::colour::rgba_f sample(const utils::math::vec2f& coords, const utils::math::geometry::sdf::direction_signed_distance& direction_signed_distance) const noexcept final override
 			{
-			const auto grad {gradient_signed_distance.gradient};
-			const auto side {gradient_signed_distance.distance.side()};
-			auto sdist{gradient_signed_distance.distance.value};
+			const auto grad {direction_signed_distance.direction};
+			const auto side {direction_signed_distance.distance.side()};
+			auto sdist{direction_signed_distance.distance.value};
 
 			sdist *= .006f;
 			const auto dist{utils::math::abs(sdist)};
@@ -318,31 +318,31 @@ namespace utils::graphics::sdf
 				bounding_box{shape.bounding_box() + shape_padding}
 				{}
 
-			utils_gpu_available constexpr utils::math::geometry::sdf::gradient_signed_distance evaluate_gradient_signed_distance(const utils::math::vec2f& coords_f) const noexcept
+			utils_gpu_available constexpr utils::math::geometry::sdf::direction_signed_distance evaluate_direction_signed_distance(const utils::math::vec2f& coords_f) const noexcept
 				{
 				if (bounding_box.contains(coords_f))
 					{
-					const auto ret{shape_ptr->sdf(coords_f).gradient_signed_distance()};
+					const auto ret{shape_ptr->sdf(coords_f).direction_signed_distance()};
 					return ret;
 					}
 				return {};
 				}
 
-			/// <summary> Populates a gradient signed distance field with the gradient distance field of an additional shape. </summary>
+			/// <summary> Populates a direction signed distance field with the direction distance field of an additional shape. </summary>
 			template <bool parallel = true>
-			constexpr utils::matrix<utils::math::geometry::sdf::gradient_signed_distance>& evaluate_gsdf
+			constexpr utils::matrix<utils::math::geometry::sdf::direction_signed_distance>& evaluate_dsdf
 				(
 				const utils::math::transform2& camera_transform,
 				const merge_callback& merge_callback,
-				utils::matrix<utils::math::geometry::sdf::gradient_signed_distance>& gradient_signed_distance_field,
+				utils::matrix<utils::math::geometry::sdf::direction_signed_distance>& direction_signed_distance_field,
 				float supersampling = 1.f
 				) const noexcept
 				{
-				const auto pixels_region_max{gradient_signed_distance_field.sizes()};
+				const auto pixels_region_max{direction_signed_distance_field.sizes()};
 				const utils::math::rect<float> pixels_region_f{bounding_box.transform(camera_transform).scale(supersampling)};
 
-				if (pixels_region_f.rr() <  0.f                   || pixels_region_f.dw() <  0.f                  ) { return gradient_signed_distance_field; }
-				if (pixels_region_f.ll() >= pixels_region_max.x() || pixels_region_f.up() >= pixels_region_max.y()) { return gradient_signed_distance_field; }
+				if (pixels_region_f.rr() <  0.f                   || pixels_region_f.dw() <  0.f                  ) { return direction_signed_distance_field; }
+				if (pixels_region_f.ll() >= pixels_region_max.x() || pixels_region_f.up() >= pixels_region_max.y()) { return direction_signed_distance_field; }
 
 				const utils::math::rect<size_t> pixels_region_cast
 					{
@@ -350,8 +350,8 @@ namespace utils::graphics::sdf
 						{
 								 utils::math::cast_clamp<size_t>(std::floor(pixels_region_f.ll())),
 								 utils::math::cast_clamp<size_t>(std::floor(pixels_region_f.up())),
-						std::min(utils::math::cast_clamp<size_t>(std::ceil (pixels_region_f.rr())), gradient_signed_distance_field.sizes().x()),
-						std::min(utils::math::cast_clamp<size_t>(std::ceil (pixels_region_f.dw())), gradient_signed_distance_field.sizes().y())
+						std::min(utils::math::cast_clamp<size_t>(std::ceil (pixels_region_f.rr())), direction_signed_distance_field.sizes().x()),
+						std::min(utils::math::cast_clamp<size_t>(std::ceil (pixels_region_f.dw())), direction_signed_distance_field.sizes().y())
 						}
 					};
 				const utils::math::rect<size_t> pixels_region
@@ -381,10 +381,10 @@ namespace utils::graphics::sdf
 						.scale(1.f / supersampling)
 						};
 
-					utils::math::geometry::sdf::gradient_signed_distance& value_at_pixel{gradient_signed_distance_field[coords_indices]};
+					utils::math::geometry::sdf::direction_signed_distance& value_at_pixel{direction_signed_distance_field[coords_indices]};
 
-					const utils::math::geometry::sdf::gradient_signed_distance shape_gradient_signed_distance{shape_ptr->sdf(coords_f).gradient_signed_distance()};
-					value_at_pixel = merge_callback(value_at_pixel, shape_gradient_signed_distance);
+					const utils::math::geometry::sdf::direction_signed_distance shape_direction_signed_distance{shape_ptr->sdf(coords_f).direction_signed_distance()};
+					value_at_pixel = merge_callback(value_at_pixel, shape_direction_signed_distance);
 					}};
 		
 				if constexpr (parallel)
@@ -396,7 +396,7 @@ namespace utils::graphics::sdf
 					std::for_each(indices.begin(), indices.end(), callback);
 					}
 
-				return gradient_signed_distance_field;
+				return direction_signed_distance_field;
 				}
 
 			utils::math::geometry::shape::aabb get_bounding_box() const noexcept { return bounding_box; }
@@ -408,7 +408,7 @@ namespace utils::graphics::sdf
 	
 
 
-	inline utils::graphics::colour::rgba_f debug_sample_gradient_sdf_scaled(utils::math::geometry::sdf::gradient_signed_distance gdist, float distance_scale = 1.f)
+	inline utils::graphics::colour::rgba_f debug_sample_direction_sdf_scaled(utils::math::geometry::sdf::direction_signed_distance gdist, float distance_scale = 1.f)
 		{
 		if (gdist.distance.value ==  utils::math::constants::finf) { return {1.f, 1.f, 1.f, 0.f}; }
 		if (gdist.distance.value == -utils::math::constants::finf) { return {0.f, 0.f, 0.f, 0.f}; }
@@ -423,7 +423,7 @@ namespace utils::graphics::sdf
 
 		// Inigo Quilez inspired fancy colors
 		gdist.distance.value *= distance_scale;
-		utils::math::vec3f colour{utils::math::vec3f{gdist.gradient.x() * .5f + .5f, gdist.gradient.y() * .5f + .5f, gdist.distance.side().is_inside() ? 1.f : 0.f}};
+		utils::math::vec3f colour{utils::math::vec3f{gdist.direction.x() * .5f + .5f, gdist.direction.y() * .5f + .5f, gdist.distance.side().is_inside() ? 1.f : 0.f}};
 		colour *= 1.0f - 0.5f * std::exp(-16.0f * gdist.distance.absolute());
 		colour *= 0.9f + 0.1f * std::cos(150.0f * gdist.distance.value);
 		colour = utils::math::lerp(colour, utils::math::vec3f{1.f}, 1.f - smoothstep(0.f, .01f, gdist.distance.absolute()));
@@ -437,8 +437,8 @@ namespace utils::graphics::sdf
 			};
 		}
 
-	inline utils::graphics::colour::rgba_f debug_sample_gradient_sdf(utils::math::geometry::sdf::gradient_signed_distance gdist)
+	inline utils::graphics::colour::rgba_f debug_sample_direction_sdf(utils::math::geometry::sdf::direction_signed_distance gdist)
 		{
-		return debug_sample_gradient_sdf_scaled(gdist, .006f);
+		return debug_sample_direction_sdf_scaled(gdist, .006f);
 		}
 	}

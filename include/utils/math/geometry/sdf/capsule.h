@@ -53,11 +53,11 @@ namespace utils::math::geometry::shape::generic
 		//	return {ret_closest_point, ret_distance};
 		//	}
 		
-		utils_gpu_available constexpr geometry::sdf::gradient_signed_distance gradient_signed_distance() const noexcept
+		utils_gpu_available constexpr geometry::sdf::direction_signed_distance direction_signed_distance() const noexcept
 			{
-			const auto tmp{shape.ab.sdf(point).gradient_signed_distance()};
+			const auto tmp{shape.ab.sdf(point).direction_signed_distance()};
 			const float distance{tmp.distance.absolute() - shape.radius};
-			const auto gradient{distance < 0.f ? -tmp.gradient : tmp.gradient};
+			const auto direction{distance < 0.f ? -tmp.direction : tmp.direction};
 			//const vec2f ba{shape.ab.b - shape.ab.a};
 			//const vec2f pa{point      - shape.ab.a};
 			//
@@ -66,8 +66,8 @@ namespace utils::math::geometry::shape::generic
 			//const float h{std::clamp(dot_pa_ba / dot_ba_ba, 0.f, 1.f)};
 			//const vec2f q{pa - ba * h};
 			//const float distance{q.get_length() - shape.radius};
-			//const auto  gradient{-q / distance};
-			return {distance, gradient};
+			//const auto  direction{-q / distance};
+			return {distance, direction};
 			}
 		};
 	}

@@ -6,6 +6,6 @@ namespace utils::math::geometry::shape::sdf::return_type
 	struct signed_distance;
 
 	struct closest_point_with_signed_distance;
-	struct gradient_signed_distance;
+	struct direction_signed_distance;
 	struct closest_point_with_distance;
 	}
