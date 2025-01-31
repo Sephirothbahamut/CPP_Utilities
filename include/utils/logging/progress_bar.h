@@ -23,26 +23,27 @@ namespace utils::logging
 			progress_bar() = default;
 			progress_bar(float update_step, size_t bar_width) : update_step{update_step}, bar_width{bar_width} {}
 
-			void advance(float amount_normalized) noexcept
+			void advance(float new_state) noexcept
 				{
-				state = amount_normalized;
-
 				std::unique_lock lock{mutex};
+				if (new_state <= state) { return; }
+				state = new_state;
+
 				const bool should_draw{(state == 1.f) || ((state - last_drawn_state) >= update_step)};
 				if (!should_draw) { return; }
+
 				last_drawn_state = state;
 				message_queue.emplace(state);
 				}
 
 			void complete() noexcept
 				{
-				if (state == 1.f) { return; }
 				advance(1.f);
 				message_queue.flush();
 				}
 
 		private:
-			std::atomic<float> state{0.f};
+			float state{0.f};
 			float last_drawn_state{0.f};
 			const float update_step{.01f};
 			const size_t bar_width{20};

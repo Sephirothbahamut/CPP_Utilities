@@ -90,7 +90,7 @@ namespace utils::math
 			return {closest, minimum_distance() * side()};
 			}
 
-		utils_gpu_available constexpr geometry::sdf::gradient_signed_distance gradient_signed_distance() noexcept
+		utils_gpu_available constexpr geometry::sdf::gradient_signed_distance gradient_signed_distance() const noexcept
 			{
 			const vec2f point_from_centre{shape.centre() - point};
 			const vec2f w{utils::math::abs(point_from_centre) - (shape.size() / 2.f)};//utils::math::abs(point) - (b);

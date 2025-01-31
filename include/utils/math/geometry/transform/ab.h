@@ -10,8 +10,8 @@ namespace utils::math::geometry::shape::generic
 	utils_gpu_available constexpr auto& ab<storage_type, optional_ends>::scale_self(this utils::concepts::non_const auto& self, const float& scaling) noexcept
 		requires(!std::remove_cvref_t<decltype(self)>::storage_type.is_const())
 		{
-		self.a.translate_self(scaling);
-		self.b.translate_self(scaling);
+		self.a.scale_self(scaling);
+		self.b.scale_self(scaling);
 		return self;
 		}
 
@@ -28,8 +28,8 @@ namespace utils::math::geometry::shape::generic
 	utils_gpu_available constexpr auto& ab<storage_type, optional_ends>::rotate_self(this utils::concepts::non_const auto& self, const angle::concepts::angle auto& rotation) noexcept
 		requires(!std::remove_cvref_t<decltype(self)>::storage_type.is_const())
 		{
-		self.a.translate_self(rotation);
-		self.b.translate_self(rotation);
+		self.a.rotate_self(rotation);
+		self.b.rotate_self(rotation);
 		return self;
 		}
 

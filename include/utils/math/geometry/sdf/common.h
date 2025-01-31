@@ -137,7 +137,14 @@ namespace utils::math::geometry::sdf
 			const vec2f ret_gradient{utils::math::lerp(a.gradient, b.gradient, (a.distance.value < b.distance.value) ? n : 1.f - n)};
 			return {ret_distance, ret_gradient};
 			}
-		utils_gpu_available constexpr gradient_signed_distance operator-() const noexcept { return {-distance, gradient}; }
+		utils_gpu_available constexpr gradient_signed_distance  operator-() const noexcept { return {-distance, gradient}; }//TODO should invert gradient direction?
+		utils_gpu_available constexpr gradient_signed_distance& operator-=(float value) noexcept { *this = *this - value; return *this; }
+		utils_gpu_available constexpr gradient_signed_distance  operator-(float value) const noexcept 
+			{
+			const auto new_distance{distance.value - value};
+			const auto new_gradient{std::signbit(distance.value) != std::signbit(new_distance) ? -gradient : gradient};
+			return {new_distance, new_gradient};
+			}
 		};
 
 	struct closest_point_with_signed_distance
