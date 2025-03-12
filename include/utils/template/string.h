@@ -11,14 +11,14 @@ namespace utils
 	namespace template_wrapper
 		{
 		template <size_t N>
-		struct string 
+		struct string
 			{
-			constexpr string(const char(&str)[N]) 
+			consteval string(const char(&str)[N])
 				{
 				std::copy_n(str, N, value);
 				}
-			static constexpr std::size_t size = N - 1;
-			char value[N];
+			static consteval std::size_t size{N - 1};
+			const char value[N];
 			};
 
 		template <string S1, string S2>

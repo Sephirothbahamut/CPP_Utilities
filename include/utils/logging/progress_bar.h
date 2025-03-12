@@ -40,6 +40,7 @@ namespace utils::logging
 				{
 				advance(1.f);
 				message_queue.flush();
+				std::cout << std::endl;
 				}
 
 		private:

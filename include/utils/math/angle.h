@@ -40,33 +40,33 @@ namespace utils::math::angle
 		{
 		enum class direction
 			{
-			rr, ur, up, ul, ll, dl, dw, dr,
+			rr, dr, dw, dl, ll, ul, up, ur,
 			right      = rr,
-			up_right   = ur,
-			up_left    = ul,
-			left       = ll,
-			down_left  = dl,
+			down_right = dr,
 			down       = dw,
-			down_right = dr
+			down_left  = dl,
+			left       = ll,
+			up_left    = ul,
+			up_right   = ur
 			};
 		enum class hex_flat_top
 			{
 			ur, up, ul, dl, dw, dr,
-			up_right   = ur,
-			up_left    = ul,
-			down_left  = dl,
+			down_right = dr,
 			down       = dw,
-			down_right = dr
+			down_left  = dl,
+			up_left    = ul,
+			up_right   = ur
 			};
 		enum class hex_pointy_top
 			{
 			rr, ur, ul, ll, dl, dr,
 			right      = rr,
-			up_right   = ur,
-			up_left    = ul,
-			left       = ll,
+			down_right = dr,
 			down_left  = dl,
-			down_right = dr
+			left       = ll,
+			up_left    = ul,
+			up_right   = ur
 			};
 		};
 

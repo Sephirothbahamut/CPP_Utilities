@@ -182,8 +182,8 @@ namespace utils::math
 					requires(!is_const)
 					{
 					value_type previous_width{r.width()};
-					r.ll() = new_value;
-					r.width() = previous_width; 
+					r.ll         () = new_value;
+					r.proxy_width() = previous_width; 
 					return *this; 
 					}
 
@@ -217,8 +217,8 @@ namespace utils::math
 					requires(!is_const)
 					{
 					value_type previous_height{r.height()};
-					r.up() = new_value;
-					r.height() = previous_height;
+					r.up          () = new_value;
+					r.proxy_height() = previous_height;
 					return *this;
 					}
 				

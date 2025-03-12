@@ -42,20 +42,21 @@ namespace utils::math::geometry::shape::generic
 	
 		utils_gpu_available constexpr geometry::sdf::closest_point_with_signed_distance closest_with_signed_distance() const noexcept
 			{
-			if constexpr (ends.is_closed())
-				{
-				geometry::sdf::closest_point_with_distance current;
-				bool inside{false};
-				shape.get_pieces().for_each([&](const auto& candidate)
-					{
-					const geometry::sdf::closest_point_with_distance candidate_values{candidate.sdf(point).closest_with_distance()};
-					current.set_to_closest(candidate_values);
-					if (candidate.sdf(point).closed_piece_side_check()) { inside = !inside; }
-					});
-				return geometry::sdf::closest_point_with_signed_distance{.closest{current.closest}, .distance{current.distance * (inside ? -1.f : 1.f)}};
-				}
-
-			if constexpr (ends.is_open())
+			
+			//if constexpr (ends.is_closed())
+			//	{//Intersection count, actually performs worse because I didn't math out bezier/line intersection, and with segmentation ad good resolution it gets way slower :|
+			//	geometry::sdf::closest_point_with_distance current;
+			//	bool inside{false};
+			//	shape.get_pieces().for_each([&](const auto& candidate)
+			//		{
+			//		const geometry::sdf::closest_point_with_distance candidate_values{candidate.sdf(point).closest_with_distance()};
+			//		current.set_to_closest(candidate_values);
+			//		if (candidate.sdf(point).closed_piece_side_check()) { inside = !inside; }
+			//		});
+			//	return geometry::sdf::closest_point_with_signed_distance{.closest{current.closest}, .distance{current.distance * (inside ? -1.f : 1.f)}};
+			//	}
+			//
+			//if constexpr (ends.is_open())
 				{
 				geometry::sdf::closest_point_with_signed_distance current;
 

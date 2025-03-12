@@ -13,6 +13,11 @@
 
 namespace utils::containers
 	{
+	/// <summary> 
+	/// Container that represent a distribution of values along a 1d range of values with pseudo-indices from 0 to std::numeric_limits<size_t>::max().
+	/// Adding the same value in subsequent regions merges them in one region (add value X to 1-3, then add X to 4-8, will make a single region with value X in positions 1-8).
+	/// Adding the a different value in a sequential region will split that region (add X to 1-9, then add Y to 5-6, will split everything into: X 1-4, Y 5-6, X 7-9).
+	///</summary>
 	struct region
 		{
 		size_t begin{0};

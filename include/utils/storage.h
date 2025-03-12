@@ -506,7 +506,6 @@ namespace utils::storage
 		//	return self;
 		//	}
 		
-		
 		utils_gpu_available constexpr auto& operator+=(this utils::concepts::non_const auto& self, const concepts::operator_parameter<decltype(self)> auto& other) noexcept requires(!storage_type.is_const()) { return self.operator_self_assign(other, [](      auto& a, const auto& b) constexpr {        a += b; }); }
 		utils_gpu_available constexpr auto& operator-=(this utils::concepts::non_const auto& self, const concepts::operator_parameter<decltype(self)> auto& other) noexcept requires(!storage_type.is_const()) { return self.operator_self_assign(other, [](      auto& a, const auto& b) constexpr {        a -= b; }); }
 		utils_gpu_available constexpr auto& operator*=(this utils::concepts::non_const auto& self, const concepts::operator_parameter<decltype(self)> auto& other) noexcept requires(!storage_type.is_const()) { return self.operator_self_assign(other, [](      auto& a, const auto& b) constexpr {        a *= b; }); }
@@ -522,7 +521,7 @@ namespace utils::storage
 		utils_gpu_available constexpr auto  operator| (this                      const auto& self, const concepts::operator_parameter<decltype(self)> auto& other) noexcept                                    { return self.operator_to_new     (other, [](const auto& a, const auto& b) constexpr { return a |  b; }); }
 		utils_gpu_available constexpr auto  operator& (this                      const auto& self, const concepts::operator_parameter<decltype(self)> auto& other) noexcept                                    { return self.operator_to_new     (other, [](const auto& a, const auto& b) constexpr { return a &  b; }); }
 		utils_gpu_available constexpr bool  operator!=(this                      const auto& self, const concepts::operator_parameter<decltype(self)> auto& other) noexcept                                    { return !self.operator==(other); }
-
+		
 		#pragma region scalar
 		#pragma endregion scalar
 
@@ -553,8 +552,8 @@ namespace utils::storage
 
 
 //Note: intellisense doesn't seem to find the operators in the class, but not finding them doesn't crash it
-//defining the operators outside intellisense just crashes, so... let's keep the errors i guess lol
-
+//defining the operators outside intellisense just crashes, so... let's keep the errors i guess
+// 
 //template <utils::storage::concepts::multiple multiple_t, utils::storage::concepts::operator_parameter<multiple_t> value_t> utils_gpu_available constexpr auto& operator+=(      multiple_t& storage, const value_t& value) noexcept requires(!multiple_t::storage_type.is_const()) { return storage.operator_self_assign(value, [](      auto& a, const auto& b) {        a += b; }); }
 //template <utils::storage::concepts::multiple multiple_t, utils::storage::concepts::operator_parameter<multiple_t> value_t> utils_gpu_available constexpr auto& operator-=(      multiple_t& storage, const value_t& value) noexcept requires(!multiple_t::storage_type.is_const()) { return storage.operator_self_assign(value, [](      auto& a, const auto& b) {        a -= b; }); }
 //template <utils::storage::concepts::multiple multiple_t, utils::storage::concepts::operator_parameter<multiple_t> value_t> utils_gpu_available constexpr auto& operator*=(      multiple_t& storage, const value_t& value) noexcept requires(!multiple_t::storage_type.is_const()) { return storage.operator_self_assign(value, [](      auto& a, const auto& b) {        a *= b; }); }

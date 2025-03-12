@@ -1,6 +1,7 @@
 #pragma once
 
 #include "declaration/capsule.h"
+#include "ab.h"
 
 namespace utils::math::geometry::shape::generic
 	{

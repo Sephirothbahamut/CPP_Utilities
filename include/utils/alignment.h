@@ -13,6 +13,14 @@ namespace utils
 			{
 			create() = delete;
 
+			inline static constexpr alignment top_left() noexcept
+				{
+				return
+					{
+					.horizontal_alignment{horizontal::left},
+					.vertical_alignment  {vertical::top}
+					};
+				}
 			inline static constexpr alignment centre() noexcept 
 				{
 				return

@@ -15,9 +15,9 @@ namespace utils::math
 		const vec2f point;
 
 		//TODO understand why this breaks intellisense
-		#ifndef __INTELLISENSE__
 
 		utils_gpu_available constexpr vec2f closest_point() const noexcept
+		#ifndef __INTELLISENSE__
 			{
 			if (point.x() <= shape.ll())
 				{
@@ -56,6 +56,9 @@ namespace utils::math
 				return {point.x(), distance_up < distance_dw ? shape.up() : shape.dw()};
 				}
 			}
+		#else
+			;
+		#endif
 		
 		utils_gpu_available constexpr float minimum_distance() const noexcept
 			{
@@ -63,34 +66,51 @@ namespace utils::math
 			}
 		
 		utils_gpu_available constexpr geometry::sdf::side side() const noexcept
+		#ifndef __INTELLISENSE__
 			{
 			if (point.x() > shape.ll() && point.x() < shape.rr() && point.y() > shape.up() && point.y() < shape.dw()) { return geometry::sdf::side::create::inside (); }
 			if (point.x() < shape.ll() || point.x() > shape.rr() || point.y() < shape.up() || point.y() > shape.dw()) { return geometry::sdf::side::create::outside(); }
 			return geometry::sdf::side::create::coincident();
 			}
+		#else
+			;
+		#endif
 		
 		utils_gpu_available constexpr geometry::sdf::signed_distance signed_distance() const noexcept
+		#ifndef __INTELLISENSE__
 			{
 			const vec2f point_from_centre_ur_quadrant{utils::math::abs(point - shape.centre())};
 			const vec2f corner_from_centre{shape.ur() - shape.centre()};
 			const vec2f distances{point_from_centre_ur_quadrant - corner_from_centre};
 			return {utils::math::max(distances, {0.f}).get_length() + utils::math::min(utils::math::max(distances.x(), distances.y()), 0.f)};
 			}
+		#else
+			;
+		#endif
 		
 		utils_gpu_available constexpr geometry::sdf::closest_point_with_distance closest_with_distance() const noexcept
+		#ifndef __INTELLISENSE__
 			{
 			const auto closest{closest_point(shape, point)};
 			return {closest, minimum_distance()};
 			}
+		#else
+			;
+		#endif
 		
 		utils_gpu_available constexpr geometry::sdf::closest_point_with_signed_distance closest_with_signed_distance() const noexcept
+		#ifndef __INTELLISENSE__
 			{
 			//TODO test, I had it return positive both inside and outside
 			const auto closest{closest_point()};
 			return {closest, minimum_distance() * side()};
 			}
+		#else
+			;
+		#endif
 
 		utils_gpu_available constexpr geometry::sdf::direction_signed_distance direction_signed_distance() const noexcept
+		#ifndef __INTELLISENSE__
 			{
 			const vec2f point_from_centre{shape.centre() - point};
 			const vec2f w{utils::math::abs(point_from_centre) - (shape.size() / 2.f)};//utils::math::abs(point) - (b);
@@ -108,6 +128,8 @@ namespace utils::math
 			const vec2f direction{s * ((g > 0.f) ? q / l : -((w.x() > w.y()) ? vec2f{1.f, 0.f} : vec2f{0.f, 1.f}))};
 			return {distance, direction};
 			}
+		#else
+			;
 		#endif
 		};
 	}

@@ -1,8 +1,8 @@
 #pragma once
 
 #include <vector>
-#include <stdexcept>
 #include <ranges>
+#include <stdexcept>
 #include <initializer_list>
 
 #include "matrix_memory_layout.h"

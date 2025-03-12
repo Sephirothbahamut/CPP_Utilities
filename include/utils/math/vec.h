@@ -381,6 +381,21 @@ namespace utils::math
 					index / x()
 					};
 				}
+
+			utils_gpu_available constexpr bool validate_coords_as_size(math::vec_s<extent> coords) const noexcept
+				requires(std::convertible_to<value_type, size_t>)
+				{
+				if constexpr (coords.size() > size()) { return false; }
+
+				for (size_t i{0}; i < size(); i++)
+					{
+					const auto coord{coords [i]};
+					const auto size_{(*this)[i]};
+					if (coord >= size_) { return false; }
+					}
+
+				return true;
+				}
 		#pragma endregion size_t
 
 

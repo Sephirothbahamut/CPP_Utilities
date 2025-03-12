@@ -47,4 +47,5 @@ namespace utils::math::geometry::sdf::details::bezier::other
 
 		return found_t;
 		}
+
 	}
