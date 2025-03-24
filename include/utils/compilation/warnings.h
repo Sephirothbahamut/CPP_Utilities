@@ -34,7 +34,7 @@
     
     #define utils_disable_warning_msvc(msvc_number)
     
-#elif
+#else
     #define utils_disable_warnings_begin
     #define utils_disable_warnings_end
 

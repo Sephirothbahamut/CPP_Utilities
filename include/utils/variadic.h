@@ -12,14 +12,19 @@ namespace utils
 		{
 		// F is void(auto& value)
 		template<typename... Ts, typename F>
-		void for_each_in_tuple(std::tuple<Ts...>& t, F f)
+		constexpr void for_each_in_tuple(std::tuple<Ts...>& t, F f)
+			{
+			std::apply([=](auto& ...x) { (..., f(x)); }, t);
+			}
+		template<typename... Ts, typename F>
+		constexpr void for_each_in_tuple(const std::tuple<Ts...>& t, F f)
 			{
 			std::apply([=](auto& ...x) { (..., f(x)); }, t);
 			}
 
 		// F is void(auto& value, size_t index)
 		template<typename... Ts, typename F>
-		void for_each_index(std::tuple<Ts...>& t, F f)
+		constexpr void for_each_index(std::tuple<Ts...>& t, F f)
 			{
 			[&] <std::size_t... Is>(std::index_sequence<Is...>) 
 				{

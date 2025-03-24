@@ -1,11 +1,14 @@
 #pragma once
 
+#include <tuple>
 #include <vector>
 #include <ranges>
 #include <limits>
 #include <cassert>
 #include <algorithm>
 
+#include "../memory.h"
+#include "../optional.h"
 #include "../compilation/gpu.h"
 #include "../oop/disable_move_copy.h"
 
@@ -27,6 +30,7 @@ namespace utils::containers
 		struct create : utils::oop::non_constructible
 			{
 			inline static constexpr region full_range() noexcept { return region{0, std::numeric_limits<size_t>::max()}; };
+			inline static constexpr region from(size_t start) noexcept { return region{start, std::numeric_limits<size_t>::max() - start}; };
 			};
 		};
 
@@ -51,12 +55,20 @@ namespace utils::containers
 		public:
 			using value_type = T;
 
-			struct slot            { size_t begin{0}; std::optional<T> value_opt{std::nullopt}; };
-			struct read_slot       { using value_type = T; const region region; std::optional<std::reference_wrapper<T      >> value_opt_ref; };
-			struct read_const_slot { using value_type = T; const region region; std::optional<std::reference_wrapper<const T>> value_opt_ref; };
+			struct slot
+				{
+				size_t begin{0};
+				std::optional<T> value_opt{std::nullopt}; 
+				};
+			struct read_slot 
+				{
+				using value_type = T;
+				const region region; 
+				utils::observer_ptr<const T> value_ptr;
+				};
 			std::vector<slot> slots;
 
-			void add(const T& new_value, region fill_region) noexcept
+			constexpr void add(const T& new_value, region fill_region) noexcept
 				{
 				if (slots.size() == 0)
 					{
@@ -200,14 +212,45 @@ namespace utils::containers
 					}
 				}
 
-			read_slot value_at(size_t index) noexcept
+			constexpr utils::observer_ptr<const value_type> at(size_t index) const noexcept
 				{
 				if (empty())
 					{
+					return nullptr; 
+					}
+
+				if (index < slots[0].begin)
+					{
+					return nullptr;
+					}
+
+				for (size_t i{1}; i < slots.size(); i++)
+					{
+					const slot& current_slot{slots[i]};
+					if (current_slot.begin > index)
+						{
+						const slot& ret_slot{slots[i - 1]};
+						if (ret_slot.value_opt.has_value())
+							{
+							return &(*ret_slot.value_opt);
+							}
+						else
+							{
+							return nullptr;
+							}
+						}
+					}
+				return nullptr;
+				}
+			
+			constexpr const read_slot slot_at(size_t index) const noexcept
+				{
+				if (empty()) 
+					{
 					return read_slot
 						{
-						.region{.begin{0}, .count{std::numeric_limits<size_t>::max()}},
-						.value_opt_ref{std::nullopt}
+						.region{region::create::full_range()},
+						.value_ptr{nullptr}
 						};
 					}
 
@@ -216,103 +259,121 @@ namespace utils::containers
 					return read_slot
 						{
 						.region{.begin{0}, .count{slots[0].begin}},
-						.value_opt_ref{std::nullopt}
+						.value_ptr{nullptr}
 						};
 					}
 
-				size_t slot_index{0};
-				while (slot_index < slots.size())
+				for (size_t i{1}; i < slots.size(); i++)
 					{
-					const regions::slot& slot{slots[slot_index]};
-					const size_t next_slot_begin{(slot_index < slots.size() - 1) ? slots[slot_index + 1].begin : std::numeric_limits<size_t>::max()};
-					if (slot.begin <= index && next_slot_begin > index) { break; }
-					slot_index++;
-					}
+					const slot& current_slot{slots[i]};
+					if (current_slot.begin > index)
+						{
+						const slot& ret_slot{slots[i - 1]};
 
-				const size_t next_slot_begin{(slot_index < slots.size() - 1) ? slots[slot_index + 1].begin : std::numeric_limits<size_t>::max()};
-				auto& slot{slots[slot_index]};
-				const size_t region_begin{slot.begin};
-
-				std::optional<std::reference_wrapper<T>> value_opt_ref{std::nullopt};
-				if (slot.value_opt.has_value()) 
-					{
-					std::reference_wrapper<T> value_ref{slot.value_opt.value()};
-					value_opt_ref.emplace(value_ref);
+						return read_slot
+							{
+							.region{.begin{ret_slot.begin}, .count{current_slot.begin - ret_slot.begin}},
+							.value_ptr{utils::optional_to_observer_ptr(ret_slot.value_opt)}
+							};
+						}
 					}
 
 				return read_slot
 					{
-					.region
-						{
-						.begin{region_begin},
-						.count{next_slot_begin - region_begin}
-						},
-					.value_opt_ref{value_opt_ref}
+					.region{region::create::from(slots.rbegin()->begin)},
+					.value_ptr{nullptr}
 					};
 				}
 
-			read_const_slot value_at(size_t index) const noexcept
+			constexpr region region_at(size_t index) const noexcept
 				{
-				if (empty())
+				if (empty()) 
 					{
-					return read_const_slot
-						{
-						.region{.begin{0}, .count{std::numeric_limits<size_t>::max()}},
-						.value_opt_ref{std::nullopt}
-						};
+					return region::create::full_range();
 					}
 
 				if (index < slots[0].begin)
 					{
-					return read_const_slot
+					return {.begin{0}, .count{slots[0].begin}};
+					}
+
+				for (size_t i{1}; i < slots.size(); i++)
+					{
+					const slot& current_slot{slots[i]};
+					if (current_slot.begin > index)
 						{
-						.region{.begin{0}, .count{slots[0].begin}},
-						.value_opt_ref{std::nullopt}
-						};
+						const slot& ret_slot{slots[i - 1]};
+
+						return {.begin{ret_slot.begin}, .count{current_slot.begin - ret_slot.begin}};
+						}
 					}
-
-				size_t slot_index{0};
-				while (slot_index < slots.size())
-					{
-					const regions::slot& slot{slots[slot_index]};
-					const size_t next_slot_begin{(slot_index < slots.size() - 1) ? slots[slot_index + 1].begin : std::numeric_limits<size_t>::max()};
-					if (slot.begin <= index && next_slot_begin > index) { break; }
-					slot_index++;
-					}
-
-				const size_t next_slot_begin{(slot_index < slots.size() - 1) ? slots[slot_index + 1].begin : std::numeric_limits<size_t>::max()};
-				auto& slot{slots[slot_index]};
-				const size_t region_begin{slot.begin};
-
-				std::optional<std::reference_wrapper<const T>> value_opt_ref{std::nullopt};
-				if (slot.value_opt.has_value()) 
-					{
-					std::reference_wrapper<const T> value_ref{slot.value_opt.value()};
-					value_opt_ref.emplace(value_ref);
-					}
-
-				return read_const_slot
-					{
-					.region
-						{
-						.begin{region_begin},
-						.count{next_slot_begin - region_begin}
-						},
-					.value_opt_ref{value_opt_ref}
-					};
+				return region::create::from(slots.rbegin()->begin);
 				}
 
-			size_t values_size() const noexcept
+			//auto slot_at(this auto&& self, size_t index) noexcept -> read_slot<std::is_const_v<decltype(self)>>
+			//	{
+			//	using ret_t = read_slot<std::is_const_v<decltype(self)>>;
+			//
+			//	if (empty())
+			//		{
+			//		return ret_t
+			//			{
+			//			.region{.begin{0}, .count{std::numeric_limits<size_t>::max()}},
+			//			.value_opt_ref{std::nullopt}
+			//			};
+			//		}
+			//
+			//	if (index < slots[0].begin)
+			//		{
+			//		return ret_t
+			//			{
+			//			.region{.begin{0}, .count{slots[0].begin}},
+			//			.value_opt_ref{std::nullopt}
+			//			};
+			//		}
+			//
+			//	size_t slot_index{0};
+			//	while (slot_index < slots.size())
+			//		{
+			//		const regions::slot& slot{slots[slot_index]};
+			//		const size_t next_slot_begin{(slot_index < slots.size() - 1) ? slots[slot_index + 1].begin : std::numeric_limits<size_t>::max()};
+			//		if (slot.begin <= index && next_slot_begin > index) { break; }
+			//		slot_index++;
+			//		}
+			//
+			//	const size_t next_slot_begin{(slot_index < slots.size() - 1) ? slots[slot_index + 1].begin : std::numeric_limits<size_t>::max()};
+			//	auto& slot{slots[slot_index]};
+			//	const size_t region_begin{slot.begin};
+			//
+			//	std::optional<std::reference_wrapper<typename ret_t::const_aware_value_type>> value_opt_ref{std::nullopt};
+			//	if (slot.value_opt.has_value()) 
+			//		{
+			//		std::reference_wrapper<typename ret_t::const_aware_value_type> value_ref{slot.value_opt.value()};
+			//		value_opt_ref.emplace(value_ref);
+			//		}
+			//
+			//	return read_slot<is_const>
+			//		{
+			//		.region
+			//			{
+			//			.begin{region_begin},
+			//			.count{next_slot_begin - region_begin}
+			//			},
+			//		.value_opt_ref{value_opt_ref}
+			//		};
+			//	}
+
+			constexpr size_t size() const noexcept
 				{
 				if (slots.empty()) { return 0; }
 				return slots[slots.size() - 1].begin;
 				}
 
-			read_slot slot_at(size_t index)
+			constexpr read_slot slot_at_index_of_slots(this auto&& self, size_t index) noexcept
 				{
-				assert(index < slots_size());
+				assert(index < slots_count());
 
-				auto& slot{slots[index]};
+				auto& slot     {slots[index    ]};
 				auto& slot_next{slots[index + 1]};
 
 				return read_slot
@@ -322,35 +383,17 @@ namespace utils::containers
 						.begin{slot.begin},
 						.count{slot_next.begin - slot.begin}
 						},
-					.value_opt_ref{slot.value_opt.has_value() ? std::optional<std::reference_wrapper<T>>{slot.value_opt.value()} : std::optional<std::reference_wrapper<T>>{std::nullopt}}
+					.value_ptr{utils::optional_to_observer_ptr(slot.value_opt)}
 					};
 				}
 
-			read_const_slot slot_at(size_t index) const
-				{
-				assert(index < slots_size());
-
-				const auto& slot{slots[index]};
-				const auto& slot_next{slots[index + 1]};
-
-				return read_const_slot
-					{
-					.region
-						{
-						.begin{slot.begin},
-						.count{slot_next.begin - slot.begin}
-						},
-					.value_opt_ref{slot.value_opt}
-					};
-				}
-
-			size_t slots_size() const noexcept
+			constexpr size_t slots_count() const noexcept
 				{
 				const size_t inner_size{slots.size()};
 				return (inner_size == 0 ? 0 : (inner_size - 1));
 				}
 
-			bool empty() const noexcept { return slots.empty(); }
+			constexpr bool empty() const noexcept { return slots.empty(); }
 
 			//TODO the view should skip nullopt regions
 			//inline auto get_slots() noexcept //inline auto cause views return types are... heh
@@ -373,7 +416,7 @@ namespace utils::containers
 				size_t last_before_end_index;
 				size_t first_after_end_index;
 				};
-			region_insert_reference_indices_t get_region_insert_reference_indices(region region) const noexcept
+			constexpr region_insert_reference_indices_t get_region_insert_reference_indices(region region) const noexcept
 				{
 				size_t slot_index{0};
 
@@ -409,15 +452,143 @@ namespace utils::containers
 				return ret;
 				}
 
-			void inner_add(size_t index, size_t begin, const T& new_value) noexcept
+			constexpr void inner_add(size_t index, size_t begin, const T& new_value) noexcept
 				{
 				slots.emplace(slots.begin() + index, begin, new_value);
 				}
-			void inner_add(size_t index, size_t begin, const std::optional<T>& new_value_opt) noexcept
+			constexpr void inner_add(size_t index, size_t begin, const std::optional<T>& new_value_opt) noexcept
 				{
 				slots.emplace(slots.begin() + index, begin, new_value_opt);
 				}
 		};
+
+
+
+	//
+	//namespace details
+	//	{
+	//	template <typename T, typename regions_of_aggregate_of_optionals_t, typename aggregate_of_optionals_t, auto ...component_getters>
+	//	regions_of_aggregate_of_optionals_t generate_regions_of_aggregate_of_optionals(const T& struct_of_regions) noexcept
+	//		{
+	//		regions_of_aggregate_of_optionals_t ret;
+	//
+	//		const size_t end{std::max(component_getters(struct_of_regions).values_size(), ...)};
+	//
+	//		size_t element_index{0};
+	//		while (element_index != end)
+	//			{
+	//			const size_t region_begin{element_index};
+	//			const size_t region_end{std::min(component_getters(struct_of_regions).region.end(), ...)};
+	//
+	//			const bool fully_nullopt
+	//				{
+	//				component_getters(struct_of_regions).value_at(element_index).has_value() && ...
+	//				};
+	//			
+	//			if(!fully_nullopt)
+	//				{
+	//				const aggregate_of_optionals_t new_aggregate{[&]()
+	//					{
+	//					aggregate_of_optionals_t ret;
+	//					((component_getters(ret) = component_getters(struct_of_regions).value_at(element_index).value_opt_ref), ...);
+	//					}()};
+	//	
+	//				ret.add(new_aggregate, {region_begin, region_end - region_begin});
+	//				}
+	//
+	//			element_index = region_end;
+	//			}
+	//
+	//		return ret;
+	//		}
+	//
+	//	template <typename aggregate_t, typename aggregate_of_optionals_t, auto ...component_getters>
+	//		requires(concepts::regions_of_aggregate_of_optionals_functor<component_getters, aggregate_t, aggregate_of_optionals_t> && ...)
+	//	struct regions_of_aggregate_of_optionals : regions<aggregate_of_optionals_t>
+	//		{
+	//		aggregate_t value_at(const size_t& index, const aggregate_t& defaults) const noexcept
+	//			{
+	//			const auto aggregate_of_optionals{regions.value_at(index)};
+	//			aggregate_t ret;
+	//			(component_getters(ret) = component_getters(aggregate_of_optionals).value_or(component_getters(defaults)), ...);
+	//			return ret;
+	//			}
+	//		};
+	//
+	//	template <typename aggregate_t, typename aggregate_of_optionals_t, auto ...component_getters>
+	//		requires(concepts::regions_of_aggregate_of_optionals_functor<component_getters, aggregate_t, aggregate_of_optionals_t> && ...)
+	//	struct regions_of_aggregate_of_optionals_with_defaults : regions_of_aggregate_of_optionals<aggregate_t, aggregate_of_optionals_t, component_getters...>
+	//		{
+	//		aggregate_t defaults;
+	//
+	//		aggregate_t value_at(const size_t& index) const noexcept
+	//			{
+	//			return value_at(index, defaults);
+	//			}
+	//		};
+	//	}
+	//
+	///// <summary> 
+	///// There must be one components_getter for each member of the aggregate.
+	///// It is a functor with:
+	///// A value_type alias for its value type
+	///// One function takes aggregate_of_optionals_t as reference and returns a reference to its optional.
+	///// One function takes regions_per_each_field_t as reference and returns a reference to its region.
+	///// aggregate_of_optionals_t, regions_per_each_field_t should share the same fields, with optional<T> and region<T> as types respectively.
+	///// </summary>
+	//template <typename aggregate_of_optionals_t, typename regions_per_each_field_t, auto ...component_getters>
+	//	requires(concepts::aggregate_regions_functor<component_getters, aggregate_of_optionals_t, regions_per_each_field_t> && ...)
+	//struct aggregate_regions_optional_only
+	//	{
+	//	regions_per_each_field_t regions_per_each_field;
+	//
+	//	auto generate_regions_of_aggregate_of_optionals() const noexcept
+	//		{
+	//		return details::generate_regions_of_aggregate_of_optionals<decltype(*this), regions<aggregate_of_optionals_t>, aggregate_of_optionals_t, component_getters...>(*this);
+	//		}
+	//	};
+	//
+	///// <summary> 
+	///// There must be one components_getter for each member of the aggregate.
+	///// It is a functor with:
+	///// A value_type alias for its value type
+	///// One function takes aggregate_t              as reference and returns a reference to its field.
+	///// One function takes aggregate_of_optionals_t as reference and returns a reference to its optional.
+	///// One function takes regions_per_each_field_t as reference and returns a reference to its region.
+	///// aggregate_t, aggregate_of_optionals_t, regions_per_each_field_t should share the same fields, with T, optional<T> and region<T> as types respectively.
+	///// </summary>
+	//template <typename aggregate_t, typename aggregate_of_optionals_t, typename regions_per_each_field_t, auto ...component_getters>
+	//	requires(concepts::aggregate_regions_with_defaults_functor<component_getters, aggregate_t, aggregate_of_optionals_t, regions_per_each_field_t> && ...)
+	//struct aggregate_regions : aggregate_regions<aggregate_t, aggregate_of_optionals_t, regions_per_each_field_t, component_getters...>
+	//	{
+	//	auto generate_regions_of_aggregate_of_optionals() const noexcept
+	//		{
+	//		return details::generate_regions_of_aggregate_of_optionals<decltype(*this), details::regions_of_aggregate_of_optionals<aggregate_t, aggregate_of_optionals_t>, aggregate_of_optionals_t, component_getters...>(*this);
+	//		}
+	//	};
+	//
+	///// <summary> 
+	///// There must be one components_getter for each member of the aggregate.
+	///// It is a functor with:
+	///// A value_type alias for its value type
+	///// One function takes aggregate_t              as reference and returns a reference to its field.
+	///// One function takes aggregate_of_optionals_t as reference and returns a reference to its optional.
+	///// One function takes regions_per_each_field_t as reference and returns a reference to its region.
+	///// aggregate_t, aggregate_of_optionals_t, regions_per_each_field_t should share the same fields, with T, optional<T> and region<T> as types respectively.
+	///// </summary>
+	//template <typename aggregate_t, typename aggregate_of_optionals_t, typename regions_per_each_field_t, auto ...component_getters>
+	//	requires(concepts::aggregate_regions_with_defaults_functor<component_getters, aggregate_t, aggregate_of_optionals_t, regions_per_each_field_t> && ...)
+	//struct aggregate_regions_with_defaults : aggregate_regions<aggregate_t, aggregate_of_optionals_t, regions_per_each_field_t, component_getters...>
+	//	{
+	//	aggregate_t defaults;
+	//
+	//	auto generate_regions_of_aggregate_of_optionals() const noexcept
+	//		{
+	//		auto ret{details::generate_regions_of_aggregate_of_optionals<decltype(*this), details::regions_of_aggregate_of_optionals_with_defaults<aggregate_t, aggregate_of_optionals_t>, aggregate_of_optionals_t, component_getters...>(*this)};
+	//		ret.defaults = defaults;
+	//		return;
+	//		}
+	//	};
 	}
 
 #include "../details/warnings_post.inline.h"
