@@ -32,6 +32,8 @@ namespace utils::containers
 			inline static constexpr region full_range() noexcept { return region{0, std::numeric_limits<size_t>::max()}; };
 			inline static constexpr region from(size_t start) noexcept { return region{start, std::numeric_limits<size_t>::max() - start}; };
 			};
+
+		bool operator==(const region& other) const noexcept = default;
 		};
 
 	template <typename T>
@@ -60,11 +62,12 @@ namespace utils::containers
 				size_t begin{0};
 				std::optional<T> value_opt{std::nullopt}; 
 				};
+			template <bool is_const>
 			struct read_slot 
 				{
 				using value_type = T;
 				const region region; 
-				utils::observer_ptr<const T> value_ptr;
+				utils::observer_ptr<std::conditional_t<is_const, const T, T>> value_ptr;
 				};
 			std::vector<slot> slots;
 
@@ -243,11 +246,11 @@ namespace utils::containers
 				return nullptr;
 				}
 			
-			constexpr const read_slot slot_at(size_t index) const noexcept
+			constexpr const read_slot<true> slot_at(size_t index) const noexcept
 				{
 				if (empty()) 
 					{
-					return read_slot
+					return read_slot<true>
 						{
 						.region{region::create::full_range()},
 						.value_ptr{nullptr}
@@ -256,7 +259,7 @@ namespace utils::containers
 
 				if (index < slots[0].begin)
 					{
-					return read_slot
+					return read_slot<true>
 						{
 						.region{.begin{0}, .count{slots[0].begin}},
 						.value_ptr{nullptr}
@@ -270,7 +273,7 @@ namespace utils::containers
 						{
 						const slot& ret_slot{slots[i - 1]};
 
-						return read_slot
+						return read_slot<true>
 							{
 							.region{.begin{ret_slot.begin}, .count{current_slot.begin - ret_slot.begin}},
 							.value_ptr{utils::optional_to_observer_ptr(ret_slot.value_opt)}
@@ -278,7 +281,7 @@ namespace utils::containers
 						}
 					}
 
-				return read_slot
+				return read_slot<true>
 					{
 					.region{region::create::from(slots.rbegin()->begin)},
 					.value_ptr{nullptr}
@@ -368,15 +371,32 @@ namespace utils::containers
 				if (slots.empty()) { return 0; }
 				return slots[slots.size() - 1].begin;
 				}
-
-			constexpr read_slot slot_at_index_of_slots(this auto&& self, size_t index) noexcept
+			
+			constexpr read_slot<true> slot_at_index_of_slots(size_t index) const noexcept
 				{
 				assert(index < slots_count());
 
 				auto& slot     {slots[index    ]};
 				auto& slot_next{slots[index + 1]};
 
-				return read_slot
+				return read_slot<true>
+					{
+					.region
+						{
+						.begin{slot.begin},
+						.count{slot_next.begin - slot.begin}
+						},
+					.value_ptr{utils::optional_to_observer_ptr(slot.value_opt)}
+					};
+				}
+			constexpr read_slot<false> slot_at_index_of_slots(size_t index) noexcept
+				{
+				assert(index < slots_count());
+
+				auto& slot     {slots[index    ]};
+				auto& slot_next{slots[index + 1]};
+
+				return read_slot<false>
 					{
 					.region
 						{
@@ -394,6 +414,8 @@ namespace utils::containers
 				}
 
 			constexpr bool empty() const noexcept { return slots.empty(); }
+
+			constexpr void clear() noexcept { slots.clear(); }
 
 			//TODO the view should skip nullopt regions
 			//inline auto get_slots() noexcept //inline auto cause views return types are... heh
