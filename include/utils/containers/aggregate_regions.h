@@ -1,5 +1,6 @@
 #pragma once
 
+#include <set>
 #include <optional>
 
 #include "regions.h"
@@ -8,7 +9,7 @@
 
 namespace utils::containers
 	{
-	template <typename AGGREGATE_T, typename AGGREGATE_OF_OPTIONALS_T, typename AGGREGATE_OF_REGIONS_T, typename ACCESSORS_HELPER>
+	template <typename AGGREGATE_T, typename AGGREGATE_OF_OPTIONALS_T, typename AGGREGATE_OF_REGIONS_T, typename ACCESSORS_HELPER, bool observer = false>
 	struct aggregate_regions
 		{
 		using aggregate_t                         = AGGREGATE_T;
@@ -18,7 +19,9 @@ namespace utils::containers
 		using regions_of_aggregate_of_optionals_t = regions<aggregate_of_optionals_t>;
 		using regions_of_aggregate_t              = regions<aggregate_t             >;
 
-		aggregate_of_regions_t regions_per_field;
+		using regions_per_field_t = std::conditional_t<observer, const aggregate_of_regions_t&, aggregate_of_regions_t>;
+		regions_per_field_t regions_per_field;
+
 		inline static constexpr const size_t elements_count{[]()
 			{
 			size_t ret{0};
@@ -50,6 +53,26 @@ namespace utils::containers
 				}, opt, ret, default_aggregate);
 
 			return ret;
+			}
+ 
+		std::set<size_t> split_indices_set() const noexcept
+			{
+			std::set<size_t> ret;
+			utils::aggregate::apply<accessors_helper>
+				(
+				[&](const auto& field_regions)
+					{
+					const auto field_split_indices{field_regions.split_indices()};
+					std::copy(field_split_indices.begin(), field_split_indices.end(), std::inserter(ret, ret.end()));
+					},
+					regions_per_field
+				);
+			return ret;
+			}
+		std::vector<size_t> split_indices() const noexcept
+			{
+			const auto tmp{split_indices_set()};
+			return std::vector<size_t>{tmp.begin(), tmp.end()};
 			}
 
 		regions_of_aggregate_of_optionals_t combine_regions() const noexcept
