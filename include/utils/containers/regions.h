@@ -29,8 +29,13 @@ namespace utils::containers
 
 		struct create : utils::oop::non_constructible
 			{
-			inline static constexpr region full_range() noexcept { return region{0, std::numeric_limits<size_t>::max()}; };
-			inline static constexpr region from(size_t start) noexcept { return region{start, std::numeric_limits<size_t>::max() - start}; };
+			inline static constexpr region full_range() noexcept { return region{0, std::numeric_limits<size_t>::max()}; }
+			inline static constexpr region from_to(size_t start, size_t end) noexcept
+				{
+				assert(end > start);
+				return region{start, end - start};
+				}
+			inline static constexpr region from(size_t start) noexcept { return from_to(start, std::numeric_limits<size_t>::max()); }
 			};
 
 		bool operator==(const region& other) const noexcept = default;
