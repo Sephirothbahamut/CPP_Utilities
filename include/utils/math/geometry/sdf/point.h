@@ -9,8 +9,17 @@ namespace utils::math
 	struct vec<T, SIZE>::sdf_proxy
 		{
 		using shape_t = vec<T, 2>;
-		#include "common.inline.h"
-		
+
+		sdf_proxy(const shape_t& shape, const vec2f& point) : shape{shape}, point{point} {};
+		const shape_t& shape;
+		const vec2f point;
+
+		utils_gpu_available constexpr geometry::sdf::direction_signed_distance direction_signed_distance() const noexcept
+			{
+			const auto closest_with_signed_distance_value{closest_with_signed_distance()};
+			return geometry::sdf::direction_signed_distance::create(closest_with_signed_distance_value, point);
+			}
+
 		utils_gpu_available constexpr geometry::shape::point closest_point() const noexcept
 			{
 			return point; 

@@ -37,6 +37,12 @@ namespace utils::math::geometry::shape::dynamic
 			{
 			using shape_t = templated_child<shape_t, storage_type>;
 			#include "common.inline.h"
+
+			utils_gpu_available constexpr geometry::sdf::direction_signed_distance direction_signed_distance() const noexcept
+				{
+				const auto closest_with_signed_distance_value{closest_with_signed_distance()};
+				return geometry::sdf::direction_signed_distance::create(closest_with_signed_distance_value, point);
+				}
 			
 			virtual geometry::shape::point                            closest_point               () const noexcept { shape.shape.sdf(point).closest_point               (); }
 			virtual float                                             minimum_distance            () const noexcept { shape.shape.sdf(point).minimum_distance            (); }

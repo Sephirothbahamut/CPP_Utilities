@@ -137,6 +137,23 @@ namespace utils::math::geometry::sdf
 			const vec2f ret_direction{utils::math::lerp(a.direction, b.direction, (a.distance.value < b.distance.value) ? n : 1.f - n)};
 			return {ret_distance, ret_direction};
 			}
+
+		utils_gpu_available constexpr direction_signed_distance& merge_self(const direction_signed_distance& other) noexcept
+			{
+			*this = merge(*this, other);
+			return *this;
+			}
+		utils_gpu_available constexpr direction_signed_distance& merge_self_absolute(const direction_signed_distance& other) noexcept
+			{
+			*this = merge_absolute(*this, other);
+			return *this;
+			}
+		utils_gpu_available constexpr direction_signed_distance& merge_self_smooth(const direction_signed_distance& other, float smoothness) noexcept
+			{
+			*this = merge_smooth(*this, other, smoothness);
+			return *this;
+			}
+
 		utils_gpu_available constexpr direction_signed_distance  operator-() const noexcept { return {-distance, direction}; }//TODO should invert direction direction?
 		utils_gpu_available constexpr direction_signed_distance& operator-=(float value) noexcept { *this = *this - value; return *this; }
 		utils_gpu_available constexpr direction_signed_distance  operator-(float value) const noexcept 
