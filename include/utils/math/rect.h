@@ -153,6 +153,23 @@ namespace utils::math
 			}
 		self_t merge(const self_t& other) const noexcept { self_t tmp{*this}; return tmp.merge_self(other); }
 
+		/// <summary>
+		/// Generates a rect of type T with rounded down and up values (top-left rounded down, bottom-right rounded up) that fully encloses this rect.
+		/// If T is an unsigned type all negative coordinates will be 0.
+		/// </summary>
+		template <typename T>
+		rect<T> wrapping_round() const noexcept
+			{
+			const utils::math::rect<T> ret
+				{
+				utils::math::cast_clamp<T>(utils::math::floor(ll())),
+				utils::math::cast_clamp<T>(utils::math::floor(up())),
+				utils::math::cast_clamp<T>(utils::math::ceil (rr())),
+				utils::math::cast_clamp<T>(utils::math::ceil (dw()))
+				};
+			return ret;
+			}
+
 		utils_gpu_available const const_aware_value_type& ll() const noexcept { return (*this)[0]; }
 		utils_gpu_available       const_aware_value_type& ll()       noexcept { return (*this)[0]; }
 		utils_gpu_available const const_aware_value_type& up() const noexcept { return (*this)[1]; }
