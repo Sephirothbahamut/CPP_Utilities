@@ -45,6 +45,9 @@ namespace utils::graphics::image
 
 	void save_to_file(const utils::matrix<utils::graphics::colour::rgba_u>& image, const std::filesystem::path& path)
 		{
+		std::filesystem::path directory{path};
+		directory.remove_filename();
+		std::filesystem::create_directories(directory);
 		stbi_write_png(path.string().c_str(), static_cast<int>(image.width()), static_cast<int>(image.height()), 4, image.data(), static_cast<int>(image.width() * 4));
 		}
 	
