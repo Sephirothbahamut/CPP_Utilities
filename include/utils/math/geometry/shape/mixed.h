@@ -440,7 +440,8 @@ namespace utils::math::geometry::shape::generic
 
 			utils_gpu_available constexpr auto get_pieces() const noexcept { return pieces_view{*this}; }
 
-			#include "../sdf/common_declaration.inline.h"
+			struct sdf_proxy;
+			utils_gpu_available sdf_proxy sdf(const vec<float, 2>& point) const noexcept;
 			#include "../bounds/common_declaration.inline.h"
 		};
 	}

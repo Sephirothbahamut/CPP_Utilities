@@ -46,12 +46,14 @@ namespace utils::math::geometry::shape::generic
 			{
 			const auto distance_to_centre{vec2f::distance(shape.centre, point)};
 			const auto ret{distance_to_centre - shape.radius};
-			return ret;
+			return {ret};
 			}
 
 		utils_gpu_available constexpr geometry::sdf::closest_point_with_distance closest_with_distance() const noexcept
 			{
-			return closest_with_signed_distance().absolute();
+			const auto closest{closest_point()};
+			const auto distance{minimum_distance()};
+			return {closest, distance};
 			}
 
 		utils_gpu_available constexpr geometry::sdf::closest_point_with_signed_distance closest_with_signed_distance() const noexcept

@@ -24,7 +24,7 @@ namespace utils::math::geometry::shape::generic
 		
 		utils_gpu_available constexpr vec2f closest_point() const noexcept
 			{
-			return closest_with_distance(shape, point).closest;
+			return closest_with_distance().closest;
 			}
 
 		utils_gpu_available constexpr float minimum_distance() const noexcept

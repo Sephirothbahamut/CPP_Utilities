@@ -9,7 +9,7 @@ namespace utils::math::geometry::shape::dynamic
 
 	namespace details
 		{
-		template <utils::math::geometry::shape::concepts::shape shape_t, storage::type STORAGE_TYPE>
+		template <utils::math::geometry::shape::concepts::shape shape_t>
 		struct templated_child;
 		}
 	}

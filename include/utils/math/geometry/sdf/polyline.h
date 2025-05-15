@@ -23,7 +23,7 @@ namespace utils::math::geometry::shape::generic
 		
 		utils_gpu_available constexpr vec2f closest_point() const noexcept
 			{
-			return closest_with_distance(shape, point).closest;
+			return closest_with_distance().closest;
 			}
 
 		utils_gpu_available constexpr float minimum_distance() const noexcept
@@ -31,7 +31,7 @@ namespace utils::math::geometry::shape::generic
 			float ret{utils::math::constants::finf};
 			shape.get_edges().for_each([this, &ret](const auto& edge)
 				{
-				const auto candidate{minimum_distance(edge, point)};
+				const auto candidate{minimum_distance()};
 				ret = std::min(ret, candidate);
 				});
 			return ret;
@@ -42,7 +42,7 @@ namespace utils::math::geometry::shape::generic
 			geometry::sdf::closest_point_with_distance ret;
 			shape.get_edges().for_each([this, &ret](const auto& edge)
 				{
-				const auto candidate{closest_with_distance(edge, point)};
+				const auto candidate{closest_with_distance()};
 				ret.set_to_closest(candidate);
 				});
 			return ret;
@@ -117,15 +117,15 @@ namespace utils::math::geometry::shape::generic
 			}
 
 		utils_gpu_available constexpr geometry::sdf::side side() const noexcept
-			requires(shape.ends.is_open())
+			//requires(shape.ends.is_open())
 			{
-			return closest_with_signed_distance(shape, point).distance.side();
+			return closest_with_signed_distance().distance.side();
 			}
 
 		utils_gpu_available constexpr geometry::sdf::signed_distance signed_distance() const noexcept
-			requires(shape.ends.is_open())
+			//requires(shape.ends.is_open())
 			{
-			return closest_with_signed_distance(shape, point).distance;
+			return {closest_with_signed_distance().distance};
 			}
 		};
 	}

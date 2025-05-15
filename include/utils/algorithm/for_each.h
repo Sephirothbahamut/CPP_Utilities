@@ -163,7 +163,7 @@ namespace utils::algorithm::for_each
 				}
 			inline in_region_scale_progress_t scaled_region(const utils::math::rect<float>& value) const noexcept
 				{
-				const auto descaled_region{value.scale(1.f / floating_per_index)};
+				const auto descaled_region{value.scale(floating_per_index)};
 				const auto size_t_region{descaled_region.wrapping_round<size_t>()};
 				const auto clamped_region{clamp_region(sizes, size_t_region)};
 				return in_region_scale_progress_t{partial_progress, sizes, floating_per_index, clamped_region};
@@ -209,7 +209,7 @@ namespace utils::algorithm::for_each
 				}
 			inline in_region_scale_t scaled_region(const utils::math::rect<float>& value) const noexcept
 				{
-				const auto descaled_region{value.scale(1.f / floating_per_index)};
+				const auto descaled_region{value.scale(floating_per_index)};
 				const auto size_t_region{descaled_region.wrapping_round<size_t>()};
 				const auto clamped_region{clamp_region(sizes, size_t_region)};
 				return in_region_scale_t{sizes, floating_per_index, clamped_region};
@@ -269,7 +269,7 @@ namespace utils::algorithm::for_each
 			};
 		}
 
-	details::in_sizes_t in_sizes(const utils::math::vec2s& sizes) noexcept
+	inline details::in_sizes_t in_sizes(const utils::math::vec2s& sizes) noexcept
 		{
 		return details::in_sizes_t(sizes);
 		}

@@ -112,7 +112,8 @@ namespace utils::math::geometry::shape::generic
 			return closest_point_at<optional_ends.value()>(t); 
 			}
 
-		#include "../sdf/common_declaration.inline.h"
+		struct sdf_proxy;
+		utils_gpu_available sdf_proxy sdf(const vec<float, 2>& point) const noexcept;
 		#include "../bounds/common_declaration.inline.h"
 		#include "../transform/common_declaration.inline.h"
 		};

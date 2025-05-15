@@ -91,7 +91,7 @@ namespace utils::math
 		utils_gpu_available constexpr geometry::sdf::closest_point_with_distance closest_with_distance() const noexcept
 		#ifndef __INTELLISENSE__
 			{
-			const auto closest{closest_point(shape, point)};
+			const auto closest{closest_point()};
 			return {closest, minimum_distance()};
 			}
 		#else

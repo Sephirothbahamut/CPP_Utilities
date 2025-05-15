@@ -86,8 +86,8 @@ namespace utils::logging
 
 	partial_progress partial_progress::split_partial_progress(size_t steps_count) noexcept
 		{
-		const float split_from{from + (step *  index     )};
-		const float split_to  {to   + (step * (index + 1))};
+		const float split_from{from + (step * index)};
+		const float split_to  {to   + (step * index)};
 		return utils::logging::partial_progress{progress_bar, split_from, split_to, steps_count};
 		}
 
