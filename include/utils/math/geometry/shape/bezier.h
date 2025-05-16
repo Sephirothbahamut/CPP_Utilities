@@ -18,8 +18,14 @@ namespace utils::math::geometry::shape::generic
 		inline static constexpr auto extent       {EXTENT};
 		inline static constexpr auto optional_ends{OPTIONAL_ENDS};
 
-		using self_t       = bezier<storage_type, extent, optional_ends>;
-		using owner_self_t = bezier<storage::type::create::owner(), extent, optional_ends>;
+		using self_t                = bezier<storage_type, extent, optional_ends>;
+		using owner_self_t          = bezier<storage::type::create::owner         (), extent, optional_ends>;
+		using observer_self_t       = bezier<storage::type::create::observer      (), extent, optional_ends>;
+		using const_observer_self_t = bezier<storage::type::create::const_observer(), extent, optional_ends>;
+
+		//TODO
+		//const_observer_self_t create_observer() const noexcept { return {*this}; }
+		//      observer_self_t create_observer()       noexcept { return {*this}; }
 
 		using          utils::math::geometry::vertices_as_field<geometry::vertices<STORAGE_TYPE, EXTENT>>::vertices;
 		using typename utils::math::geometry::vertices_as_field<geometry::vertices<STORAGE_TYPE, EXTENT>>::vertices_t;
@@ -357,8 +363,9 @@ namespace utils::math::geometry::shape::generic
 			}
 
 		struct sdf_proxy;
-		utils_gpu_available sdf_proxy sdf(const vec<float, 2>& point) const noexcept;
-		#include "../bounds/common_declaration.inline.h"
+		utils_gpu_available constexpr sdf_proxy sdf(const vec<float, 2>& point) const noexcept;
+		utils_gpu_available constexpr auto bounding_box() const noexcept;
+		utils_gpu_available constexpr auto bounding_circle() const noexcept;
 		};
 	}
 

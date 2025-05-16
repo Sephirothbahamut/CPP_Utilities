@@ -24,8 +24,15 @@ namespace utils::math::geometry::shape::generic
 			inline static constexpr auto storage_type{STORAGE_TYPE};
 			inline static constexpr auto ends        {ENDS};
 
-			using self_t       = mixed<storage_type, ends>;
-			using owner_self_t = mixed<storage::type::create::owner(), ends>;
+			using self_t                = mixed<storage_type                           , ends>;
+			using owner_self_t          = mixed<storage::type::create::owner         (), ends>;
+			using observer_self_t       = mixed<storage::type::create::observer      (), ends>;
+			using const_observer_self_t = mixed<storage::type::create::const_observer(), ends>;
+
+			//TODO
+			//const_observer_self_t create_observer() const noexcept { return {*this}; }
+			//      observer_self_t create_observer()       noexcept { return {*this}; }
+
 
 			using          utils::math::geometry::vertices_as_field<geometry::ends_aware_vertices<storage_type, ends.is_closed(), std::dynamic_extent>>::vertices;
 			using typename utils::math::geometry::vertices_as_field<geometry::ends_aware_vertices<storage_type, ends.is_closed(), std::dynamic_extent>>::vertices_t;
@@ -55,15 +62,18 @@ namespace utils::math::geometry::shape::generic
 			constexpr mixed(const shape::point& first_point) noexcept { vertices.storage.emplace_back(first_point); }
 			constexpr mixed() noexcept = default;
 
-			utils_gpu_available constexpr mixed(const concepts::mixed auto& other) 
-				requires(storage_type.can_construct_from_const()) :
-				utils::math::geometry::vertices_as_field<geometry::ends_aware_vertices<STORAGE_TYPE, ENDS.is_closed(), std::dynamic_extent>>{other},
-				pieces_metadata{other.pieces_metadata} {}
-
-			utils_gpu_available constexpr mixed(concepts::mixed auto& other) 
-				requires(storage::constness_matching<self_t, decltype(other)>::compatible_constness) :
-				utils::math::geometry::vertices_as_field<geometry::ends_aware_vertices<STORAGE_TYPE, ENDS.is_closed(), std::dynamic_extent>>{other},
-				pieces_metadata{other.pieces_metadata} {}
+			//TODO
+			//utils_gpu_available constexpr mixed(const concepts::mixed auto& other) 
+			//	requires(storage_type.can_construct_from_const()) :
+			//	utils::math::geometry::vertices_as_field<geometry::ends_aware_vertices<STORAGE_TYPE, ENDS.is_closed(), std::dynamic_extent>>{other.vertices},
+			//	//pieces_metadata{other.pieces_metadata} 
+			//	{}
+			//
+			//utils_gpu_available constexpr mixed(concepts::mixed auto& other) 
+			//	requires(storage::constness_matching<self_t, decltype(other)>::compatible_constness) :
+			//	utils::math::geometry::vertices_as_field<geometry::ends_aware_vertices<STORAGE_TYPE, ENDS.is_closed(), std::dynamic_extent>>{other.vertices},
+			//	pieces_metadata{other.pieces_metadata} 
+			//	{}
 
 			auto& clear(const shape::point& first_point) noexcept
 				requires(storage_type.is_owner())
@@ -441,8 +451,9 @@ namespace utils::math::geometry::shape::generic
 			utils_gpu_available constexpr auto get_pieces() const noexcept { return pieces_view{*this}; }
 
 			struct sdf_proxy;
-			utils_gpu_available sdf_proxy sdf(const vec<float, 2>& point) const noexcept;
-			#include "../bounds/common_declaration.inline.h"
+			utils_gpu_available constexpr sdf_proxy sdf(const vec<float, 2>& point) const noexcept;
+			utils_gpu_available constexpr auto bounding_box() const noexcept;
+			utils_gpu_available constexpr auto bounding_circle() const noexcept;
 		};
 	}
 

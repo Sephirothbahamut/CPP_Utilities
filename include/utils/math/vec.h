@@ -20,8 +20,14 @@ namespace utils::math
 		using typename base_t::value_type;
 		using typename base_t::const_aware_value_type;
 		using typename base_t::template_type;
-		using self_t       = vec<value_type, extent>;
-		using owner_self_t = vec<value_type, extent>;
+
+		using self_t                = vec<T                                                                             , extent>;
+		using owner_self_t          = vec<value_type                                                                    , extent>;
+		using observer_self_t       = vec<storage::storage_type_for<value_type, storage::type::create::observer      ()>, extent>;
+		using const_observer_self_t = vec<storage::storage_type_for<value_type, storage::type::create::const_observer()>, extent>;
+		
+		const_observer_self_t create_observer() const noexcept { return {*this}; }
+		      observer_self_t create_observer()       noexcept { return {*this}; }
 
 		using utils::storage::multiple<T, SIZE, false>::multiple;
 
@@ -306,7 +312,7 @@ namespace utils::math
 		#pragma endregion 2d
 		#pragma region geometry
 			struct sdf_proxy;
-			utils_gpu_available sdf_proxy sdf(const vec<float, 2>& point) const noexcept requires(std::convertible_to<value_type, float> && extent == 2);
+			utils_gpu_available constexpr sdf_proxy sdf(const vec<float, 2>& point) const noexcept requires(std::convertible_to<value_type, float> && extent == 2);
 			utils_gpu_available constexpr auto bounding_box   ()          const noexcept requires(std::convertible_to<value_type, float> && extent == 2);
 			utils_gpu_available constexpr auto bounding_circle()          const noexcept requires(std::convertible_to<value_type, float> && extent == 2);
 

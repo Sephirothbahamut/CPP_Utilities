@@ -33,8 +33,13 @@ namespace utils::math
 		using vertex_owner    = utils::math::vec2<value_type>;
 		using vertex_observer = utils::math::vecref2<const_aware_value_type>;
 		
-		using self_t       = rect<value_type>;
-		using owner_self_t = rect<value_type>;
+		using self_t                = rect<T>;
+		using owner_self_t          = rect<value_type>;
+		using observer_self_t       = rect<storage::storage_type_for<value_type, storage::type::create::observer      ()>>;
+		using const_observer_self_t = rect<storage::storage_type_for<value_type, storage::type::create::const_observer()>>;
+		
+		const_observer_self_t create_observer() const noexcept { return {*this}; }
+		      observer_self_t create_observer()       noexcept { return {*this}; }
 
 		using utils::storage::multiple<T, 4, false>::multiple;
 
@@ -51,14 +56,14 @@ namespace utils::math
 				return {utils::math::constants::finf, utils::math::constants::finf, -utils::math::constants::finf, -utils::math::constants::finf};
 				}
 
-			template <std::convertible_to<value_type> T_oth> requires (!utils::concepts::reference<value_type>)
-			utils_gpu_available inline static constexpr self_t from_possize(utils::math::vec2<T_oth> position, utils::math::vec2<T_oth> size) { return {position.x(), position.y(), position.x() + size.x(), position.y() + size.y()}; }
+			template <std::convertible_to<value_type> T_oth, std::convertible_to<value_type> T2_oth> requires (!utils::concepts::reference<value_type>)
+			utils_gpu_available inline static constexpr self_t from_possize(utils::math::vec2<T_oth> position, utils::math::vec2<T2_oth> size) { return {position.x(), position.y(), position.x() + size.x(), position.y() + size.y()}; }
 			
-			template <std::convertible_to<value_type> T_oth>
-			utils_gpu_available inline static constexpr  self_t from_ul_dr  (utils::math::vec2<T_oth> ul, utils::math::vec2<T_oth> dr) { return {ul.x(), ul.y(), dr.x(), dr.y()}; }
+			template <std::convertible_to<value_type> T_oth, std::convertible_to<value_type> T2_oth>
+			utils_gpu_available inline static constexpr  self_t from_ul_dr  (utils::math::vec2<T_oth> ul, utils::math::vec2<T2_oth> dr) { return {ul.x(), ul.y(), dr.x(), dr.y()}; }
 
-			template <std::same_as<value_type> T_oth>
-			utils_gpu_available inline static constexpr self_t from_vertices(utils::math::vec2<T_oth>& a, utils::math::vec2<T_oth>& b)
+			template <std::convertible_to<value_type> T_oth, std::convertible_to<value_type> T2_oth>
+			utils_gpu_available inline static constexpr self_t from_vertices(utils::math::vec2<T_oth>& a, utils::math::vec2<T2_oth>& b)
 				requires (storage_type.is_observer())
 				{
 				return 
@@ -568,8 +573,9 @@ namespace utils::math
 		utils_gpu_available constexpr bool contains(const concepts::vec_size<2> auto& point) const noexcept { return point.x() >= ll() && point.x() <= rr() && point.y() >= up() && point.y() <= dw(); }
 		
 		struct sdf_proxy;
-		utils_gpu_available sdf_proxy sdf(const vec2f& point) const noexcept requires(std::same_as<value_type, float>);
-		#include "geometry/bounds/common_declaration.inline.h"
+		utils_gpu_available constexpr sdf_proxy sdf(const vec2f& point) const noexcept requires(std::same_as<value_type, float>);
+		utils_gpu_available constexpr auto bounding_box() const noexcept;
+		utils_gpu_available constexpr auto bounding_circle() const noexcept;
 		#include "geometry/transform/common_declaration.inline.h"
 		};
 	}

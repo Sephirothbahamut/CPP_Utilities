@@ -79,7 +79,6 @@ namespace utils::math::geometry
 			requires(vertices_t::storage_type.can_construct_from_const()) :
 			vertices(other) {}
 
-
 		#include "../transform/common_declaration.inline.h"
 		};
 	}

@@ -10,8 +10,13 @@ namespace utils::math::geometry::shape::generic
 		inline static constexpr auto storage_type {STORAGE_TYPE };
 		inline static constexpr auto optional_ends{OPTIONAL_ENDS};
 
-		using self_t       = ab<storage_type, optional_ends>;
-		using owner_self_t = ab<storage::type::create::owner(), optional_ends>;
+		using self_t                = ab<storage_type, optional_ends>;
+		using owner_self_t          = ab<storage::type::create::owner         (), optional_ends>;
+		using observer_self_t       = ab<storage::type::create::observer      (), optional_ends>;
+		using const_observer_self_t = ab<storage::type::create::const_observer(), optional_ends>;
+
+		const_observer_self_t create_observer() const noexcept { return {*this}; }
+		      observer_self_t create_observer()       noexcept { return {*this}; }
 
 		using vertex_t = generic::point<storage_type>;
 		template <bool is_function_const>
@@ -113,8 +118,10 @@ namespace utils::math::geometry::shape::generic
 			}
 
 		struct sdf_proxy;
-		utils_gpu_available sdf_proxy sdf(const vec<float, 2>& point) const noexcept;
-		#include "../bounds/common_declaration.inline.h"
+		utils_gpu_available constexpr sdf_proxy sdf(const vec<float, 2>& point) const noexcept;
+
+		utils_gpu_available constexpr auto bounding_box() const noexcept;
+		utils_gpu_available constexpr auto bounding_circle() const noexcept;
 		#include "../transform/common_declaration.inline.h"
 		};
 	}

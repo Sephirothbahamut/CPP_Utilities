@@ -11,6 +11,11 @@ namespace utils::math::geometry::shape::generic
 
 		using self_t       = circle<storage_type                  >;
 		using owner_self_t = circle<storage::type::create::owner()>;
+		using observer_self_t       = circle<storage::type::create::observer      ()>;
+		using const_observer_self_t = circle<storage::type::create::const_observer()>;
+		
+		const_observer_self_t create_observer() const noexcept { return {*this}; }
+		      observer_self_t create_observer()       noexcept { return {*this}; }
 
 		using vertex_t = generic::point<storage_type>;
 		using radius_t = storage::single<storage::storage_type_for<float, storage_type>>;
@@ -37,8 +42,9 @@ namespace utils::math::geometry::shape::generic
 		utils_gpu_available constexpr circle(      concepts::circle auto& other) requires(storage::constness_matching<self_t, decltype(other)>::compatible_constness) :
 			centre{other.centre}, radius{other.radius} {}
 		struct sdf_proxy;
-		utils_gpu_available sdf_proxy sdf(const vec<float, 2>& point) const noexcept;
-		#include "../bounds/common_declaration.inline.h"
+		utils_gpu_available constexpr sdf_proxy sdf(const vec<float, 2>& point) const noexcept;
+		utils_gpu_available constexpr auto bounding_box() const noexcept;
+		utils_gpu_available constexpr auto bounding_circle() const noexcept;
 		#include "../transform/common_declaration.inline.h"
 		};
 	}

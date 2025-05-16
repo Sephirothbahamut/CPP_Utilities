@@ -72,7 +72,7 @@ namespace utils::math::geometry::shape::generic
 namespace utils::math::geometry::shape::generic
 	{
 	template <storage::type storage_type>
-	circle<storage_type>::sdf_proxy circle<storage_type>::sdf(const shape::point& point) const noexcept
+	utils_gpu_available constexpr circle<storage_type>::sdf_proxy circle<storage_type>::sdf(const shape::point& point) const noexcept
 		{
 		return {*this, point};
 		}

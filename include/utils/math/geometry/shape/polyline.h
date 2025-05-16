@@ -27,8 +27,14 @@ namespace utils::math::geometry::shape::generic
 		inline static constexpr auto ends        {ENDS};
 		inline static constexpr auto extent      {EXTENT};
 
-		using self_t       = polyline<storage_type, ends, extent>;
-		using owner_self_t = polyline<storage::type::create::owner(), ends, extent>;
+		using self_t                = polyline<storage_type                           , ends, extent>;
+		using owner_self_t          = polyline<storage::type::create::owner         (), ends, extent>;
+		using observer_self_t       = polyline<storage::type::create::observer      (), ends, extent>;
+		using const_observer_self_t = polyline<storage::type::create::const_observer(), ends, extent>;
+		
+		//TODO
+		//const_observer_self_t create_observer() const noexcept { return {*this}; }
+		//      observer_self_t create_observer()       noexcept { return {*this}; }
 
 		using          utils::math::geometry::vertices_as_field<geometry::ends_aware_vertices<storage_type, ends.is_closed(), extent>>::vertices;
 		using typename utils::math::geometry::vertices_as_field<geometry::ends_aware_vertices<storage_type, ends.is_closed(), extent>>::vertices_t;
@@ -208,8 +214,9 @@ namespace utils::math::geometry::shape::generic
 		utils_gpu_available constexpr auto get_edges() noexcept { return edges_view<storage_type.is_const()>{*this}; }
 
 		struct sdf_proxy;
-		utils_gpu_available sdf_proxy sdf(const vec<float, 2>& point) const noexcept;
-		#include "../bounds/common_declaration.inline.h"
+		utils_gpu_available constexpr sdf_proxy sdf(const vec<float, 2>& point) const noexcept;
+		utils_gpu_available constexpr auto bounding_box() const noexcept;
+		utils_gpu_available constexpr auto bounding_circle() const noexcept;
 		};
 
 	template <storage::type storage_type, size_t extent>

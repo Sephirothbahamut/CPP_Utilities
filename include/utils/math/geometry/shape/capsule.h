@@ -10,8 +10,13 @@ namespace utils::math::geometry::shape::generic
 		{
 		inline static constexpr auto storage_type{STORAGE_TYPE};
 
-		using self_t       = capsule<storage_type                  >;
-		using owner_self_t = capsule<storage::type::create::owner()>;
+		using self_t                = capsule<storage_type                           >;
+		using owner_self_t          = capsule<storage::type::create::owner         ()>;
+		using observer_self_t       = capsule<storage::type::create::observer      ()>;
+		using const_observer_self_t = capsule<storage::type::create::const_observer()>;
+		
+		const_observer_self_t create_observer() const noexcept { return {*this}; }
+		      observer_self_t create_observer()       noexcept { return {*this}; }
 
 		using edge_t   = generic::segment<storage_type>;
 		using radius_t = storage::single<storage::storage_type_for<float, storage_type>>;
@@ -38,8 +43,9 @@ namespace utils::math::geometry::shape::generic
 			ab{other.ab}, radius{other.radius} {}
 
 		struct sdf_proxy;
-		utils_gpu_available sdf_proxy sdf(const vec<float, 2>& point) const noexcept;
-		#include "../bounds/common_declaration.inline.h"
+		utils_gpu_available constexpr sdf_proxy sdf(const vec<float, 2>& point) const noexcept;
+		utils_gpu_available constexpr auto bounding_box() const noexcept;
+		utils_gpu_available constexpr auto bounding_circle() const noexcept;
 		#include "../transform/common_declaration.inline.h"
 		};
 	}

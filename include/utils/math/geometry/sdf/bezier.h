@@ -240,7 +240,7 @@ namespace utils::math::geometry::shape::generic
 namespace utils::math::geometry::shape::generic
 	{
 	template<storage::type storage_type, size_t extent, geometry::ends::optional_ab optional_ends>
-	bezier<storage_type, extent, optional_ends>::sdf_proxy bezier<storage_type, extent, optional_ends>::sdf(const shape::point& point) const noexcept
+	utils_gpu_available constexpr bezier<storage_type, extent, optional_ends>::sdf_proxy bezier<storage_type, extent, optional_ends>::sdf(const shape::point& point) const noexcept
 		{
 		return {*this, point};
 		}

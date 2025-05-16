@@ -74,7 +74,7 @@ namespace utils::math::geometry::shape::generic
 namespace utils::math::geometry::shape::generic
 	{
 	template <storage::type storage_type>
-	capsule<storage_type>::sdf_proxy capsule<storage_type>::sdf(const shape::point& point) const noexcept
+	utils_gpu_available constexpr capsule<storage_type>::sdf_proxy capsule<storage_type>::sdf(const shape::point& point) const noexcept
 		{
 		return {*this, point};
 		}

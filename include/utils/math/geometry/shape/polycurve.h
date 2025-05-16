@@ -29,8 +29,13 @@ namespace utils::math::geometry::shape::generic
 		inline static constexpr auto extent              {EXTENT};
 		inline static constexpr auto piece_vertices_count{PIECE_VERTICES_COUNT};
 
-		using self_t       = polycurve<piece_t, storage_type, ends, extent>;
-		using owner_self_t = polycurve<piece_t, storage::type::create::owner(), ends, extent>;
+		using self_t                = polycurve<piece_t, storage_type                           , ends, extent>;
+		using owner_self_t          = polycurve<piece_t, storage::type::create::owner         (), ends, extent>;
+		using observer_self_t       = polycurve<piece_t, storage::type::create::observer      (), ends, extent>;
+		using const_observer_self_t = polycurve<piece_t, storage::type::create::const_observer(), ends, extent>;
+		
+		const_observer_self_t create_observer() const noexcept { return {*this}; }
+		      observer_self_t create_observer()       noexcept { return {*this}; }
 
 		using          utils::math::geometry::vertices_as_field<geometry::ends_aware_vertices<storage_type, ends.is_closed(), extent>>::vertices;
 		using typename utils::math::geometry::vertices_as_field<geometry::ends_aware_vertices<storage_type, ends.is_closed(), extent>>::vertices_t;
@@ -216,11 +221,12 @@ namespace utils::math::geometry::shape::generic
 		utils_gpu_available constexpr auto get_edges() noexcept { return pieces_view<storage_type.is_const()>{*this}; }
 
 		struct sdf_proxy;
-		utils_gpu_available sdf_proxy sdf(const vec<float, 2>& point) const noexcept;
+		utils_gpu_available constexpr sdf_proxy sdf(const vec<float, 2>& point) const noexcept;
 		#include "../bounds/common_declaration.inline.h"
 		};
 	}
 
+#ifndef __INTELLISENSE__
 static_assert(utils::math::geometry::shape::concepts::shape
 	<
 	utils::math::geometry::shape::polycurve<>
@@ -245,3 +251,4 @@ static_assert(utils::math::geometry::shape::concepts::has_vertices
 	<
 	utils::math::geometry::shape::polygon<>
 	>);
+#endif

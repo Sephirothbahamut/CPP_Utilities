@@ -54,7 +54,7 @@ namespace utils::math
 
 
 	template<typename T, size_t SIZE>
-	utils_gpu_available vec<T, SIZE>::sdf_proxy vec<T, SIZE>::sdf(const vec<float, 2>& point) const noexcept
+	utils_gpu_available constexpr vec<T, SIZE>::sdf_proxy vec<T, SIZE>::sdf(const vec<float, 2>& point) const noexcept
 		requires(std::convertible_to<value_type, float> && extent == 2)
 		{
 		static_assert(std::same_as<value_type, float> && SIZE == 2);

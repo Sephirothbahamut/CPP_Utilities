@@ -137,7 +137,7 @@ namespace utils::math
 namespace utils::math
 	{
 	template <typename T>
-	utils_gpu_available rect<T>::sdf_proxy rect<T>::sdf(const vec2f& point) const noexcept 
+	utils_gpu_available constexpr rect<T>::sdf_proxy rect<T>::sdf(const vec2f& point) const noexcept 
 		requires(std::same_as<value_type, float>)
 		{
 		return {*this, point};
