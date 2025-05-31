@@ -87,6 +87,8 @@ namespace utils::logging
 						ss << name << ", duration: " << std::format("{:%T}", delta_time);
 						logger_ptr->push(value_type::section_leave(ss.str(), logger_ptr->indents_count));
 						};
+
+					operator bool() const noexcept { return true; }
 				};
 		public:
 			[[nodiscard]] section_marker section(const std::string& name) noexcept

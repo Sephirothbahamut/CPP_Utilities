@@ -10,6 +10,7 @@
 #include "../flags.h"
 #include "../math/vec.h"
 #include "../math/rect.h"
+#include "../math/geometry/transform/aabb.h"
 #include "../math/math.h"
 #include "../logging/progress_bar.h"
 

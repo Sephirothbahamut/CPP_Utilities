@@ -178,9 +178,16 @@ namespace utils::containers
 
 							if (fab_index == lbe_index)
 								{
-								if (!extend_lbb)
+								if (lbb_is_valid)
 									{
-									inner_add(lbb_index + 1, fill_region.begin, new_value);
+									if (!extend_lbb)
+										{
+										inner_add(lbb_index + 1, fill_region.begin, new_value);
+										}
+									}
+								else
+									{
+									inner_add(0, fill_region.begin, new_value);
 									}
 								return;
 								}
