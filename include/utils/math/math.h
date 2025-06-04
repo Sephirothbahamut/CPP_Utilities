@@ -61,6 +61,12 @@ namespace utils::math
 		return (a != 0 && x / a != b);
 		}
 
+	template <std::unsigned_integral T>
+	utils_gpu_available constexpr bool will_overflow_sum(T a, T b) noexcept
+		{
+		return a > std::numeric_limits<T>::max() - b;
+		}
+
 	template <typename T, typename oth_t>
 	utils_gpu_available constexpr T lerp(T a, oth_t b, float t) noexcept { return (a * (1.f - t)) + (b * t); }
 

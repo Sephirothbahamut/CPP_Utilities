@@ -46,6 +46,29 @@ namespace utils::aggregate
 				}
 			});
 		}
+
+	/// <summary>
+	/// Example usage of aggregate::apply.
+	/// Given an aggregate of optionals, return a non-optional aggregate where fields that were nullopt/nullptr/whatever are replaced with values from a default values aggregate.
+	/// </summary>
+	/// <typeparam name="aggregate_accessors"></typeparam>
+	/// <typeparam name="aggregate_t"></typeparam>
+	/// <typeparam name="aggregate_optionals_t">Aggregate containing std::optional<T>, utils::observer_ptr<T>, anything with an "operator bool()" and "const T& operator*()"</typeparam>
+	/// <param name="aggregate_of_optionals">The input aggregate from which to take all the "valid" values.</param>
+	/// <param name="default_values_aggregate">Values that are invalid from the aggregate of optionals are taken from this aggregate instead.</param>
+	/// <returns>A non optional aggregate</returns>
+	template <typename aggregate_accessors, typename aggregate_t, typename aggregate_optionals_t>
+	aggregate_t apply_defaults_to_optionals(const aggregate_optionals_t& aggregate_of_optionals, const aggregate_t& default_values_aggregate) noexcept
+		{
+		aggregate_t ret;
+
+		aggregate::apply<accessors_helper>([](const auto& field_opt, const auto& field_default, auto& field_return)
+			{
+			field_return = field_opt ? (*field_opt) : field_default;
+			}, aggregate_of_optionals, default_values_aggregate, ret);
+
+		return ret;
+		}
 	}
 
 
