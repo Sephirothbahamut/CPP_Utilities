@@ -53,11 +53,14 @@ namespace utils::containers
 		public:
 			using value_type = T;
 
+			template <bool IS_CONST>
 			struct read_slot
 				{
+				inline static constexpr const bool is_const{IS_CONST};
+
 				using value_type = regions::value_type;
 				const region region;
-				const value_type& value;
+				std::conditional_t<is_const, const value_type&, value_type&> value;
 				};
 
 		private:
@@ -106,6 +109,118 @@ namespace utils::containers
 				{
 				}
 
+
+
+
+
+
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////// Iterators begin //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+			template <bool IS_CONST>
+			class forward_iterator
+				{
+				private:
+					inline static constexpr const bool is_const{IS_CONST};
+					friend class regions;
+
+					using difference_type = std::ptrdiff_t;
+					using value_type = regions::value_type;
+					using inner_iterator_t = std::conditional_t<is_const, typename inner_slots_t::const_iterator, typename inner_slots_t::iterator>;
+
+					size_t begin{0};
+					inner_iterator_t inner_it;
+
+					forward_iterator(size_t begin, inner_iterator_t inner_it) :
+						begin   {begin   },
+						inner_it{inner_it}
+						{
+						}
+
+				public:
+					forward_iterator<is_const>& operator++() noexcept
+						{
+						begin = inner_it->end;
+						++inner_it;
+						return *this;
+						}
+					forward_iterator<is_const> operator++(int) noexcept
+						{
+						auto tmp{*this};
+						++(*this);
+						return tmp;
+						}
+
+					bool operator==(const forward_iterator<is_const>& other) const noexcept
+						{
+						return inner_it == other.inner_it;
+						}
+
+					const read_slot<true> operator*() const noexcept
+						{
+						const read_slot<is_const> ret
+							{
+							.region{region()},
+							.value {value()}
+							};
+						return ret;
+						}
+					read_slot<false> operator*() noexcept
+						requires(!is_const)
+						{
+						const read_slot<is_const> ret
+							{
+							.region{region()},
+							.value {value()}
+							};
+						return ret;
+						}
+
+					const value_type& value() const noexcept                     { return inner_it->value; }
+					      value_type& value()       noexcept requires(!is_const) { return inner_it->value; }
+
+					const region region() const noexcept
+						{
+						const auto ret{utils::containers::region::create::from_to(begin, inner_it->end)};
+						return ret;
+						}
+
+					bool is_end() const noexcept 
+						{
+						const bool ret{begin == std::numeric_limits<size_t>::max()};
+						return ret;
+						}
+				};
+
+			forward_iterator<true> begin() const noexcept
+				{
+				const forward_iterator<true> ret
+					{
+					static_cast<size_t>(0),
+					inner_slots.begin()
+					};
+				return ret;
+				}
+			forward_iterator<true> end() const noexcept
+				{
+				const forward_iterator<true> ret
+					{
+					std::numeric_limits<size_t>::max(),
+					inner_slots.end()
+					};
+				return ret;
+				}
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////// Iterators end ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////// Views begin //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
 			class slot_index_view_t
 				{
 				public:
@@ -148,9 +263,9 @@ namespace utils::containers
 									}
 								}
 
-							read_slot slot() const noexcept
+							read_slot<true> slot() const noexcept
 								{
-								const read_slot ret
+								const read_slot<true> ret
 									{
 									.region{region()},
 									.value {value ()}
@@ -183,6 +298,9 @@ namespace utils::containers
 					size_t size() const noexcept { return _regions.inner_slots.size(); }
 					/// <summary> Will never be empty, there's at least one slot.</summary>
 					bool empty() const noexcept { return false; }
+
+					forward_iterator<true> begin() const noexcept { return _regions.begin(); }
+					forward_iterator<true> end  () const noexcept { return _regions.end  (); }
 
 				private:
 					const regions<value_type>& _regions;
@@ -226,7 +344,7 @@ namespace utils::containers
 								return _regions.slot_index_view().at(slot_index()).region();
 								}
 
-							read_slot slot() const noexcept
+							read_slot<true> slot() const noexcept
 								{
 								return _regions.slot_index_view().at(slot_index()).slot();
 								}
@@ -267,6 +385,132 @@ namespace utils::containers
 				{
 				return elements_index_view().at(index);
 				}
+
+
+			/// <summary> 
+			/// Unsafe APIs allow you to access slot's value (via both accessors and iterators) as non-constant.
+			/// Modifying those values without making sure that no two consecutive slots hold the same values is UB. 
+			/// Unsupported. I don't deal with it. Sorry not sorry. If you do it, it's on you.
+			/// </summary>
+			class unsafe_slot_view_t
+				{
+				public:
+					unsafe_slot_view_t(regions<value_type>& regions) : _regions{regions} {}
+
+					class at_t
+						{
+						friend class slot_index_view_t;
+						public:
+							value_type& value() noexcept
+								{
+								return _regions.inner_slots[_index].value;
+								}
+							size_t region_begin()  noexcept
+								{
+								if (_index == 0) { return 0; }
+								return _regions.inner_slots[_index - 1].end;
+								}
+							size_t region_end() const noexcept
+								{
+								return _regions.inner_slots[_index].end;
+								}
+							containers::region region() const noexcept
+								{
+								const inner_slot_t& inner_slot{_regions.inner_slots[_index]};
+								if (_index == 0)
+									{
+									const containers::region ret
+										{
+										.begin{0},
+										.count{inner_slot.end}
+										};
+									return ret;
+									}
+								else
+									{
+									const inner_slot_t& previous_inner_slot{_regions.inner_slots[_index - 1]};
+									const containers::region ret{region::create::from_to(previous_inner_slot.end, inner_slot.end)};
+									return ret;
+									}
+								}
+
+							read_slot<false> slot() noexcept
+								{
+								const read_slot<false> ret
+									{
+									.region{region()},
+									.value {value ()}
+									};
+								return ret;
+								}
+
+						private:
+							at_t(size_t index, regions<value_type>& regions) : _index{index}, _regions{regions} {}
+							size_t _index;
+							regions<value_type>& _regions;
+						};
+
+					at_t at(const size_t& index) const noexcept 
+						{
+						if (index >= _regions.inner_slots.size())
+							{
+							throw std::out_of_range{"Regions access out of bounds."};
+							}
+						return {index, _regions}; 
+						}
+					at_t operator[](const size_t& index) const noexcept
+						{
+						#ifdef utils_is_debug
+						return at(index);
+						#endif
+						return {index, _regions};
+						}
+
+					size_t size() const noexcept { return _regions.inner_slots.size(); }
+					/// <summary> Will never be empty, there's at least one slot.</summary>
+					bool empty() const noexcept { return false; }
+
+					forward_iterator<false> begin() noexcept 
+						{
+						const forward_iterator<false> ret
+							{
+							static_cast<size_t>(0),
+							_regions.inner_slots.begin()
+							};
+						return ret;
+						}
+					forward_iterator<false> end() noexcept 
+						{
+						const forward_iterator<false> ret
+							{
+							std::numeric_limits<size_t>::max(),
+							_regions.inner_slots.end()
+							};
+						return ret;
+						}
+
+				private:
+					regions<value_type>& _regions;
+				};
+			friend class unsafe_slot_view_t;
+			/// <summary> 
+			/// Unsafe APIs allow you to access slot's value (via both accessors and iterators) as non-constant.
+			/// Modifying those values without making sure that no two consecutive slots hold the same values is UB. 
+			/// Unsupported. I don't deal with it. Sorry not sorry. If you do it, it's on you.
+			/// </summary>
+			unsafe_slot_view_t unsafe_slots_index_view() const noexcept { return {*this}; }
+			/// <summary> 
+			/// Unsafe APIs allow you to access slot's value (via both accessors and iterators) as non-constant.
+			/// Modifying those values without making sure that no two consecutive slots hold the same values is UB. 
+			/// Unsupported. I don't deal with it. Sorry not sorry. If you do it, it's on you.
+			/// </summary>
+			unsafe_slot_view_t::at_t unsafe_at_slot_index(const size_t& index) const noexcept
+				{
+				return unsafe_slots_index_view().at(index);
+				}
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////// Views end ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 			std::vector<size_t> split_indices() const noexcept
 				{
@@ -426,85 +670,7 @@ namespace utils::containers
 					}
 				}
 	
-			class const_forward_iterator
-				{
-				private:
-					friend class regions;
-
-					using difference_type = std::ptrdiff_t;
-					using value_type = regions::value_type;
-
-					size_t begin{0};
-					inner_slots_t::const_iterator inner_it;
-
-					const_forward_iterator(size_t begin, inner_slots_t::const_iterator inner_it) :
-						begin   {begin   },
-						inner_it{inner_it}
-						{
-						}
-
-				public:
-					const_forward_iterator& operator++() noexcept
-						{
-						begin = inner_it->end;
-						++inner_it;
-						return *this;
-						}
-					const_forward_iterator operator++(int) noexcept
-						{
-						auto tmp{*this};
-						++(*this);
-						return tmp;
-						}
-
-					bool operator==(const const_forward_iterator& other) const noexcept
-						{
-						return inner_it == other.inner_it;
-						}
-
-					const read_slot operator*() const noexcept 
-						{
-						const read_slot ret
-							{
-							.region{region()},
-							.value {value ()}
-							};
-						return ret; 
-						}
-
-					const value_type& value() const noexcept { return inner_it->value; }
-
-					const region region() const noexcept
-						{
-						const auto ret{utils::containers::region::create::from_to(begin, inner_it->end)};
-						return ret;
-						}
-
-					bool is_end() const noexcept 
-						{
-						const bool ret{begin == std::numeric_limits<size_t>::max()};
-						return ret;
-						}
-				};
-
-			const_forward_iterator begin() const noexcept
-				{
-				const const_forward_iterator ret
-					{
-					static_cast<size_t>(0),
-					inner_slots.begin()
-					};
-				return ret;
-				}
-			const_forward_iterator end() const noexcept
-				{
-				const const_forward_iterator ret
-					{
-					std::numeric_limits<size_t>::max(),
-					inner_slots.end()
-					};
-				return ret;
-				}
+			
 		};
 	}
 
