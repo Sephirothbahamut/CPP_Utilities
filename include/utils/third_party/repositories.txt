@@ -1,0 +1,6 @@
+https://github.com/Neargye/magic_enum
+https://github.com/JCash/voronoi
+https://github.com/nothings/stb
+https://github.com/yhirose/cpp-unicodelib
+https://github.com/cameron314/concurrentqueue
+https://github.com/nemtrif/utfcpp/tree/master
