@@ -33,7 +33,7 @@ namespace utils::containers
 
 			aggregate::apply<accessors_helper>([index](const auto& field_regions, auto& field_return)
 				{
-				const auto value{field_regions.value_at(index)};
+				const auto value{field_regions.at_element_index(index).value()};
 				field_return = value;
 				}, regions_per_field, ret);
 

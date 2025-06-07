@@ -109,7 +109,24 @@ namespace utils::containers
 				{
 				}
 
-
+			void reset(const value_type& starting_value) noexcept
+				{
+				inner_slots.clear();
+				inner_slots.emplace_back(inner_slot_t
+					{
+					.value{starting_value},
+					.end{std::numeric_limits<size_t>::max()}
+					});
+				}
+			void reset() noexcept
+				{
+				inner_slots.clear();
+				inner_slots.emplace_back(inner_slot_t
+					{
+					.value{},
+					.end{std::numeric_limits<size_t>::max()}
+					});
+				}
 
 
 
@@ -279,7 +296,7 @@ namespace utils::containers
 							const regions<value_type>& _regions;
 						};
 
-					at_t at(const size_t& index) const noexcept 
+					at_t at(const size_t& index) const 
 						{
 						if (index >= _regions.inner_slots.size())
 							{
@@ -355,7 +372,7 @@ namespace utils::containers
 							const regions<value_type>& _regions;
 						};
 
-					at_t at(const size_t& index) const noexcept
+					at_t at(const size_t& index) const
 						{
 						if (index == std::numeric_limits<size_t>::max())
 							{
@@ -498,13 +515,13 @@ namespace utils::containers
 			/// Modifying those values without making sure that no two consecutive slots hold the same values is UB. 
 			/// Unsupported. I don't deal with it. Sorry not sorry. If you do it, it's on you.
 			/// </summary>
-			unsafe_slot_view_t unsafe_slots_index_view() const noexcept { return {*this}; }
+			unsafe_slot_view_t unsafe_slots_index_view() noexcept { return {*this}; }
 			/// <summary> 
 			/// Unsafe APIs allow you to access slot's value (via both accessors and iterators) as non-constant.
 			/// Modifying those values without making sure that no two consecutive slots hold the same values is UB. 
 			/// Unsupported. I don't deal with it. Sorry not sorry. If you do it, it's on you.
 			/// </summary>
-			unsafe_slot_view_t::at_t unsafe_at_slot_index(const size_t& index) const noexcept
+			unsafe_slot_view_t::at_t unsafe_at_slot_index(const size_t& index) noexcept
 				{
 				return unsafe_slots_index_view().at(index);
 				}
@@ -514,14 +531,16 @@ namespace utils::containers
 
 			std::vector<size_t> split_indices() const noexcept
 				{
-				std::vector<size_t> ret; ret.reserve(inner_slots.size() - 1);
+				std::vector<size_t> ret; 
+				ret.reserve(inner_slots.size() - 1);
 
-				typename inner_slots_t::iterator it{inner_slots.begin()};
+				typename inner_slots_t::const_iterator it{inner_slots.cbegin()};
 				while (it->end != std::numeric_limits<size_t>::max())
 					{
 					ret.emplace_back(it->end);
 					it++;
 					}
+				return ret;
 				}
 			std::vector<value_type> values() const noexcept
 				{
