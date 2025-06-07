@@ -15,13 +15,11 @@ namespace utils::console
 	{
 	initializer::initializer() noexcept
 		{
-		if constexpr (utils::compilation::os == utils::compilation::os_t::Windows)
-			{
-			#ifdef utils_compilation_os_windows
-			//	{
-			SetConsoleMode(GetStdHandle(STD_OUTPUT_HANDLE), ENABLE_VIRTUAL_TERMINAL_INPUT);
-			//	}
-			#endif
-			}
+		#ifdef utils_compilation_os_windows
+		const auto hConsole = GetStdHandle(STD_OUTPUT_HANDLE);
+		DWORD mode;
+		GetConsoleMode(hConsole, &mode);
+		SetConsoleMode(hConsole, mode | ENABLE_VIRTUAL_TERMINAL_PROCESSING);
+		#endif
 		}
 	}
