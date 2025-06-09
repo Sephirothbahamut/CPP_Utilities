@@ -61,7 +61,7 @@ namespace utils::string
 			{
 			return in;
 			}
-		else if constexpr (sizeof(from_chat_t) == sizeof(to_char_t))
+		else if constexpr (sizeof(from_char_t) == sizeof(to_char_t))
 			{
 			const std::basic_string<to_char_t> ret{reinterpret_cast<const to_char_t*>(in.c_str())};
 			return ret;

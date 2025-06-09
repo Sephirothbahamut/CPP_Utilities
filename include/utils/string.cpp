@@ -2,7 +2,7 @@
 #include "compilation/OS.h"
 #include "third_party/utf8.h"
 
-namespace barnack::string
+namespace utils::string
 	{
 	template <typename to_char_t, typename from_char_t>
 	constexpr std::basic_string<to_char_t> cast(const std::basic_string_view<from_char_t>& in)
@@ -11,7 +11,7 @@ namespace barnack::string
 			{
 			return std::basic_string<to_char_t>{in};
 			}
-		else if constexpr (sizeof(from_chat_t) == sizeof(to_char_t))
+		else if constexpr (sizeof(from_char_t) == sizeof(to_char_t))
 			{
 			std::basic_string<from_char_t> in_string_own{in};
 			return cast<to_char_t, from_char_t>(in_string_own);

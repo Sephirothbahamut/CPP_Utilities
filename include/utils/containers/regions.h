@@ -12,6 +12,7 @@
 #include "../optional.h"
 #include "../compilation/gpu.h"
 #include "../oop/disable_move_copy.h"
+#include "../math/math.h"
 
 #include "../details/warnings_pre.inline.h"
 
