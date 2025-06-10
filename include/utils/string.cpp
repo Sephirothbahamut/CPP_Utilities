@@ -2,10 +2,12 @@
 #include "compilation/OS.h"
 #include "third_party/utf8.h"
 
+#include <sstream>
+
 namespace utils::string
 	{
 	template <typename to_char_t, typename from_char_t>
-	constexpr std::basic_string<to_char_t> cast(const std::basic_string_view<from_char_t>& in)
+	constexpr std::basic_string<to_char_t> cast(const std::basic_string_view<from_char_t> in)
 		{
 		if constexpr (std::same_as<from_char_t, to_char_t>)
 			{
@@ -53,35 +55,77 @@ namespace utils::string
 		return ret;
 		}
 	
-	template std::basic_string<char    > cast<char    , char    >(const std::basic_string_view<char    >& in);
-	template std::basic_string<char8_t > cast<char8_t , char8_t >(const std::basic_string_view<char8_t >& in);
-	template std::basic_string<char16_t> cast<char16_t, char16_t>(const std::basic_string_view<char16_t>& in);
-	template std::basic_string<char32_t> cast<char32_t, char32_t>(const std::basic_string_view<char32_t>& in);
-	template std::basic_string<wchar_t > cast<wchar_t , wchar_t >(const std::basic_string_view<wchar_t >& in);
+	template std::basic_string<char    > cast<char    , char    >(const std::basic_string_view<char    > in);
+	template std::basic_string<char8_t > cast<char8_t , char8_t >(const std::basic_string_view<char8_t > in);
+	template std::basic_string<char16_t> cast<char16_t, char16_t>(const std::basic_string_view<char16_t> in);
+	template std::basic_string<char32_t> cast<char32_t, char32_t>(const std::basic_string_view<char32_t> in);
+	template std::basic_string<wchar_t > cast<wchar_t , wchar_t >(const std::basic_string_view<wchar_t > in);
 
 	//TODO is there any standard macro to check the size of wchar_t?
 	#ifdef utils_compilation_os_windows
-	template std::basic_string<char16_t> cast<char16_t, wchar_t >(const std::basic_string_view<wchar_t >& in);
-	template std::basic_string<wchar_t > cast<wchar_t , char16_t>(const std::basic_string_view<char16_t>& in);
+	template std::basic_string<char16_t> cast<char16_t, wchar_t >(const std::basic_string_view<wchar_t > in);
+	template std::basic_string<wchar_t > cast<wchar_t , char16_t>(const std::basic_string_view<char16_t> in);
 	#else
-	template std::basic_string<char32_t> cast<char32_t, wchar_t >(const std::basic_string_view<wchar_t >& in);
-	template std::basic_string<wchar_t > cast<wchar_t , char32_t>(const std::basic_string_view<char32_t>& in);
+	template std::basic_string<char32_t> cast<char32_t, wchar_t >(const std::basic_string_view<wchar_t > in);
+	template std::basic_string<wchar_t > cast<wchar_t , char32_t>(const std::basic_string_view<char32_t> in);
 	#endif
 
 
-	template std::basic_string<char    > cast<char    , char16_t>(const std::basic_string_view<char16_t>& in);
-	template std::basic_string<char8_t > cast<char8_t , char16_t>(const std::basic_string_view<char16_t>& in);
-	template std::basic_string<char    > cast<char    , char32_t>(const std::basic_string_view<char32_t>& in);
-	template std::basic_string<char8_t > cast<char8_t , char32_t>(const std::basic_string_view<char32_t>& in);
-	template std::basic_string<char    > cast<char    , wchar_t >(const std::basic_string_view<wchar_t >& in);
-	template std::basic_string<char8_t > cast<char8_t , wchar_t >(const std::basic_string_view<wchar_t >& in);
+	template std::basic_string<char    > cast<char    , char16_t>(const std::basic_string_view<char16_t> in);
+	template std::basic_string<char8_t > cast<char8_t , char16_t>(const std::basic_string_view<char16_t> in);
+	template std::basic_string<char    > cast<char    , char32_t>(const std::basic_string_view<char32_t> in);
+	template std::basic_string<char8_t > cast<char8_t , char32_t>(const std::basic_string_view<char32_t> in);
+	template std::basic_string<char    > cast<char    , wchar_t >(const std::basic_string_view<wchar_t > in);
+	template std::basic_string<char8_t > cast<char8_t , wchar_t >(const std::basic_string_view<wchar_t > in);
 	
-	template std::basic_string<char16_t> cast<char16_t, char    >(const std::basic_string_view<char    >& in);
-	template std::basic_string<char16_t> cast<char16_t, char8_t >(const std::basic_string_view<char8_t >& in);
-	template std::basic_string<char32_t> cast<char32_t, char    >(const std::basic_string_view<char    >& in);
-	template std::basic_string<char32_t> cast<char32_t, char8_t >(const std::basic_string_view<char8_t >& in);
-	template std::basic_string<wchar_t > cast<wchar_t , char    >(const std::basic_string_view<char    >& in);
-	template std::basic_string<wchar_t > cast<wchar_t , char8_t >(const std::basic_string_view<char8_t >& in);
+	template std::basic_string<char16_t> cast<char16_t, char    >(const std::basic_string_view<char    > in);
+	template std::basic_string<char16_t> cast<char16_t, char8_t >(const std::basic_string_view<char8_t > in);
+	template std::basic_string<char32_t> cast<char32_t, char    >(const std::basic_string_view<char    > in);
+	template std::basic_string<char32_t> cast<char32_t, char8_t >(const std::basic_string_view<char8_t > in);
+	template std::basic_string<wchar_t > cast<wchar_t , char    >(const std::basic_string_view<char    > in);
+	template std::basic_string<wchar_t > cast<wchar_t , char8_t >(const std::basic_string_view<char8_t > in);
+
+	template <typename from_char_t>
+	constexpr char32_t parse_codepoint(const std::basic_string_view<from_char_t> in)
+		{
+		std::basic_stringstream<from_char_t> ss;
+		ss << std::hex << in;
+		std::uint32_t codepoint_value;
+		ss >> codepoint_value;
+
+		const char32_t codepoint{static_cast<char32_t>(codepoint_value)};
+		return codepoint;
+		}
+
+	template char32_t parse_codepoint<char    >(const std::basic_string_view<char    > in);
+	template char32_t parse_codepoint<char8_t >(const std::basic_string_view<char8_t > in);
+	template char32_t parse_codepoint<char16_t>(const std::basic_string_view<char16_t> in);
+	template char32_t parse_codepoint<char32_t>(const std::basic_string_view<char32_t> in);
+	template char32_t parse_codepoint<wchar_t >(const std::basic_string_view<wchar_t > in);
+
+
+	template <typename to_char_t>
+	constexpr std::basic_string<to_char_t> codepoint_to_string(const char32_t& codepoint)
+		{
+		constexpr bool input_is_utf8  {std::same_as<from_char_t, char8_t > ||                   std::same_as<from_char_t, char   >};
+		constexpr bool input_is_utf16 {std::same_as<from_char_t, char16_t> || (wchar_is_utf16 ? std::same_as<from_char_t, wchar_t> : false)};
+		constexpr bool input_is_utf32 {std::same_as<from_char_t, char32_t> || (wchar_is_utf32 ? std::same_as<from_char_t, wchar_t> : false)};
+
+		if constexpr (input_is_utf8)
+			{
+			std::basic_string<to_char_t> ret;
+			utf8::append(codepoint, ret);
+			}
+		else if constexpr (input_is_utf16)
+			{
+			std::basic_string<to_char_t> ret;
+			utf8::append16(codepoint, ret);
+			}
+		else if constexpr (input_is_utf32)
+			{
+			return {codepoint};
+			}
+		}
 	}
 
 

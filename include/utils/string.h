@@ -45,7 +45,7 @@ namespace utils::string
 	/// Can also convert wchar_t strings to their char16/32_t counterpart. This conversion is UGLY (reinterpret cast warning). But Marineshi said it's fine. :) 
 	/// </summary>
 	template <typename to_char_t, typename from_char_t>
-	constexpr std::basic_string<to_char_t> cast(const std::basic_string_view<from_char_t>& in);
+	constexpr std::basic_string<to_char_t> cast(const std::basic_string_view<from_char_t> in);
 
 	/// <summary>
 	/// Converts strings from utf8 to utf16 or utf32 and from utf16 or utf32 to utf8.
@@ -84,6 +84,17 @@ namespace utils::string
 		{
 		return cast<to_char_t, from_char_t>(std::basic_string_view<from_char_t>{in});
 		}
+
+
+	/// <summary>
+	/// Parses a string representing a codepoint as hex values.
+	/// The values you usually see in escaped sequences (the "1F604" part of "\u1F604")
+	/// </summary>
+	template <typename from_char_t>
+	constexpr char32_t parse_codepoint(const std::basic_string_view<from_char_t> in);
+
+	template <typename to_char_t>
+	constexpr std::basic_string<to_char_t> codepoint_to_string(const char32_t& codepoint);
 	}
 
 #ifdef utils_implementation
