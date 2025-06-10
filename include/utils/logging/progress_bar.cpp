@@ -49,18 +49,20 @@ namespace utils::logging
 		ss << utils::console::colour::restore_defaults << "[";
 		for (size_t i{0}; i < bar_width; i++)
 			{
-			const float index_percent{static_cast<float>(i) / static_cast<float>(bar_width)};
 
 			if (i < bar_current_index)
 				{
+				const float index_percent{static_cast<float>(i) / static_cast<float>(bar_width)};
 				const uint8_t r{static_cast<uint8_t>(std::pow((1.f - index_percent), 1.f / 2.2f) * 127.f)};
-				const uint8_t g{static_cast<uint8_t>(std::pow(index_percent , 1.f / 2.2f) * 127.f)};
-				//const uint8_t r{static_cast<uint8_t>((1.f - percent) * 127.f)};
-				//const uint8_t g{static_cast<uint8_t>(       percent  * 127.f)};
+				const uint8_t g{static_cast<uint8_t>(std::pow(       index_percent , 1.f / 2.2f) * 127.f)};
 
 				ss << utils::console::colour::background{utils::graphics::colour::rgb_u{r, g, uint8_t{0}}};
 				}
 			else if (i == bar_current_index)
+				{
+				ss << utils::console::colour::background{utils::graphics::colour::rgb_u{uint8_t{50}, uint8_t{50}, uint8_t{255}}};
+				}
+			else //if (i > bar_current_index)
 				{
 				ss << utils::console::colour::background{utils::graphics::colour::rgb_u{uint8_t{50}, uint8_t{50}, uint8_t{50}}};
 				}

@@ -20,6 +20,8 @@ namespace utils::console
 		DWORD mode;
 		GetConsoleMode(hConsole, &mode);
 		SetConsoleMode(hConsole, mode | ENABLE_VIRTUAL_TERMINAL_PROCESSING);
+
+		SetConsoleOutputCP(65001); //utf-8 console
 		#endif
 		}
 	}

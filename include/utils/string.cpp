@@ -2,10 +2,29 @@
 #include "compilation/OS.h"
 #include "third_party/utf8.h"
 
+#include "memory.h"
+
 #include <sstream>
 
 namespace utils::string
 	{
+	namespace details
+		{
+		template <typename char_t>
+		struct utf_check
+			{
+			//Tell me what platform would even be this crazy...
+			// constexpr bool wchar_is_utf8 {sizeof(wchar_t) == sizeof(char8_t )};
+			inline static constexpr const bool wchar_is_utf16{sizeof(wchar_t) == sizeof(char16_t)};
+			inline static constexpr const bool wchar_is_utf32{sizeof(wchar_t) == sizeof(char32_t)};
+		
+			inline static constexpr const bool utf8 {std::same_as<char_t, char8_t > ||                   std::same_as<char_t, char   >};
+			inline static constexpr const bool utf16{std::same_as<char_t, char16_t> || (wchar_is_utf16 ? std::same_as<char_t, wchar_t> : false)};
+			inline static constexpr const bool utf32{std::same_as<char_t, char32_t> || (wchar_is_utf32 ? std::same_as<char_t, wchar_t> : false)};
+			};
+		}
+
+
 	template <typename to_char_t, typename from_char_t>
 	constexpr std::basic_string<to_char_t> cast(const std::basic_string_view<from_char_t> in)
 		{
@@ -23,32 +42,22 @@ namespace utils::string
 
 		std::basic_string<to_char_t> ret;
 
-		//Tell me what platform would even be this crazy...
-		// constexpr bool wchar_is_utf8 {sizeof(wchar_t) == sizeof(char8_t )};
-		constexpr bool wchar_is_utf16{sizeof(wchar_t) == sizeof(char16_t)};
-		constexpr bool wchar_is_utf32{sizeof(wchar_t) == sizeof(char32_t)};
-
-		constexpr bool input_is_utf8  {std::same_as<from_char_t, char8_t > ||                   std::same_as<from_char_t, char   >};
-		constexpr bool input_is_utf16 {std::same_as<from_char_t, char16_t> || (wchar_is_utf16 ? std::same_as<from_char_t, wchar_t> : false)};
-		constexpr bool input_is_utf32 {std::same_as<from_char_t, char32_t> || (wchar_is_utf32 ? std::same_as<from_char_t, wchar_t> : false)};
+		using input_utf  = details::utf_check<from_char_t>;
+		using output_utf = details::utf_check<  to_char_t>;
 		
-		constexpr bool output_is_utf8 {std::same_as<  to_char_t, char8_t > ||                   std::same_as<  to_char_t, char   >};
-		constexpr bool output_is_utf16{std::same_as<  to_char_t, char16_t> || (wchar_is_utf16 ? std::same_as<  to_char_t, wchar_t> : false)};
-		constexpr bool output_is_utf32{std::same_as<  to_char_t, char32_t> || (wchar_is_utf32 ? std::same_as<  to_char_t, wchar_t> : false)};
-
-		if constexpr (input_is_utf8 && output_is_utf16)
+		if constexpr (input_utf::utf8 && output_utf::utf16)
 			{
 			utf8::utf8to16(in.begin(), in.end(), std::back_inserter(ret));
 			}
-		else if constexpr (input_is_utf16 && output_is_utf8)
+		else if constexpr (input_utf::utf16 && output_utf::utf8)
 			{
 			utf8::utf16to8(in.begin(), in.end(), std::back_inserter(ret));
 			}
-		else if constexpr (input_is_utf8 && output_is_utf32)
+		else if constexpr (input_utf::utf8 && output_utf::utf32)
 			{
 			utf8::utf8to32(in.begin(), in.end(), std::back_inserter(ret));
 			}
-		else if constexpr (input_is_utf32 && output_is_utf8)
+		else if constexpr (input_utf::utf32 && output_utf::utf8)
 			{
 			utf8::utf32to8(in.begin(), in.end(), std::back_inserter(ret));
 			}
@@ -88,13 +97,21 @@ namespace utils::string
 	template <typename from_char_t>
 	constexpr char32_t parse_codepoint(const std::basic_string_view<from_char_t> in)
 		{
-		std::basic_stringstream<from_char_t> ss;
-		ss << std::hex << in;
-		std::uint32_t codepoint_value;
-		ss >> codepoint_value;
+		if constexpr (std::same_as<from_char_t, char>)
+			{
+			std::basic_stringstream<from_char_t> ss;
+			ss << std::hex << in;
+			std::uint32_t codepoint_value;
+			ss >> codepoint_value;
 
-		const char32_t codepoint{static_cast<char32_t>(codepoint_value)};
-		return codepoint;
+			const char32_t codepoint{static_cast<char32_t>(codepoint_value)};
+			return codepoint;
+			}
+		else if constexpr (!std::same_as<from_char_t, char>)
+			{
+			const std::string cast_string{cast<char, from_char_t>(in)};
+			return parse_codepoint<char>(cast_string);
+			}
 		}
 
 	template char32_t parse_codepoint<char    >(const std::basic_string_view<char    > in);
@@ -107,26 +124,27 @@ namespace utils::string
 	template <typename to_char_t>
 	constexpr std::basic_string<to_char_t> codepoint_to_string(const char32_t& codepoint)
 		{
-		constexpr bool input_is_utf8  {std::same_as<from_char_t, char8_t > ||                   std::same_as<from_char_t, char   >};
-		constexpr bool input_is_utf16 {std::same_as<from_char_t, char16_t> || (wchar_is_utf16 ? std::same_as<from_char_t, wchar_t> : false)};
-		constexpr bool input_is_utf32 {std::same_as<from_char_t, char32_t> || (wchar_is_utf32 ? std::same_as<from_char_t, wchar_t> : false)};
+		using output_utf = details::utf_check<to_char_t>;
 
-		if constexpr (input_is_utf8)
+		if constexpr (output_utf::utf8)
 			{
+			const utils::observer_ptr<const char32_t> codepoint_begin{std::addressof(codepoint)};
+			const utils::observer_ptr<const char32_t> codepoint_end  {codepoint_begin + 1};
+
 			std::basic_string<to_char_t> ret;
-			utf8::append(codepoint, ret);
+			utf8::utf32to8(codepoint_begin, codepoint_end, std::back_inserter(ret));
+			return ret;
 			}
-		else if constexpr (input_is_utf16)
+		else if constexpr (output_utf::utf16)
 			{
-			std::basic_string<to_char_t> ret;
-			utf8::append16(codepoint, ret);
+			return cast<to_char_t, char8_t>(codepoint_to_string<char8_t>(codepoint));
 			}
-		else if constexpr (input_is_utf32)
+		else if constexpr (output_utf::utf32)
 			{
 			return {codepoint};
 			}
 		}
-
+	
 	template std::basic_string<char    > codepoint_to_string(const char32_t& codepoint);
 	template std::basic_string<char8_t > codepoint_to_string(const char32_t& codepoint);
 	template std::basic_string<char16_t> codepoint_to_string(const char32_t& codepoint);
