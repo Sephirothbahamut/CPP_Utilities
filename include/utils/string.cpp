@@ -126,6 +126,12 @@ namespace utils::string
 			return {codepoint};
 			}
 		}
+
+	template std::basic_string<char    > codepoint_to_string(const char32_t& codepoint);
+	template std::basic_string<char8_t > codepoint_to_string(const char32_t& codepoint);
+	template std::basic_string<char16_t> codepoint_to_string(const char32_t& codepoint);
+	template std::basic_string<char32_t> codepoint_to_string(const char32_t& codepoint);
+	template std::basic_string<wchar_t > codepoint_to_string(const char32_t& codepoint);
 	}
 
 
