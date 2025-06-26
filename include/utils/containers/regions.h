@@ -689,8 +689,31 @@ namespace utils::containers
 					inner_slots.erase(inner_slots.begin() + index_of_slot_starting_at_begin + 1, inner_slots.begin() + index_of_slot_starting_before_or_at_end);
 					}
 				}
-	
-			
+
+			size_t count_slots_if(auto callback)
+				{
+				size_t count{0};
+				for (const auto& slot : slot_index_view())
+					{
+					if (callback(slot.value)) 
+						{
+						count++;
+						}
+					}
+				return count;
+				}
+			size_t count_values_if(auto callback)
+				{
+				size_t count{0};
+				for (const auto& slot : slot_index_view())
+					{
+					if (callback(slot.value)) 
+						{
+						count += slot.region.count; 
+						}
+					}
+				return count;
+				}
 		};
 	}
 

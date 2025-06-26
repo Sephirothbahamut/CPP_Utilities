@@ -16,9 +16,12 @@ namespace utils::graphics::dpi_conversions
 		utils_gpu_available inline constexpr utils::math::vec2f mm_to_px(const utils::math::vec2f& dpi) noexcept { return in_to_px(dpi) * mm_to_in(); }
 		utils_gpu_available inline constexpr utils::math::vec2f px_to_mm(const utils::math::vec2f& dpi) noexcept { return px_to_in(dpi) * in_to_mm(); }
 		}
+	
+	utils_gpu_available inline constexpr auto dpi_to_dpmm(const auto& value) noexcept { return value * multipliers::mm_to_in(); }
+	utils_gpu_available inline constexpr auto dpmm_to_dpi(const auto& value) noexcept { return value * multipliers::in_to_mm(); }
 
-	utils_gpu_available inline constexpr utils::math::vec2f px_to_in(const auto& value, const utils::math::vec2f& dpi) { return value * multipliers::px_to_in(dpi); }
-	utils_gpu_available inline constexpr utils::math::vec2f in_to_px(const auto& value, const utils::math::vec2f& dpi) { return value * multipliers::in_to_px(dpi); }
+	utils_gpu_available inline constexpr utils::math::vec2f px_to_in(const auto& value, const utils::math::vec2f& dpi) noexcept { return value * multipliers::px_to_in(dpi); }
+	utils_gpu_available inline constexpr utils::math::vec2f in_to_px(const auto& value, const utils::math::vec2f& dpi) noexcept { return value * multipliers::in_to_px(dpi); }
 	
 	utils_gpu_available inline constexpr auto mm_to_in(const auto& value) noexcept { return value * multipliers::mm_to_in(); }
 	utils_gpu_available inline constexpr auto in_to_mm(const auto& value) noexcept { return value * multipliers::in_to_mm(); }
