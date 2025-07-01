@@ -690,7 +690,7 @@ namespace utils::containers
 					}
 				}
 
-			size_t count_slots_if(auto callback)
+			size_t count_slots_if(auto callback) const noexcept
 				{
 				size_t count{0};
 				for (const auto& slot : slot_index_view())
@@ -702,7 +702,7 @@ namespace utils::containers
 					}
 				return count;
 				}
-			size_t count_values_if(auto callback)
+			size_t count_values_if(auto callback) const noexcept
 				{
 				size_t count{0};
 				for (const auto& slot : slot_index_view())

@@ -5,33 +5,46 @@
 
 namespace utils::graphics::dpi_conversions
 	{
+
+	template <typename T>
+	concept dots_per_unit_cpt = std::same_as<T, float> || std::same_as<T, utils::math::vec2f>;
+
 	namespace multipliers
 		{
 		utils_gpu_available inline constexpr float in_to_mm  () noexcept { return       25.4f; }
 		utils_gpu_available inline constexpr float mm_to_in  () noexcept { return 1.f / 25.4f; }
 
-		utils_gpu_available inline constexpr utils::math::vec2f px_to_in(const utils::math::vec2f& dpi) noexcept { return 1.f / dpi; }
-		utils_gpu_available inline constexpr utils::math::vec2f in_to_px(const utils::math::vec2f& dpi) noexcept { return dpi / 1.f; }
+		utils_gpu_available inline constexpr auto px_to_in(const dots_per_unit_cpt auto& dpi) noexcept { return 1.f / dpi; }
+		utils_gpu_available inline constexpr auto in_to_px(const dots_per_unit_cpt auto& dpi) noexcept { return dpi / 1.f; }
 
-		utils_gpu_available inline constexpr utils::math::vec2f px_to_mm(const utils::math::vec2f& dpmm) noexcept { return 1.f  / dpmm; }
-		utils_gpu_available inline constexpr utils::math::vec2f mm_to_px(const utils::math::vec2f& dpmm) noexcept { return dpmm / 1.f ; }
+		utils_gpu_available inline constexpr auto px_to_mm(const dots_per_unit_cpt auto& dpmm) noexcept { return 1.f  / dpmm; }
+		utils_gpu_available inline constexpr auto mm_to_px(const dots_per_unit_cpt auto& dpmm) noexcept { return dpmm / 1.f ; }
 		}
 	
 	utils_gpu_available inline constexpr auto dpi_to_dpmm(const auto& value) noexcept { return value * multipliers::mm_to_in(); }
 	utils_gpu_available inline constexpr auto dpmm_to_dpi(const auto& value) noexcept { return value * multipliers::in_to_mm(); }
 
-	utils_gpu_available inline constexpr utils::math::vec2f px_to_in(const auto& value, const utils::math::vec2f& dpi) noexcept { return value * multipliers::px_to_in(dpi); }
-	utils_gpu_available inline constexpr utils::math::vec2f in_to_px(const auto& value, const utils::math::vec2f& dpi) noexcept { return value * multipliers::in_to_px(dpi); }
+	utils_gpu_available inline constexpr auto px_to_in(const auto& value, const dots_per_unit_cpt auto& dpi) noexcept { return value * multipliers::px_to_in(dpi); }
+	utils_gpu_available inline constexpr auto in_to_px(const auto& value, const dots_per_unit_cpt auto& dpi) noexcept { return value * multipliers::in_to_px(dpi); }
 	
 	utils_gpu_available inline constexpr auto mm_to_in(const auto& value) noexcept { return value * multipliers::mm_to_in(); }
 	utils_gpu_available inline constexpr auto in_to_mm(const auto& value) noexcept { return value * multipliers::in_to_mm(); }
 
-	utils_gpu_available inline constexpr utils::math::vec2f mm_to_px(const auto& value, const utils::math::vec2f& dpmm) noexcept { return value * multipliers::mm_to_px(dpmm); }
-	utils_gpu_available inline constexpr utils::math::vec2f px_to_mm(const auto& value, const utils::math::vec2f& dpmm) noexcept { return value * multipliers::px_to_mm(dpmm); }
+	utils_gpu_available inline constexpr auto mm_to_px(const auto& value, const dots_per_unit_cpt auto& dpmm) noexcept { return value * multipliers::mm_to_px(dpmm); }
+	utils_gpu_available inline constexpr auto px_to_mm(const auto& value, const dots_per_unit_cpt auto& dpmm) noexcept { return value * multipliers::px_to_mm(dpmm); }
 
-	utils_gpu_available inline constexpr utils::math::rect<float> px_to_mm(const utils::math::rect<float>& rect, const utils::math::vec2f& dpmm) noexcept
+	utils_gpu_available inline constexpr utils::math::rect<float> px_to_mm(const utils::math::rect<float>& rect, const dots_per_unit_cpt auto& dpmm) noexcept
 		{
-		const auto multiplier{utils::graphics::dpi_conversions::multipliers::px_to_mm(dpmm)};
+		const auto multiplier{[&]() -> utils::math::vec2f
+			{
+			const auto base{utils::graphics::dpi_conversions::multipliers::px_to_mm(dpmm)};
+			if constexpr (std::same_as<std::remove_cvref_t<decltype(dpmm)>, float>)
+				{
+				return {base, base};
+				}
+			return base;
+			}()};
+
 		return utils::math::rect<float>
 			{
 			rect.ll() * multiplier.x(),
@@ -41,9 +54,17 @@ namespace utils::graphics::dpi_conversions
 			};
 		}
 	
-	utils_gpu_available inline constexpr utils::math::rect<float> mm_to_px(const utils::math::rect<float>& rect, const utils::math::vec2f& dpmm) noexcept
+	utils_gpu_available inline constexpr utils::math::rect<float> mm_to_px(const utils::math::rect<float>& rect, const dots_per_unit_cpt auto& dpmm) noexcept
 		{
-		const auto multiplier{utils::graphics::dpi_conversions::multipliers::mm_to_px(dpmm)};
+		const auto multiplier{[&]() -> utils::math::vec2f
+			{
+			const auto base{utils::graphics::dpi_conversions::multipliers::mm_to_px(dpmm)};
+			if constexpr (std::same_as<std::remove_cvref_t<decltype(dpmm)>, float>)
+				{
+				return {base, base};
+				}
+			return base;
+			}()};
 		return utils::math::rect<float>
 			{
 			rect.ll() * multiplier.x(),
