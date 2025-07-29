@@ -57,16 +57,25 @@ namespace utils::graphics::colour
 	namespace concepts
 		{
 		template <typename T>
-		concept additive = std::same_as<T, details::additive<typename T::value_type, T::extent>>;
+		concept additive = std::same_as<std::remove_cvref_t<T>, details::additive<typename T::template_type, T::extent>>;
 		template <typename T>
 		concept rgba = additive<T> &&  T::static_has_alpha;
 		template <typename T>
 		concept rgb  = additive<T> && !T::static_has_alpha;
 
 		template <typename T>
-		concept hsv = std::same_as<T, colour::hsv<typename T::value_type, T::static_has_alpha>>;
+		concept hsv = std::same_as<std::remove_cvref_t<T>, details::hsv<typename T::template_type, T::extent>>;
 		template <typename T>
-		concept hsva = std::same_as<T, colour::hsv<typename T::value_type, true>>;
+		concept hsva = hsv<T> && T::static_has_alpha;
+
+		template <typename T, typename source_t>
+		concept compatible_additive =
+			utils::storage::concepts::compatible_multiple<T, source_t> &&
+			additive<T>;
+		template <typename T, typename source_t>
+		concept compatible_hsv =
+			utils::storage::concepts::compatible_multiple<T, source_t> &&
+			hsv<T>;
 
 		template <typename T>
 		concept colour = additive<T> || hsv<T>;
@@ -74,6 +83,8 @@ namespace utils::graphics::colour
 
 	namespace details
 		{
+		struct colour_cast_flag_t {};
+
 		inline extern constexpr const char name_rgb[]{"rgb"};
 		inline extern constexpr const char name_hsv[]{"hsv"};
 
@@ -94,6 +105,11 @@ namespace utils::graphics::colour
 			inline static constexpr bool static_has_alpha{extent == 4};
 
 			using storage::multiple<T, extent>::multiple;
+
+			utils_gpu_available constexpr additive(colour_cast_flag_t, const concepts::compatible_hsv<additive<T, extent>> auto& hsv) noexcept
+				requires(storage_type.is_owner());
+			utils_gpu_available constexpr additive(const concepts::compatible_hsv<additive<T, extent>> auto& hsv) noexcept : additive{colour_cast_flag_t{}, hsv} {}
+			utils_gpu_available constexpr additive(      concepts::compatible_hsv<additive<T, extent>> auto& hsv) noexcept : additive{colour_cast_flag_t{}, hsv} {}
 			
 			self_t& operator=(const additive<T, extent>& copy) noexcept
 				{
@@ -160,8 +176,17 @@ namespace utils::graphics::colour
 					}
 				}
 
-			utils_gpu_available constexpr additive(const concepts::hsv auto& hsv) noexcept
-				requires(storage_type.is_owner());
+			utils_gpu_available constexpr additive(const concepts::additive auto& other, float alpha) noexcept
+				requires(storage_type.is_owner() && static_has_alpha)
+				{
+				using other_range = std::remove_cvref_t<decltype(other)>::range;
+
+				for (size_t i = 0; i < 3; i++)
+					{
+					(*this)[i] = other_range::template cast_to<range>(other[i]);
+					}
+				a() = alpha;
+				}
 
 			utils_gpu_available constexpr owner_self_t blend(const concepts::colour auto& foreground) const noexcept
 				requires(std::remove_cvref_t<decltype(foreground)>::static_has_alpha)
@@ -231,6 +256,12 @@ namespace utils::graphics::colour
 			using range = utils::math::type_based_numeric_range<T>;
 			inline static constexpr bool static_has_alpha{extent == 4};
 
+			
+			utils_gpu_available constexpr hsv(colour_cast_flag_t, const concepts::compatible_additive<hsv<T, extent>> auto& rgb) noexcept
+				requires(storage_type.is_owner());
+			utils_gpu_available constexpr hsv(const concepts::compatible_additive<hsv<T, extent>> auto& rgb) noexcept : hsv{colour_cast_flag_t{}, rgb} {}
+			utils_gpu_available constexpr hsv(      concepts::compatible_additive<hsv<T, extent>> auto& rgb) noexcept : hsv{colour_cast_flag_t{}, rgb} {}
+
 			using storage::multiple<T, extent>::multiple;
 
 			utils_gpu_available constexpr hsv(enum base base, T components_multiplier = range::full_value, T alpha = range::full_value)
@@ -270,19 +301,16 @@ namespace utils::graphics::colour
 				if constexpr (static_has_alpha) { a() = other.a(); }
 				}
 
-			utils_gpu_available constexpr hsv(const concepts::rgb auto& rgb) noexcept
-				requires(storage_type.is_owner());
-
 			utils_gpu_available constexpr hsv(const utils::math::angle::degf& hue, const float& saturation, const float& value) noexcept
 				requires(storage_type.is_owner()) : 
 				base_t
 					{
-					::utils::math::angle::base<const_aware_value_type, range::full_value>{hue}.value,
+					::utils::math::angle::base<const_aware_value_type, range::full_value>{hue}.value(),
 					saturation, 
 					value
 					}
-					{};
-			
+				{}
+
 			utils_gpu_available constexpr ::utils::math::angle::base<const const_aware_value_type&, range::full_value> h() const noexcept { return {(*this)[0]}; }
 			utils_gpu_available constexpr ::utils::math::angle::base<      const_aware_value_type&, range::full_value> h()       noexcept { return {(*this)[0]}; }
 			utils_gpu_available constexpr const const_aware_value_type& s() const noexcept { return (*this)[1]; }
@@ -294,7 +322,7 @@ namespace utils::graphics::colour
 			};
 
 		template<utils::math::concepts::undecorated_number T, size_t extent>
-		utils_gpu_available constexpr additive<T, extent>::additive(const concepts::hsv auto& hsv) noexcept
+		utils_gpu_available constexpr additive<T, extent>::additive(colour_cast_flag_t, const concepts::compatible_hsv<additive<T, extent>> auto& hsv) noexcept
 			requires(storage_type.is_owner())
 			{
 			if (hsv.s() == 0)
@@ -308,7 +336,7 @@ namespace utils::graphics::colour
 				{
 				float tmp_r, tmp_g, tmp_b;
 
-				float tmp_h{hsv.h().value};
+				float tmp_h{hsv.h().value()};
 				tmp_h *= 6.f;
 
 				const unsigned i{static_cast<unsigned>(tmp_h)};
@@ -339,11 +367,11 @@ namespace utils::graphics::colour
 			}
 
 		template<utils::math::concepts::undecorated_floating_point T, size_t extent>
-		utils_gpu_available constexpr hsv<T, extent>::hsv(const concepts::rgb auto& rgb) noexcept
+		utils_gpu_available constexpr hsv<T, extent>::hsv(colour_cast_flag_t, const concepts::compatible_additive<hsv<T, extent>> auto& rgb) noexcept
 			requires(storage_type.is_owner())
 			{//https://stackoverflow.com/questions/3018313/algorithm-to-convert-rgb-to-hsv-and-hsv-to-rgb-in-range-0-255-for-both
 			using from_t = std::remove_cvref_t<decltype(rgb)>;
-			const details::additive<value_type, static_has_alpha> remapped_rgb{rgb};
+			const details::additive<value_type, extent> remapped_rgb{rgb};
 
 			const value_type min{std::min({remapped_rgb.r(), remapped_rgb.g(), remapped_rgb.b()})};
 			const value_type max{std::max({remapped_rgb.r(), remapped_rgb.g(), remapped_rgb.b()})};
@@ -386,7 +414,7 @@ namespace utils::graphics::colour
 				}
 		
 			tmp_hue = (tmp_hue / 6.f) * range::full_value;
-			h().value = tmp_hue;
+			h().value() = tmp_hue;
 
 			h().clamp_self();
 
