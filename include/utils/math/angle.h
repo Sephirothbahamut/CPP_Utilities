@@ -83,7 +83,7 @@ namespace utils::math::angle
 	class utils_oop_empty_bases base : public details::angle_flag
 		{
 		public:
-			using value_type   = T;
+			using value_type   = std::remove_cvref_t<T>;
 			using self_t       = base<T, full_angle_value>;
 			using owner_self_t = base<value_type, full_angle_value>;
 
@@ -92,16 +92,16 @@ namespace utils::math::angle
 			inline static constexpr value_type full_angle{full_angle_value};
 			inline static constexpr value_type half_angle{full_angle / static_cast<value_type>(2.)};
 
-			value_type value{ 0.f };
+			T value{ 0.f };
 
 			utils_gpu_available constexpr base() requires(!static_value_is_reference) = default;
-			utils_gpu_available constexpr base(const value_type& value) requires(!static_value_is_reference) : value{value} {}
+			utils_gpu_available constexpr base(const value_type& value) requires(!static_value_is_reference || (static_value_is_reference && std::is_const_v<T>)) : value{value} {}
+			utils_gpu_available constexpr base(      value_type& value) : value{value} {}
 
 			utils_gpu_available constexpr base(common::direction      dir) requires(!static_value_is_reference) : value{                                                           static_cast<value_type>(dir) * (full_angle_value / static_cast<value_type>(8)) } {}
 			utils_gpu_available constexpr base(common::hex_flat_top   dir) requires(!static_value_is_reference) : value{                                                           static_cast<value_type>(dir) * (full_angle_value / static_cast<value_type>(6)) } {}
 			utils_gpu_available constexpr base(common::hex_pointy_top dir) requires(!static_value_is_reference) : value{(full_angle_value / static_cast<value_type>(12)) + (static_cast<value_type>(dir) * (full_angle_value / static_cast<value_type>(6)))} {}
 
-			utils_gpu_available constexpr base(value_type& value) requires(static_value_is_reference) : value{value} {}
 
 			// template <value_type other_full_angle>
 			// base(const base<value_type, other_full_angle>& src) : value{ (src.value / other_full_angle) * full_angle } {}
