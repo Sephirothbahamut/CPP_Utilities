@@ -266,7 +266,8 @@ namespace utils::math
 			template <typename T2 = float, T2 f_a_v = 360.f>
 			utils_gpu_available constexpr math::angle::base<T2, f_a_v> angle(this const auto& self) noexcept { return math::angle::base<T2, f_a_v>::atan2(self.y(), self.x()); }
 				
-			utils_gpu_available constexpr owner_self_t operator+ (const math::angle::concepts::angle auto& angle) const noexcept
+
+			utils_gpu_available constexpr auto  operator+ (this const auto& self, const math::angle::concepts::angle_operand<decltype(self)> auto& angle) noexcept
 				{
 				//const auto a1{self.x()};
 				//const auto a2{angle.cos()};
@@ -278,26 +279,25 @@ namespace utils::math
 				//const auto f{d + e};
 				//const owner_self_t ret{c, f};
 
-				owner_self_t ret
+				const owner_self_t ret
 					{
-					x() * angle.cos() - y() * angle.sin(),
-					x() * angle.sin() + y() * angle.cos()
+					self.x() * angle.cos() - self.y() * angle.sin(),
+					self.x() * angle.sin() + self.y() * angle.cos()
 					};
 				return ret;
 				}
-
-			utils_gpu_available constexpr owner_self_t operator- (const math::angle::concepts::angle auto& angle) const noexcept
+			utils_gpu_available constexpr auto  operator- (this const auto& self, const math::angle::concepts::angle_operand<decltype(self)> auto& angle) noexcept
 				{
 				const auto nangle{-angle};
-				return operator+(nangle);
+				return self.operator+(nangle);
 				}
+			utils_gpu_available constexpr auto& operator+=(this storage::concepts::non_const auto& self, const math::angle::concepts::angle_operand<decltype(self)> auto& angle) noexcept { return self = self - angle; }
+			utils_gpu_available constexpr auto& operator-=(this storage::concepts::non_const auto& self, const math::angle::concepts::angle_operand<decltype(self)> auto& angle) noexcept { return self = self - angle; }
+
+
+
 			
-			utils_gpu_available constexpr self_t& operator+=(const math::angle::concepts::angle auto& angle) noexcept 
-				{
-				return *this = *this + angle;
-				}
-			utils_gpu_available constexpr self_t& operator-=(const math::angle::concepts::angle auto& angle) noexcept { return *this = *this - angle; }
-			utils_gpu_available constexpr self_t& operator= (const math::angle::concepts::angle auto& angle) noexcept
+			utils_gpu_available constexpr self_t& operator= (const  math::angle::concepts::angle_operand<self_t> auto& angle) noexcept
 				{
 				const auto previous_length{get_length()};
 				const auto new_self{create::from_angle(angle, previous_length)};
