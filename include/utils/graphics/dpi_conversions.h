@@ -5,6 +5,8 @@
 
 namespace utils::graphics::dpi_conversions
 	{
+	template <typename T>
+	concept float_vec_or_rect = std::same_as<T, float> || std::same_as<T, utils::math::vec2f> || std::same_as<T, utils::math::rect<float>>;
 
 	template <typename T>
 	concept dots_per_unit_cpt = std::same_as<T, float> || std::same_as<T, utils::math::vec2f>;
@@ -21,17 +23,17 @@ namespace utils::graphics::dpi_conversions
 		utils_gpu_available inline constexpr auto mm_to_px(const dots_per_unit_cpt auto& dpmm) noexcept { return dpmm / 1.f ; }
 		}
 	
-	utils_gpu_available inline constexpr auto dpi_to_dpmm(const auto& value) noexcept { return value * multipliers::mm_to_in(); }
-	utils_gpu_available inline constexpr auto dpmm_to_dpi(const auto& value) noexcept { return value * multipliers::in_to_mm(); }
+	utils_gpu_available inline constexpr auto dpi_to_dpmm(const dots_per_unit_cpt auto& value) noexcept { return value * multipliers::mm_to_in(); }
+	utils_gpu_available inline constexpr auto dpmm_to_dpi(const dots_per_unit_cpt auto& value) noexcept { return value * multipliers::in_to_mm(); }
 
-	utils_gpu_available inline constexpr auto px_to_in(const auto& value, const dots_per_unit_cpt auto& dpi) noexcept { return value * multipliers::px_to_in(dpi); }
-	utils_gpu_available inline constexpr auto in_to_px(const auto& value, const dots_per_unit_cpt auto& dpi) noexcept { return value * multipliers::in_to_px(dpi); }
+	utils_gpu_available inline constexpr auto px_to_in(const float_vec_or_rect auto& value, const dots_per_unit_cpt auto& dpi) noexcept { return value * multipliers::px_to_in(dpi); }
+	utils_gpu_available inline constexpr auto in_to_px(const float_vec_or_rect auto& value, const dots_per_unit_cpt auto& dpi) noexcept { return value * multipliers::in_to_px(dpi); }
 	
-	utils_gpu_available inline constexpr auto mm_to_in(const auto& value) noexcept { return value * multipliers::mm_to_in(); }
-	utils_gpu_available inline constexpr auto in_to_mm(const auto& value) noexcept { return value * multipliers::in_to_mm(); }
+	utils_gpu_available inline constexpr auto mm_to_in(const float_vec_or_rect auto& value) noexcept { return value * multipliers::mm_to_in(); }
+	utils_gpu_available inline constexpr auto in_to_mm(const float_vec_or_rect auto& value) noexcept { return value * multipliers::in_to_mm(); }
 
-	utils_gpu_available inline constexpr auto mm_to_px(const auto& value, const dots_per_unit_cpt auto& dpmm) noexcept { return value * multipliers::mm_to_px(dpmm); }
-	utils_gpu_available inline constexpr auto px_to_mm(const auto& value, const dots_per_unit_cpt auto& dpmm) noexcept { return value * multipliers::px_to_mm(dpmm); }
+	utils_gpu_available inline constexpr auto mm_to_px(const float_vec_or_rect auto& value, const dots_per_unit_cpt auto& dpmm) noexcept { return value * multipliers::mm_to_px(dpmm); }
+	utils_gpu_available inline constexpr auto px_to_mm(const float_vec_or_rect auto& value, const dots_per_unit_cpt auto& dpmm) noexcept { return value * multipliers::px_to_mm(dpmm); }
 
 	utils_gpu_available inline constexpr utils::math::rect<float> px_to_mm(const utils::math::rect<float>& rect, const dots_per_unit_cpt auto& dpmm) noexcept
 		{
