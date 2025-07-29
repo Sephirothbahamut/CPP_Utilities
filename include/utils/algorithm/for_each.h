@@ -243,6 +243,11 @@ namespace utils::algorithm::for_each
 				scale({1.f, 1.f}).execute<parallel>(callback);
 				}
 
+			inline in_region_scale_progress_t partial_progress(utils::logging::partial_progress& value) const noexcept
+				{
+				return scale({1.f, 1.f}).partial_progress(value);
+				}
+
 			using callback_params = in_region_scale_t::callback_params;
 			};
 
@@ -264,6 +269,11 @@ namespace utils::algorithm::for_each
 			inline void execute(auto callback) const noexcept
 				{
 				scale({1.f, 1.f}).execute<parallel>(callback);
+				}
+
+			inline in_sizes_scale_progress_t partial_progress(utils::logging::partial_progress& value) const noexcept
+				{
+				return scale({1.f, 1.f}).partial_progress(value);
 				}
 
 			using callback_params = in_sizes_scale_t::callback_params;
