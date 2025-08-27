@@ -57,22 +57,27 @@ namespace utils
 			utils_gpu_available static constexpr bool validate_coords(math::vec2s coords) noexcept { return validate_x(coords.x()), validate_y(coords.y()); }
 			};
 
+		//Purposefully not gpu available
 		template <typename T>
 		struct matrix_sizes_interface<T, matrix_size{std::dynamic_extent, std::dynamic_extent}>
 			{
 			private:
 				utils::math::vec2s inner_sizes;
 
-			public:
-				matrix_sizes_interface(utils::math::vec2s inner_sizes) : inner_sizes{inner_sizes} {}
+			protected:
+				void resize(utils::math::vec2s new_sizes) { inner_sizes = new_sizes; }
 
-				utils_gpu_available constexpr utils::math::vec2s sizes () const noexcept { return inner_sizes; }
-				utils_gpu_available constexpr size_t             width () const noexcept { return inner_sizes.x(); }
-				utils_gpu_available constexpr size_t             height() const noexcept { return inner_sizes.y(); }
+			public:
+				constexpr matrix_sizes_interface() = default;
+				constexpr matrix_sizes_interface(utils::math::vec2s inner_sizes) : inner_sizes{inner_sizes} {}
+
+				constexpr utils::math::vec2s sizes () const noexcept { return inner_sizes; }
+				constexpr size_t             width () const noexcept { return inner_sizes.x(); }
+				constexpr size_t             height() const noexcept { return inner_sizes.y(); }
 				
-				utils_gpu_available constexpr bool validate_x     (size_t      x     ) const noexcept { return x < width (); }
-				utils_gpu_available constexpr bool validate_y     (size_t      y     ) const noexcept { return y < height(); }
-				utils_gpu_available constexpr bool validate_coords(math::vec2s coords) const noexcept { return validate_x(coords.x()), validate_y(coords.y()); }
+				constexpr bool validate_x     (size_t      x     ) const noexcept { return x < width (); }
+				constexpr bool validate_y     (size_t      y     ) const noexcept { return y < height(); }
+				constexpr bool validate_coords(math::vec2s coords) const noexcept { return validate_x(coords.x()), validate_y(coords.y()); }
 			};
 		}
 
@@ -82,26 +87,28 @@ namespace utils
 		utils_gpu_available inline static constexpr matrix_size _extents{EXTENTS};
 		utils_gpu_available inline static constexpr utils::math::vec2s extents{EXTENTS.width, EXTENTS.height};
 		using multiple_t = details::evaluate_multiple_t<T, EXTENTS>;
-		using sizes_inerface_t = details::matrix_sizes_interface<T, EXTENTS>;
+		using sizes_interface_t = details::matrix_sizes_interface<T, EXTENTS>;
 
 		using typename multiple_t::value_type;
 		using typename multiple_t::const_aware_value_type;
-		using multiple_t      ::size;
-		using multiple_t      ::storage_type;
-		using sizes_inerface_t::sizes;
-		using sizes_inerface_t::validate_coords;
+		using multiple_t       ::size;
+		using multiple_t       ::storage_type;
+		using sizes_interface_t::sizes;
+		using sizes_interface_t::validate_coords;
 		
 		using self_t          = matrix<T                      , EXTENTS>;
 		using owner_self_t    = matrix<value_type             , EXTENTS>;
 		using observer_self_t = matrix<const_aware_value_type&, EXTENTS>;
 
-		utils_gpu_available constexpr matrix(utils::math::vec2s sizes) requires(EXTENTS.is_dynamic() && storage_type.is_owner()) :
+		constexpr matrix() requires(EXTENTS.is_dynamic() && storage_type.is_owner()) = default;
+
+		constexpr matrix(utils::math::vec2s sizes) requires(EXTENTS.is_dynamic() && storage_type.is_owner()) :
 			multiple_t(sizes.sizes_to_size()),
 			details::matrix_sizes_interface<T, EXTENTS>{sizes}
 			{
 			}
 			
-		utils_gpu_available constexpr matrix(utils::math::vec2s sizes, const T default_value) requires(EXTENTS.is_dynamic() && storage_type.is_owner()) :
+		constexpr matrix(utils::math::vec2s sizes, const T default_value) requires(EXTENTS.is_dynamic() && storage_type.is_owner()) :
 			multiple_t(sizes.sizes_to_size()),
 			details::matrix_sizes_interface<T, EXTENTS>{sizes}
 			{
@@ -112,7 +119,7 @@ namespace utils
 			}
 
 		template <typename ...Args>
-		utils_gpu_available constexpr matrix(utils::math::vec2s sizes, Args&&... args) requires(EXTENTS.is_dynamic() && storage_type.is_owner()) :
+		constexpr matrix(utils::math::vec2s sizes, Args&&... args) requires(EXTENTS.is_dynamic() && storage_type.is_owner()) :
 			multiple_t(utils::storage::construct_flag_data, std::forward<Args>(args)...),
 			details::matrix_sizes_interface<T, EXTENTS>{sizes}
 			{
@@ -123,6 +130,12 @@ namespace utils
 		utils_gpu_available constexpr matrix(Args&&... args) requires(!EXTENTS.is_dynamic() && storage_type.is_owner()) :
 			multiple_t(utils::storage::construct_flag_data, std::forward<Args>(args)...)
 			{}
+
+		constexpr void resize(utils::math::vec2s new_sizes) requires(EXTENTS.is_dynamic() && storage_type.is_owner())
+			{
+			multiple_t::inner_storage.resize(new_sizes.sizes_to_size());
+			sizes_interface_t::resize(new_sizes);
+			}
 
 		using multiple_t::operator[];
 		using multiple_t::at;

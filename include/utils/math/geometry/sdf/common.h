@@ -127,6 +127,10 @@ namespace utils::math::geometry::sdf
 			{
 			return a.distance.value < b.distance.value ? a : b;
 			}
+		utils_gpu_available static constexpr direction_signed_distance intersection(const direction_signed_distance& a, const direction_signed_distance& b) noexcept
+			{
+			return a.distance.value < b.distance.value ? b : a;
+			}
 		utils_gpu_available static constexpr direction_signed_distance merge_smooth(const direction_signed_distance& a, const direction_signed_distance& b, float smoothness) noexcept
 			{
 			smoothness *= 4.f;
@@ -151,6 +155,11 @@ namespace utils::math::geometry::sdf
 		utils_gpu_available constexpr direction_signed_distance& merge_self_smooth(const direction_signed_distance& other, float smoothness) noexcept
 			{
 			*this = merge_smooth(*this, other, smoothness);
+			return *this;
+			}
+		utils_gpu_available constexpr direction_signed_distance& itersect_self(const direction_signed_distance& other) noexcept
+			{
+			*this = intersection(*this, other);
 			return *this;
 			}
 
