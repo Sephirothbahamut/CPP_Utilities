@@ -78,6 +78,19 @@ namespace utils::math::geometry::details
 			{
 			return intersection<a.optional_ends.value(), b.optional_ends.value()>();
 			}
+
+		template <ends::ab ends_a, ends::ab ends_b>
+		utils_gpu_available constexpr bool intersects() const noexcept
+			requires (shape::concepts::ab_ends_aware<a_t>, shape::concepts::ab_ends_aware<b_t>)
+			{
+			return intersection<ends_a, ends_b>().has_value();
+			}
+
+		utils_gpu_available constexpr bool intersects() const noexcept
+			requires (shape::concepts::ab_ends_aware<a_t>, shape::concepts::ab_ends_aware<b_t>)
+			{
+			return intersects<a.optional_ends.value(), b.optional_ends.value()>();
+			}
 		};
 	}
 

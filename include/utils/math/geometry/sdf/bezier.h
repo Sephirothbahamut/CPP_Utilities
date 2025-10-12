@@ -21,7 +21,7 @@ namespace utils::math::geometry::sdf::details::bezier
 	namespace other
 		{
 		template <ends::ab ends>
-		utils_gpu_available constexpr float closest_t(const utils::math::vec2f& point, const shape::concepts::bezier auto& shape) noexcept;
+		utils_gpu_available constexpr float closest_t(const utils::math::vec2f& point, const shape::concepts::bezier auto& shape, float t_step = .01f) noexcept;
 		}
 	}
 
@@ -122,16 +122,29 @@ namespace utils::math::geometry::shape::generic
 			return {proxy.point(), distance};
 			}
 
+
+		template <ends::ab ends>
+		utils_gpu_available constexpr geometry::sdf::side side(const shape_t::at_proxy& proxy) const noexcept
+			{
+			const auto left{proxy.normal()};
+			const auto a_to_point{point - proxy.point()};
+			//TODO not sure why needs inverting. Normal is left which is outside and should lead to positive result already :shrugs:
+			const geometry::sdf::side ret{-utils::math::vec2f::dot(left, a_to_point)};
+			return ret;
+
+			//const auto a{shape.at(proxy.t - 0.002f).point()};
+			//const auto b{shape.at(proxy.t + 0.002f).point()};
+			//const geometry::shape::segment segment{a, b};
+			//return segment.sdf(point).side();
+			}
+
 		template <ends::ab ends>
 		utils_gpu_available constexpr geometry::sdf::side side()const noexcept
 			{
 			const auto proxy{closest_proxy<ends>()};
-			const auto left{proxy.normal()};
-			const auto a_to_point{point - proxy.point()};
-			//TODO not sure why needs inverting. Normal is left which is outside and should lead to positive result already :shrugs:
-			const geometry::sdf::side ret{-utils::math::vec2f::dot(left, a_to_point)}; 
-			return ret;
+			return side<ends>(proxy);
 			}
+
 
 		template <ends::ab ends>
 		utils_gpu_available constexpr geometry::sdf::signed_distance signed_distance()const noexcept
@@ -156,11 +169,7 @@ namespace utils::math::geometry::shape::generic
 			const auto closest{proxy.point()};
 			const float distance{minimum_distance<ends>()};
 
-			const auto left{proxy.normal()};
-			const auto a_to_point{point - closest};
-			const geometry::sdf::side side{-utils::math::vec2f::dot(left, a_to_point)};
-
-			const geometry::sdf::signed_distance signed_distance{distance * side};
+			const geometry::sdf::signed_distance signed_distance{distance * side<ends>(proxy)};
 			const geometry::sdf::closest_point_with_signed_distance ret{closest, signed_distance};
 			return ret;
 			}

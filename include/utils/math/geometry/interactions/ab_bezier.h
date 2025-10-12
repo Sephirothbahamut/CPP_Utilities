@@ -16,6 +16,31 @@ namespace utils::math::geometry::details
 		a_t& a;
 		b_t& b;
 
+		bool intersects(float t_step = .01f) const noexcept
+			{
+			for (float ta{0.f}; ta < 1.f; ta += t_step)
+				{
+				const shape::segment sa{a.at(ta).point(), a.at(ta + t_step).point()};
+
+				if (geometry::interactions(sa, b).intersects()) { return true; }
+				}
+			return false;
+			}
+
+		size_t intersections_count(float t_step = .01f) const noexcept
+			{
+			size_t ret{0};
+
+			for (float ta{0.f}; ta < 1.f; ta += t_step)
+				{
+				const shape::segment sa{a.at(ta).point(), a.at(ta + t_step).point()};
+
+				if (geometry::interactions(sa, b).intersects()) { ret++; }
+				}
+
+			return ret;
+			}
+
 		std::pair<float, float> intersection_ts_approximate_first(float t_step = .01f) const noexcept
 			{
 			for (float ta{0.f}; ta < 1.f; ta += t_step)
@@ -39,21 +64,19 @@ namespace utils::math::geometry::details
 		a_t& a;
 		b_t& b;
 
+		bool intersects(float t_step = .01f) const noexcept
+			{
+			return interactions_bezier_ab{b, a}.intersects(t_step);
+			}
+		size_t intersections_count(float t_step = .01f) const noexcept
+			{
+			return interactions_bezier_ab{b, a}.intersections_count(t_step);
+			}
+
 		std::pair<float, float> intersection_ts_approximate_first(float t_step = .01f) const noexcept
 			{
-			for (float tb{1.f - t_step}; tb > t_step; tb -= t_step)
-				{
-				const shape::segment sb{b.at(tb).point(), b.at(tb + t_step).point()};
-
-				const std::pair<float, float> intersection_ts{interactions(a, sb).intersection_ts()};
-				if (!std::isnan(intersection_ts.first) && !std::isnan(intersection_ts.second))
-					{
-					const float curve_tb{tb + (t_step * intersection_ts.second)};
-					return {intersection_ts.first, curve_tb};
-					}
-				}
-
-			return {utils::math::constants::fnan, utils::math::constants::fnan};
+			const auto ret{interactions_bezier_ab{b, a}.intersects(t_step)};
+			return {ret.second, ret.first};
 			}
 		};
 	}

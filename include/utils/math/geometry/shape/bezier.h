@@ -105,10 +105,11 @@ namespace utils::math::geometry::shape::generic
 
 				utils_gpu_available constexpr operator vec2f() const noexcept { return point(); }
 
+				float t;
+
 			private:
 				utils_gpu_available constexpr at_proxy(const self_t& bezier_curve, const float t) : bezier_curve{bezier_curve}, t{t} {}
 				const self_t& bezier_curve;
-				const float t;
 			};
 
 		using coefficients_t = utils::storage::multiple<storage::storage_type_for<geometry::shape::point, utils::storage::type::create::owner()>, extent, true>;
