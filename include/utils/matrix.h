@@ -77,7 +77,7 @@ namespace utils
 				
 				constexpr bool validate_x     (size_t      x     ) const noexcept { return x < width (); }
 				constexpr bool validate_y     (size_t      y     ) const noexcept { return y < height(); }
-				constexpr bool validate_coords(math::vec2s coords) const noexcept { return validate_x(coords.x()), validate_y(coords.y()); }
+				constexpr bool validate_coords(math::vec2s coords) const noexcept { return validate_x(coords.x()) && validate_y(coords.y()); }
 			};
 		}
 
