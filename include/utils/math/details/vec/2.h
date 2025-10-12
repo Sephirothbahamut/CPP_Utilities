@@ -29,6 +29,7 @@ namespace utils::math
 	using vec2u32    = vec2   <uint32_t     >;
 	using vec2u64    = vec2   <uint64_t     >;
 	using vec2s      = vec2   <size_t       >;
+	using vec2ss     = vec2   <ssize_t      >;
 	using vec2f      = vec2   <float        >;
 	using vec2d      = vec2   <double       >;
 	using vec2l      = vec2   <long         >;

@@ -11,6 +11,8 @@
 
 namespace utils::math
 	{
+	using ssize_t = std::ptrdiff_t;
+
 	namespace concepts
 		{
 		template <typename T>
