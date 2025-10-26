@@ -100,26 +100,17 @@ namespace utils::math::angle
 			using observer_self_t       = base<storage::storage_type_for<value_type, storage::type::create::observer      ()>, full_angle_value>;
 			using const_observer_self_t = base<storage::storage_type_for<value_type, storage::type::create::const_observer()>, full_angle_value>;
 
-			//inline static constexpr const bool static_value_is_reference{utils::concepts::reference<T>};
-
 			inline static constexpr value_type full_angle{full_angle_value};
 			inline static constexpr value_type half_angle{full_angle / static_cast<value_type>(2.)};
 
-			using utils::storage::single<T>::single;
-
-			//utils_gpu_available constexpr base() requires(!static_value_is_reference) = default;
-			//utils_gpu_available constexpr base(const value_type& value) requires(!static_value_is_reference || (static_value_is_reference && std::is_const_v<T>)) : value{value} {}
-			//utils_gpu_available constexpr base(      value_type& value) : value{value} {}
+			utils_gpu_available constexpr base() requires(single_t::storage_type.is_owner()) = default;
+			utils_gpu_available constexpr base(const value_type& value) requires(single_t::storage_type.is_owner() || (single_t::storage_type.is_observer() && single_t::storage_type.is_const())) : single_t{value} {}
+			utils_gpu_available constexpr base(      value_type& value) requires(single_t::storage_type.is_observer() && !single_t::storage_type.is_const()) : single_t{value} {}
 
 			utils_gpu_available constexpr base(common::direction      dir) requires(storage_type.is_owner()) : single_t{                                                    static_cast<value_type>(dir) * (full_angle_value / static_cast<value_type>(8)) } {}
 			utils_gpu_available constexpr base(common::hex_flat_top   dir) requires(storage_type.is_owner()) : single_t{                                                    static_cast<value_type>(dir) * (full_angle_value / static_cast<value_type>(6)) } {}
 			utils_gpu_available constexpr base(common::hex_pointy_top dir) requires(storage_type.is_owner()) : single_t{(full_angle_value / static_cast<value_type>(12)) + (static_cast<value_type>(dir) * (full_angle_value / static_cast<value_type>(6)))} {}
 
-
-			// template <value_type other_full_angle>
-			// base(const base<value_type, other_full_angle>& src) : value{ (src.value / other_full_angle) * full_angle } {}
-			// template <>
-			// base<value_type, full_angle_value>(const base<value_type, full_angle_value>& src) : value{src.value} {}
 
 			template <value_type other_full_angle>
 			utils_gpu_available constexpr base(const base<value_type, other_full_angle>& other) noexcept
@@ -137,6 +128,7 @@ namespace utils::math::angle
 					}()}
 				{
 				}
+
 
 			template <value_type other_full_angle>
 			utils_gpu_available constexpr self_t& operator=(const base<value_type, other_full_angle>& other) noexcept
@@ -221,7 +213,7 @@ namespace utils::math::angle
 					}
 				else if constexpr (std::is_floating_point_v<value_type>)
 					{
-					value_type d{std::modf((converted_b.value() - a.value()), full_angle)};
+					value_type d{std::fmod((converted_b.value() - a.value()), full_angle)};
 					return d < -half_angle ? d + full_angle : d > half_angle ? d - full_angle : d;
 					}
 				}
@@ -259,13 +251,13 @@ namespace utils::math::angle
 				}
 
 	#pragma region Trigonometry
-			utils_gpu_available inline        constexpr value_type sin  (                                        ) const noexcept { return std::sin(rad_value()); }
-			utils_gpu_available inline        constexpr value_type cos  (                                        ) const noexcept { return std::cos(rad_value()); }
-			utils_gpu_available inline        constexpr value_type tan  (                                        ) const noexcept { return std::tan(rad_value()); }
-			utils_gpu_available inline static constexpr owner_self_t     asin (value_type n                     )       noexcept { return { base<value_type, static_cast<value_type>(2. * constants::PId)>{std::asin(n)} }; }
-			utils_gpu_available inline static constexpr owner_self_t     acos (value_type n                     )       noexcept { return { base<value_type, static_cast<value_type>(2. * constants::PId)>{std::acos(n)} }; }
-			utils_gpu_available inline static constexpr owner_self_t     atan (value_type n                     )       noexcept { return { base<value_type, static_cast<value_type>(2. * constants::PId)>{std::atan(n)} }; }
-			utils_gpu_available inline static constexpr owner_self_t     atan2(value_type a, value_type b)       noexcept { return { base<value_type, static_cast<value_type>(2. * constants::PId)>{std::atan2(a, b)} }; }
+			utils_gpu_available inline        constexpr value_type   sin  (                          ) const noexcept { return std::sin(rad_value()); }
+			utils_gpu_available inline        constexpr value_type   cos  (                          ) const noexcept { return std::cos(rad_value()); }
+			utils_gpu_available inline        constexpr value_type   tan  (                          ) const noexcept { return std::tan(rad_value()); }
+			utils_gpu_available inline static constexpr owner_self_t asin (value_type n              )       noexcept { return owner_self_t{ base<value_type, static_cast<value_type>(2. * constants::PId)>{std::asin (n   )} }; }
+			utils_gpu_available inline static constexpr owner_self_t acos (value_type n              )       noexcept { return owner_self_t{ base<value_type, static_cast<value_type>(2. * constants::PId)>{std::acos (n   )} }; }
+			utils_gpu_available inline static constexpr owner_self_t atan (value_type n              )       noexcept { return owner_self_t{ base<value_type, static_cast<value_type>(2. * constants::PId)>{std::atan (n   )} }; }
+			utils_gpu_available inline static constexpr owner_self_t atan2(value_type a, value_type b)       noexcept { return owner_self_t{ base<value_type, static_cast<value_type>(2. * constants::PId)>{std::atan2(a, b)} }; }
 	#pragma endregion Trigonometry
 
 		private:
