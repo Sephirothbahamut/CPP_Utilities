@@ -6,6 +6,12 @@ namespace utils::logging
 	{
 	progress_bar::progress_bar() = default;
 	progress_bar::progress_bar(float update_step, size_t bar_width) : update_step{update_step}, bar_width{bar_width} {}
+	progress_bar::~progress_bar() 
+		{
+		/*if (state < 1.f) { complete(); }*/ 
+		message_queue.flush();
+		std::cout << std::endl;
+		}
 
 	void progress_bar::advance(float new_state) noexcept
 		{
@@ -85,12 +91,15 @@ namespace utils::logging
 		{
 		std::unique_lock lock{mutex};
 		index++;
-		progress_bar.advance(from + (step * static_cast<float>(index)) );
+		#ifdef utils_is_debug
+		assert(index <= steps_count);
+		#endif
+		progress_bar.advance(from + (step * static_cast<float>(index)));
 		}
 
 	partial_progress partial_progress::split_partial_progress(size_t steps_count) noexcept
 		{
-		const float split_from{from + (step *  index    )};
+		const float split_from{from + (step *  index    ) };
 		const float split_to  {from + (step * (index + 1))};
 		return utils::logging::partial_progress{progress_bar, split_from, split_to, steps_count};
 		}
@@ -100,6 +109,9 @@ namespace utils::logging
 		from{from},
 		to  {to},
 		step{evaluate_step(from, to, steps_count)}
+		#ifdef utils_is_debug
+		, steps_count{steps_count}
+		#endif
 		{}
 
 	float partial_progress::evaluate_step(float from, float to, size_t steps_count) noexcept

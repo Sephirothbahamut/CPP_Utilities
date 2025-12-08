@@ -14,6 +14,7 @@
 #include "../containers/multithreading/self_consuming_queue.h"
 
 #include "../oop/disable_move_copy.h"
+#include "../compilation/debug.h"
 
 //TODO remove inlines and split into .cpp
 
@@ -26,6 +27,7 @@ namespace utils::logging
 		public:
 			progress_bar();
 			progress_bar(float update_step, size_t bar_width);
+			~progress_bar();
 
 			void advance(float new_state) noexcept;
 
@@ -37,7 +39,7 @@ namespace utils::logging
 			float state{0.f};
 			float last_drawn_state{0.f};
 			const float update_step{.01f};
-			const size_t bar_width{20};
+			const size_t bar_width{50};
 			std::mutex mutex;
 
 			utils::containers::multithreading::self_consuming_queue<float, utils::containers::multithreading::operation_flag_bits::none> message_queue
@@ -68,6 +70,7 @@ namespace utils::logging
 			const float from{0.f};
 			const float to  {1.f};
 			const float step{0.f};
+			utils_if_debug(size_t steps_count{1};)
 			size_t index{0};
 
 			static float evaluate_step(float from, float to, size_t steps_count) noexcept;
