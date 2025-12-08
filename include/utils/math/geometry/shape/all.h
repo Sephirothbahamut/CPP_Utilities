@@ -9,3 +9,4 @@
 #include "capsule.h"
 #include "mixed.h"
 #include "dynamic.h"
+#include "arc.h"

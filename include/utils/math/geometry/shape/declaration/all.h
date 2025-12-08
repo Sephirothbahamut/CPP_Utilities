@@ -8,3 +8,4 @@
 #include "circle.h"
 #include "capsule.h"
 #include "mixed.h"
+#include "arc.h"
