@@ -49,6 +49,7 @@ namespace utils::logging
 				message_queue.flush();
 				}
 
+			constexpr void raw(const string::concepts::stringlike auto& string) noexcept requires(concepts::message<value_type>) { push(value_type::raw(string, indents_count)); }
 			constexpr void inf(const string::concepts::stringlike auto& string) noexcept requires(concepts::message<value_type>) { push(value_type::inf(string, indents_count)); }
 			constexpr void log(const string::concepts::stringlike auto& string) noexcept requires(concepts::message<value_type>) { push(value_type::log(string, indents_count)); }
 			constexpr void dgn(const string::concepts::stringlike auto& string) noexcept requires(concepts::message<value_type>) { push(value_type::dgn(string, indents_count)); }
@@ -106,8 +107,8 @@ namespace utils::logging
 				{
 				[this](T& element) -> void
 					{
-					std::cout << element << std::endl;
-					file << element << std::endl;
+					std::cout << element << std::flush;
+					file << element << std::flush;
 					},
 				[this](std::vector<T>& elements)
 					{

@@ -14,7 +14,7 @@
 namespace utils::logging
 	{
 	enum class output_style_t { on_line, tag_as_separator };
-	enum class msg_t { log, dgn, inf, wrn, err, section_enter, section_leave };
+	enum class msg_t { raw, log, dgn, inf, wrn, err, section_enter, section_leave };
 
 	template <output_style_t OUTPUT_STYLE>
 	class message
@@ -26,7 +26,8 @@ namespace utils::logging
 			constexpr message& operator=(const message&  copy) = default;
 			constexpr message           (      message&& move) = default;
 			constexpr message& operator=(      message&& move) = default;
-
+			
+			static constexpr message raw          (const string::concepts::stringlike auto& string = "", size_t indents_count = 0) noexcept { return {msg_t::raw          , string, indents_count}; }
 			static constexpr message log          (const string::concepts::stringlike auto& string = "", size_t indents_count = 0) noexcept { return {msg_t::log          , string, indents_count}; }
 			static constexpr message dgn          (const string::concepts::stringlike auto& string = "", size_t indents_count = 0) noexcept { return {msg_t::dgn          , string, indents_count}; }
 			static constexpr message inf          (const string::concepts::stringlike auto& string = "", size_t indents_count = 0) noexcept { return {msg_t::inf          , string, indents_count}; }
@@ -118,6 +119,11 @@ namespace utils::logging
 
 			friend std::ostream& operator<<(std::ostream& os, const message& m)
 				{
+				if (m.type == msg_t::raw)
+					{
+					return os << m.string;
+					}
+
 				constexpr size_t timestamp_digits{std::numeric_limits<decltype(m.time.time_since_epoch().count())>::digits10};
 
 				std::stringstream ss;
