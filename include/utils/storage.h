@@ -83,7 +83,9 @@ namespace utils::storage
 
 		utils_gpu_available constexpr single() = default;
 		template <typename ...Args>
-		utils_gpu_available constexpr single(Args&&... args) : storage{std::forward<Args>(args)...} {}
+		utils_gpu_available constexpr single(Args&&... args) : storage{std::forward<Args>(args)...} 
+			{
+			}
 
 		utils_gpu_available constexpr          const value_type& value     () const noexcept                                    { return static_cast<const value_type&>(storage); }
 		utils_gpu_available constexpr                value_type& value     ()       noexcept requires(!storage_type.is_const()) { return static_cast<      value_type&>(storage); }

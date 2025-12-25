@@ -75,7 +75,7 @@ namespace utils::math::geometry::details
 
 		std::pair<float, float> intersection_ts_approximate_first(float t_step = .01f) const noexcept
 			{
-			const auto ret{interactions_bezier_ab{b, a}.intersects(t_step)};
+			const auto ret{interactions_bezier_ab{b, a}.intersection_ts_approximate_first(t_step)};
 			return {ret.second, ret.first};
 			}
 		};

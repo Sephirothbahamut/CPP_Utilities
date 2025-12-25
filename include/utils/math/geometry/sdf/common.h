@@ -163,6 +163,7 @@ namespace utils::math::geometry::sdf
 			return *this;
 			}
 
+		utils_gpu_available constexpr bool operator==(const direction_signed_distance& other) const noexcept = default;
 		utils_gpu_available constexpr direction_signed_distance  operator-() const noexcept { return {-distance, direction}; }//TODO should invert direction direction?
 		utils_gpu_available constexpr direction_signed_distance& operator-=(float value) noexcept { *this = *this - value; return *this; }
 		utils_gpu_available constexpr direction_signed_distance  operator-(float value) const noexcept 

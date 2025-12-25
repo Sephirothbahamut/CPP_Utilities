@@ -339,6 +339,7 @@ namespace utils::math
 			utils_gpu_available constexpr size_t sizes_to_size() const noexcept
 				requires(std::convertible_to<value_type, size_t>)
 				{
+				assert(x() >= 0 && y() >= 0);
 				size_t ret{1};
 				for (const auto& value : (*this))
 					{
@@ -350,6 +351,7 @@ namespace utils::math
 			utils_gpu_available constexpr size_t coords_to_index(math::vec_s<extent> coords) const noexcept
 				requires(std::convertible_to<value_type, size_t>)
 				{
+				assert(x() >= 0 && y() >= 0);
 				size_t ret{0};
 				size_t multiplier{1};
 
