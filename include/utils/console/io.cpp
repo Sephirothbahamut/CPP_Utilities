@@ -2,6 +2,9 @@
 
 #include "../compilation/OS.h"
 
+#include <iostream>
+#include <string>
+
 //getch
 #ifdef utils_compilation_os_windows
 //	{
@@ -76,4 +79,29 @@ namespace utils::console
 		//	}
 		#endif
 		}
+
+
+
+	namespace string
+		{
+		std::string clear_line() noexcept { return "\x1b[2K"; }
+		std::string cursor_up () noexcept { return "\x1b[1A"; }
+		std::string clear_lines(size_t count) noexcept
+			{
+			assert(count >= 1);
+			std::string str;
+			str.reserve(4 * count + 4 * (count - 1) + 1);
+			str += clear_line();
+			for (size_t i{1}; i < count; i++)
+				{
+				str += cursor_up();
+				str += clear_line();
+				}
+			return str;
+			}
+		}
+
+	void clear_line (            ) noexcept { std::cout << string::clear_line (); }
+	void cursor_up  (            ) noexcept { std::cout << string::cursor_up  (); }
+	void clear_lines(size_t count) noexcept { std::cout << string::clear_lines(count); }
 	}
