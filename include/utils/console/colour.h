@@ -1,6 +1,7 @@
 #pragma once
 
 #include <iostream>
+#include <string>
 #include <stdexcept>
 #include "../graphics/colour.h"
 
@@ -48,17 +49,28 @@ namespace utils::console::colour
 			colour_data_t data;
 			};
 
+		struct restore_defaults_t {};
+
 		namespace concepts
 			{
 			template <typename T>
 			concept colour = std::derived_from<T, utils::console::colour::details::colour<typename T::colour_data_t>>;
 			}
 
-		struct restore_defaults_t {};
-
-		inline std::ostream& operator<<(std::ostream& stream, const utils::console::colour::details::restore_defaults_t&)
+		template <typename char_t>
+		std::basic_ostream<char_t>& operator<<(std::basic_ostream<char_t>& stream, const utils::console::colour::details::restore_defaults_t&)
 			{
 			return stream << "\033[0m";
+			}
+		template <typename char_t>
+		std::basic_string<char_t>& operator+=(std::basic_string<char_t>& string, const utils::console::colour::details::restore_defaults_t&)
+			{
+			return string += "\033[0m";
+			}
+		template <typename char_t>
+		std::basic_string<char_t> operator+(const std::basic_string<char_t>& string, const utils::console::colour::details::restore_defaults_t&)
+			{
+			return string + "\033[0m";
 			}
 		}
 
@@ -80,57 +92,72 @@ namespace utils::console::colour
 		template <typename T> concept background = std::same_as<T, utils::console::colour::background<typename T::colour_data_t>>;
 		}
 
-	template <typename char_t, details::concepts::colour colour_t>
+	template <typename char_t = char, details::concepts::colour colour_t>
 	inline constexpr std::basic_string<char_t> to_string(const colour_t& colour) noexcept
 		{
-		std::basic_stringstream<char_t> ss;
 		if constexpr (std::same_as<typename colour_t::colour_data_t, utils::console::colour::colour_8>)
 			{
 			if constexpr (concepts::foreground<colour_t>)
 				{
 				switch (colour.data.base)
 					{
-					case utils::graphics::colour::base::black  : ss << "\x1B[" << (colour.data.is_dark ? "30" : "90") << "m"; break;
-					case utils::graphics::colour::base::red    : ss << "\x1B[" << (colour.data.is_dark ? "31" : "91") << "m"; break;
-					case utils::graphics::colour::base::green  : ss << "\x1B[" << (colour.data.is_dark ? "32" : "92") << "m"; break;
-					case utils::graphics::colour::base::yellow : ss << "\x1B[" << (colour.data.is_dark ? "33" : "93") << "m"; break;
-					case utils::graphics::colour::base::blue   : ss << "\x1B[" << (colour.data.is_dark ? "34" : "94") << "m"; break;
-					case utils::graphics::colour::base::magenta: ss << "\x1B[" << (colour.data.is_dark ? "35" : "95") << "m"; break;
-					case utils::graphics::colour::base::cyan   : ss << "\x1B[" << (colour.data.is_dark ? "36" : "96") << "m"; break;
-					case utils::graphics::colour::base::white  : ss << "\x1B[" << (colour.data.is_dark ? "37" : "97") << "m"; break;
+					case utils::graphics::colour::base::black  : return std::string{"\x1B["} + (colour.data.is_dark ? "30" : "90") + "m";
+					case utils::graphics::colour::base::red    : return std::string{"\x1B["} + (colour.data.is_dark ? "31" : "91") + "m";
+					case utils::graphics::colour::base::green  : return std::string{"\x1B["} + (colour.data.is_dark ? "32" : "92") + "m";
+					case utils::graphics::colour::base::yellow : return std::string{"\x1B["} + (colour.data.is_dark ? "33" : "93") + "m";
+					case utils::graphics::colour::base::blue   : return std::string{"\x1B["} + (colour.data.is_dark ? "34" : "94") + "m";
+					case utils::graphics::colour::base::magenta: return std::string{"\x1B["} + (colour.data.is_dark ? "35" : "95") + "m";
+					case utils::graphics::colour::base::cyan   : return std::string{"\x1B["} + (colour.data.is_dark ? "36" : "96") + "m";
+					case utils::graphics::colour::base::white  : return std::string{"\x1B["} + (colour.data.is_dark ? "37" : "97") + "m";
 					}
 				}
 			else if constexpr (concepts::background<colour_t>)
 				{
 				switch (colour.data.base)
 					{
-					case utils::graphics::colour::base::black  : ss << "\x1B[" << (colour.data.is_dark ? "40" : "100") << "m"; break;
-					case utils::graphics::colour::base::red    : ss << "\x1B[" << (colour.data.is_dark ? "41" : "101") << "m"; break;
-					case utils::graphics::colour::base::green  : ss << "\x1B[" << (colour.data.is_dark ? "42" : "102") << "m"; break;
-					case utils::graphics::colour::base::yellow : ss << "\x1B[" << (colour.data.is_dark ? "43" : "103") << "m"; break;
-					case utils::graphics::colour::base::blue   : ss << "\x1B[" << (colour.data.is_dark ? "44" : "104") << "m"; break;
-					case utils::graphics::colour::base::magenta: ss << "\x1B[" << (colour.data.is_dark ? "45" : "105") << "m"; break;
-					case utils::graphics::colour::base::cyan   : ss << "\x1B[" << (colour.data.is_dark ? "46" : "106") << "m"; break;
-					case utils::graphics::colour::base::white  : ss << "\x1B[" << (colour.data.is_dark ? "47" : "107") << "m"; break;
+					case utils::graphics::colour::base::black  : return std::string{"\x1B["} + (colour.data.is_dark ? "40" : "100") + "m";
+					case utils::graphics::colour::base::red    : return std::string{"\x1B["} + (colour.data.is_dark ? "41" : "101") + "m";
+					case utils::graphics::colour::base::green  : return std::string{"\x1B["} + (colour.data.is_dark ? "42" : "102") + "m";
+					case utils::graphics::colour::base::yellow : return std::string{"\x1B["} + (colour.data.is_dark ? "43" : "103") + "m";
+					case utils::graphics::colour::base::blue   : return std::string{"\x1B["} + (colour.data.is_dark ? "44" : "104") + "m";
+					case utils::graphics::colour::base::magenta: return std::string{"\x1B["} + (colour.data.is_dark ? "45" : "105") + "m";
+					case utils::graphics::colour::base::cyan   : return std::string{"\x1B["} + (colour.data.is_dark ? "46" : "106") + "m";
+					case utils::graphics::colour::base::white  : return std::string{"\x1B["} + (colour.data.is_dark ? "47" : "107") + "m";
 					}
 				}
 			}
 		else if constexpr (std::same_as<typename colour_t::colour_data_t, utils::graphics::colour::rgb_u>)
 			{
-			ss << "\033[";
-			if constexpr (concepts::foreground<colour_t>) { ss << "38"; }
-			else if constexpr (concepts::background<colour_t>) { ss << "48"; }
+			std::basic_string<char_t> ret;
+			ret += "\033[";
+			if constexpr (concepts::foreground<colour_t>) { ret += "38"; }
+			else if constexpr (concepts::background<colour_t>) { ret += "48"; }
 
-			ss << ";2;" << +colour.data.r() << ";" << +colour.data.g() << ";" << +colour.data.b() << "m";
+			ret += ";2;" + std::to_string(colour.data.r()) + ";" + std::to_string(colour.data.g()) + ";" + std::to_string(colour.data.b()) + "m";
+			return ret;
 			}
+		}
 
-		return ss.str();
+	template <typename char_t = char>
+	inline constexpr std::basic_string<char_t> to_string(const details::restore_defaults_t& restore_defaults) noexcept
+		{
+		return "\033[0m";
 		}
 
 	template <typename char_t, details::concepts::colour colour_t>
 	std::basic_ostream<char_t>& operator<<(std::basic_ostream<char_t>& stream, const colour_t& colour) noexcept
 		{
 		return stream << to_string<char_t>(colour);
+		}
+	template <typename char_t, details::concepts::colour colour_t>
+	std::basic_string<char_t>& operator+=(std::basic_string<char_t>& string, const colour_t& colour) noexcept
+		{
+		return string += to_string<char_t>(colour);
+		}
+	template <typename char_t, details::concepts::colour colour_t>
+	std::basic_string<char_t> operator+(const std::basic_string<char_t>& string, const colour_t& colour) noexcept
+		{
+		return string + to_string<char_t>(colour);
 		}
 
 	inline static constexpr details::restore_defaults_t restore_defaults;
