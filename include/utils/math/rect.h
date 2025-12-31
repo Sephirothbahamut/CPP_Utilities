@@ -149,7 +149,7 @@ namespace utils::math
 				}
 			};
 
-		self_t& merge_self(const self_t& other) noexcept
+		utils_gpu_available constexpr self_t& merge_self(const self_t& other) noexcept
 			{
 			ll() = utils::math::min(ll(), other.ll());
 			up() = utils::math::min(up(), other.up());
@@ -157,14 +157,14 @@ namespace utils::math
 			dw() = utils::math::max(dw(), other.dw());
 			return *this;
 			}
-		self_t merge(const self_t& other) const noexcept { self_t tmp{*this}; return tmp.merge_self(other); }
+		utils_gpu_available constexpr self_t merge(const self_t& other) const noexcept { self_t tmp{*this}; return tmp.merge_self(other); }
 
 		/// <summary>
 		/// Generates a rect of type T with rounded down and up values (top-left rounded down, bottom-right rounded up) that fully encloses this rect.
 		/// If T is an unsigned type all negative coordinates will be 0.
 		/// </summary>
 		template <typename T>
-		rect<T> wrapping_round() const noexcept
+		utils_gpu_available constexpr rect<T> wrapping_round() const noexcept
 			{
 			const utils::math::rect<T> ret
 				{
@@ -176,14 +176,14 @@ namespace utils::math
 			return ret;
 			}
 
-		utils_gpu_available const const_aware_value_type& ll() const noexcept { return (*this)[0]; }
-		utils_gpu_available       const_aware_value_type& ll()       noexcept { return (*this)[0]; }
-		utils_gpu_available const const_aware_value_type& up() const noexcept { return (*this)[1]; }
-		utils_gpu_available       const_aware_value_type& up()       noexcept { return (*this)[1]; }
-		utils_gpu_available const const_aware_value_type& rr() const noexcept { return (*this)[2]; }
-		utils_gpu_available       const_aware_value_type& rr()       noexcept { return (*this)[2]; }
-		utils_gpu_available const const_aware_value_type& dw() const noexcept { return (*this)[3]; }
-		utils_gpu_available       const_aware_value_type& dw()       noexcept { return (*this)[3]; }
+		utils_gpu_available constexpr const const_aware_value_type& ll() const noexcept { return (*this)[0]; }
+		utils_gpu_available constexpr       const_aware_value_type& ll()       noexcept { return (*this)[0]; }
+		utils_gpu_available constexpr const const_aware_value_type& up() const noexcept { return (*this)[1]; }
+		utils_gpu_available constexpr       const_aware_value_type& up()       noexcept { return (*this)[1]; }
+		utils_gpu_available constexpr const const_aware_value_type& rr() const noexcept { return (*this)[2]; }
+		utils_gpu_available constexpr       const_aware_value_type& rr()       noexcept { return (*this)[2]; }
+		utils_gpu_available constexpr const const_aware_value_type& dw() const noexcept { return (*this)[3]; }
+		utils_gpu_available constexpr       const_aware_value_type& dw()       noexcept { return (*this)[3]; }
 
 		#pragma region Proxies
 		#pragma region Position
@@ -588,19 +588,54 @@ namespace utils::math
 	template <typename T = float>
 	struct utils_oop_empty_bases padding
 		{
-		rect<T> rect;
-		utils_gpu_available float horizontal() const noexcept { return rect.ll() + rect.rr(); }
-		utils_gpu_available float vertical  () const noexcept { return rect.up() + rect.dw(); }
+		std::array<T, 4> inner_storage;
+
+		utils_gpu_available constexpr const T& ll() const noexcept { return (*this)[0]; }
+		utils_gpu_available constexpr       T& ll()       noexcept { return (*this)[0]; }
+		utils_gpu_available constexpr const T& up() const noexcept { return (*this)[1]; }
+		utils_gpu_available constexpr       T& up()       noexcept { return (*this)[1]; }
+		utils_gpu_available constexpr const T& rr() const noexcept { return (*this)[2]; }
+		utils_gpu_available constexpr       T& rr()       noexcept { return (*this)[2]; }
+		utils_gpu_available constexpr const T& dw() const noexcept { return (*this)[3]; }
+		utils_gpu_available constexpr       T& dw()       noexcept { return (*this)[3]; }
+		
+		utils_gpu_available constexpr const utils::math::vec2   <T> ul() const noexcept { return {ll(), up()}; }
+		utils_gpu_available constexpr const utils::math::vec2   <T> ur() const noexcept { return {rr(), up()}; }
+		utils_gpu_available constexpr const utils::math::vec2   <T> dr() const noexcept { return {rr(), dw()}; }
+		utils_gpu_available constexpr const utils::math::vec2   <T> dl() const noexcept { return {ll(), dw()}; }
+		utils_gpu_available constexpr       utils::math::vecref2<T> ul()       noexcept { return {ll(), up()}; }
+		utils_gpu_available constexpr       utils::math::vecref2<T> ur()       noexcept { return {rr(), up()}; }
+		utils_gpu_available constexpr       utils::math::vecref2<T> dr()       noexcept { return {rr(), dw()}; }
+		utils_gpu_available constexpr       utils::math::vecref2<T> dl()       noexcept { return {ll(), dw()}; }
+		utils_gpu_available constexpr auto up_left     () const noexcept { return ul(); }
+		utils_gpu_available constexpr auto top_left    () const noexcept { return ul(); }
+		utils_gpu_available constexpr auto up_right    () const noexcept { return ur(); }
+		utils_gpu_available constexpr auto top_right   () const noexcept { return ur(); }
+		utils_gpu_available constexpr auto down_right  () const noexcept { return dr(); }
+		utils_gpu_available constexpr auto bottom_right() const noexcept { return dr(); }
+		utils_gpu_available constexpr auto down_left   () const noexcept { return dl(); }
+		utils_gpu_available constexpr auto bottom_left () const noexcept { return dl(); }
+		utils_gpu_available constexpr auto up_left     ()       noexcept { return ul(); }
+		utils_gpu_available constexpr auto top_left    ()       noexcept { return ul(); }
+		utils_gpu_available constexpr auto up_right    ()       noexcept { return ur(); }
+		utils_gpu_available constexpr auto top_right   ()       noexcept { return ur(); }
+		utils_gpu_available constexpr auto down_right  ()       noexcept { return dr(); }
+		utils_gpu_available constexpr auto bottom_right()       noexcept { return dr(); }
+		utils_gpu_available constexpr auto down_left   ()       noexcept { return dl(); }
+		utils_gpu_available constexpr auto bottom_left ()       noexcept { return dl(); }
+
+		utils_gpu_available float horizontal() const noexcept { return ll() + rr(); }
+		utils_gpu_available float vertical  () const noexcept { return up() + dw(); }
 		};
 
 	template <typename T>
 	utils_gpu_available rect<T> operator+(const rect<T>& rect, const padding<T>& padding) noexcept
 		{
 		auto ret{rect};
-		ret.ll() -= padding.rect.ll();
-		ret.up() -= padding.rect.up();
-		ret.rr() += padding.rect.rr();
-		ret.dw() += padding.rect.dw();
+		ret.ll() -= padding.ll();
+		ret.up() -= padding.up();
+		ret.rr() += padding.rr();
+		ret.dw() += padding.dw();
 		return ret;
 		}
 
@@ -608,10 +643,10 @@ namespace utils::math
 	utils_gpu_available rect<T> operator-(const rect<T>& rect, const padding<T>& padding) noexcept
 		{
 		auto ret{rect};
-		ret.ll() += padding.rect.ll();
-		ret.up() += padding.rect.up();
-		ret.rr() -= padding.rect.rr();
-		ret.dw() -= padding.rect.dw();
+		ret.ll() += padding.ll();
+		ret.up() += padding.up();
+		ret.rr() -= padding.rr();
+		ret.dw() -= padding.dw();
 		return ret;
 		}
 
