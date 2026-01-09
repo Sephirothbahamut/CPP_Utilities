@@ -552,6 +552,8 @@ namespace utils::containers
 					}
 				}
 
+			value_type last_value() const noexcept { return inner_slots.rbegin()->value; }
+
 			void add(const value_type& new_value, const region& in_region)
 				{
 				assert(in_region.begin != std::numeric_limits<size_t>::max());
