@@ -336,11 +336,10 @@ namespace utils::math
 				return std::ranges::iota_view<size_t, size_t>(size_t{0}, sizes_to_size());
 				}
 
-			utils_gpu_available constexpr size_t sizes_to_size() const noexcept
-				requires(std::convertible_to<value_type, size_t>)
+			utils_gpu_available constexpr value_type sizes_to_size() const noexcept
 				{
 				assert(x() >= 0 && y() >= 0);
-				size_t ret{1};
+				value_type ret{1};
 				for (const auto& value : (*this))
 					{
 					ret *= value;
@@ -348,7 +347,7 @@ namespace utils::math
 				return ret;
 				}
 
-			utils_gpu_available constexpr size_t coords_to_index(math::vec_s<extent> coords) const noexcept
+			utils_gpu_available constexpr value_type coords_to_index(math::vec_s<extent> coords) const noexcept
 				requires(std::convertible_to<value_type, size_t>)
 				{
 				assert(x() >= 0 && y() >= 0);

@@ -136,6 +136,7 @@ namespace utils::console::colour
 			ret += ";2;" + std::to_string(colour.data.r()) + ";" + std::to_string(colour.data.g()) + ";" + std::to_string(colour.data.b()) + "m";
 			return ret;
 			}
+		std::unreachable();
 		}
 
 	template <typename char_t = char>

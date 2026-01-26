@@ -31,16 +31,16 @@ namespace utils::math
 		using typename storage_t::value_type;
 		using typename storage_t::const_aware_value_type;
 		using storage_t::storage_type;
-		using vertex_owner = utils::math::vec2<value_type>;
+		using vertex_owner    = utils::math::vec2   <value_type>;
 		using vertex_observer = utils::math::vecref2<const_aware_value_type>;
 
-		using self_t = rect<T>;
-		using owner_self_t = rect<value_type>;
-		using observer_self_t = rect<storage::storage_type_for<value_type, storage::type::create::observer()>>;
+		using self_t                = rect<T>;
+		using owner_self_t          = rect<value_type>;
+		using observer_self_t       = rect<storage::storage_type_for<value_type, storage::type::create::observer      ()>>;
 		using const_observer_self_t = rect<storage::storage_type_for<value_type, storage::type::create::const_observer()>>;
 
 		const_observer_self_t create_observer() const noexcept { return {*this}; }
-		observer_self_t create_observer()       noexcept { return {*this}; }
+		      observer_self_t create_observer()       noexcept { return {*this}; }
 
 		using utils::storage::multiple<T, 4, false>::multiple;
 
@@ -163,7 +163,7 @@ namespace utils::math
 		/// Generates a rect of type T with rounded down and up values (top-left rounded down, bottom-right rounded up) that fully encloses this rect.
 		/// If T is an unsigned type all negative coordinates will be 0.
 		/// </summary>
-		template <typename T>
+		template <std::integral T>
 		utils_gpu_available constexpr rect<T> wrapping_round() const noexcept
 			{
 			const utils::math::rect<T> ret
@@ -172,6 +172,29 @@ namespace utils::math
 				utils::math::cast_clamp<T>(utils::math::floor(up())),
 				utils::math::cast_clamp<T>(utils::math::ceil (rr())),
 				utils::math::cast_clamp<T>(utils::math::ceil (dw()))
+				};
+			return ret;
+			}
+		utils_gpu_available constexpr owner_self_t wrapping_round() const noexcept
+			{
+			const owner_self_t ret
+				{
+				utils::math::floor(ll()),
+				utils::math::floor(up()),
+				utils::math::ceil (rr()),
+				utils::math::ceil (dw())
+				};
+			return ret;
+			}
+		template <typename T>
+		utils_gpu_available constexpr rect<T> cast() const noexcept
+			{
+			const utils::math::rect<T> ret
+				{
+				utils::math::cast_clamp<T>(ll()),
+				utils::math::cast_clamp<T>(up()),
+				utils::math::cast_clamp<T>(rr()),
+				utils::math::cast_clamp<T>(dw())
 				};
 			return ret;
 			}
@@ -586,9 +609,25 @@ namespace utils::math
 
 
 	template <typename T = float>
-	struct utils_oop_empty_bases padding
+	struct utils_oop_empty_bases padding : utils::storage::multiple<T, 4, false>
 		{
-		std::array<T, 4> inner_storage;
+		using storage_t = utils::storage::multiple<T, 4, false>;
+
+		using typename storage_t::value_type;
+		using typename storage_t::const_aware_value_type;
+		using storage_t::storage_type;
+		using vertex_owner    = utils::math::vec2   <value_type>;
+		using vertex_observer = utils::math::vecref2<const_aware_value_type>;
+
+		using self_t                = padding<T>;
+		using owner_self_t          = padding<value_type>;
+		using observer_self_t       = padding<storage::storage_type_for<value_type, storage::type::create::observer      ()>>;
+		using const_observer_self_t = padding<storage::storage_type_for<value_type, storage::type::create::const_observer()>>;
+
+		const_observer_self_t create_observer() const noexcept { return {*this}; }
+		      observer_self_t create_observer()       noexcept { return {*this}; }
+
+		using utils::storage::multiple<T, 4, false>::multiple;
 
 		utils_gpu_available constexpr const T& ll() const noexcept { return (*this)[0]; }
 		utils_gpu_available constexpr       T& ll()       noexcept { return (*this)[0]; }
@@ -627,6 +666,32 @@ namespace utils::math
 		utils_gpu_available float horizontal() const noexcept { return ll() + rr(); }
 		utils_gpu_available float vertical  () const noexcept { return up() + dw(); }
 		};
+
+
+	/*template <typename T>
+	utils_gpu_available padding<T> operator+(const padding<T>& a, const padding<T>& b) noexcept
+		{
+		const padding<T> ret
+			{
+			a.ll() + b.ll(),
+			a.up() + b.up(),
+			a.rr() + b.rr(),
+			a.dw() + b.dw(),
+			};
+		return ret;
+		}
+	template <typename T>
+	utils_gpu_available padding<T> operator+(const padding<T>& a, const T& b) noexcept
+		{
+		const padding<T> ret
+			{
+			a.ll() + b,
+			a.up() + b,
+			a.rr() + b,
+			a.dw() + b,
+			};
+		return ret;
+		}*/
 
 	template <typename T>
 	utils_gpu_available rect<T> operator+(const rect<T>& rect, const padding<T>& padding) noexcept
