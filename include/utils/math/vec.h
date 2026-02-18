@@ -309,6 +309,13 @@ namespace utils::math
 			utils_gpu_available constexpr owner_self_t perpendicular_left            () const noexcept requires(storage_type.is_owner() && extent == 2) { return {-y(),  x()}; }
 			utils_gpu_available constexpr owner_self_t perpendicular_clockwise       () const noexcept requires(storage_type.is_owner() && extent == 2) { return perpendicular_right(); }
 			utils_gpu_available constexpr owner_self_t perpendicular_counterclockwise() const noexcept requires(storage_type.is_owner() && extent == 2) { return perpendicular_left (); }
+
+			utils_gpu_available constexpr vec<float, 3> to_3d_normal() const noexcept  requires(std::convertible_to<value_type, float>&& extent == 2)
+				{
+				const float z = std::clamp(1.f - std::sqrt((x() * x() + y() * y())), 0.f, 1.f);
+				const utils::math::vec<float, 3> ret{x(), y(), z};
+				return ret;
+				}
 		#pragma endregion 2d
 		#pragma region geometry
 			struct sdf_proxy;
@@ -326,7 +333,6 @@ namespace utils::math
 			utils_gpu_available constexpr auto& rotate_self   (this utils::concepts::non_const auto& self, const angle::degf       & rotation   ) noexcept requires(std::convertible_to<value_type, float> && extent == 2 && !std::remove_cvref_t<decltype(self)>::storage_type.is_const());
 			utils_gpu_available constexpr auto& translate_self(this utils::concepts::non_const auto& self, const vec2f             & translation) noexcept requires(std::convertible_to<value_type, float> && extent == 2 && !std::remove_cvref_t<decltype(self)>::storage_type.is_const());
 		#pragma endregion geometry
-
 
 
 		#pragma region size_t

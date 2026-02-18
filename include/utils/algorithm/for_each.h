@@ -16,6 +16,44 @@
 
 namespace utils::algorithm::for_each
 	{
+	inline void in_rect(utils::math::rect<size_t> unsigned_rect, std::function<void(utils::math::vec2s coords)> callback, utils::logging::progress_bar<>& partial_progress)
+		{
+		auto inner_partial_progress{partial_progress.split(unsigned_rect.size().sizes_to_size())};
+		for (size_t i{0}; i < unsigned_rect.size().sizes_to_size(); i++)
+			{
+			const auto coords{unsigned_rect.size().index_to_coords(i)};
+			callback(coords);
+			inner_partial_progress.advance();
+			}
+		}
+
+	inline void in_rect(utils::math::rect<utils::math::ssize_t> signed_rect, std::function<void(utils::math::vec2ss coords)> callback, utils::logging::progress_bar<>& partial_progress)
+		{
+		const utils::math::vec2ss delta_origin
+			{
+			signed_rect.ll() < 0 ? signed_rect.ll() : 0,
+			signed_rect.up() < 0 ? signed_rect.up() : 0,
+			};
+
+		const utils::math::rect<size_t> unsigned_rect
+			{
+			static_cast<size_t>(signed_rect.ll() - delta_origin.x()),
+			static_cast<size_t>(signed_rect.up() - delta_origin.y()),
+			static_cast<size_t>(signed_rect.rr() - delta_origin.x()),
+			static_cast<size_t>(signed_rect.dw() - delta_origin.y())
+			};
+
+		in_rect(unsigned_rect, [&delta_origin, &callback](utils::math::vec2s coords)
+			{
+			const utils::math::vec2ss signed_coords
+				{
+				static_cast<utils::math::ssize_t>(coords.x()) + delta_origin.x(),
+				static_cast<utils::math::ssize_t>(coords.y()) + delta_origin.y()
+				};
+			callback(signed_coords);
+			}, partial_progress);
+		}
+
 	namespace details
 		{
 		inline utils::math::rect<size_t> clamp_region(const utils::math::vec2s& resolution, const utils::math::rect<size_t>& unclamped_region) noexcept
@@ -48,7 +86,7 @@ namespace utils::algorithm::for_each
 
 		struct in_region_scale_progress_t
 			{
-			logging::partial_progress& partial_progress;
+			logging::progress_bar<>& partial_progress;
 			utils::math::vec2s sizes;
 			utils::math::vec2f floating_per_index;
 			utils::math::rect<size_t> region;
@@ -66,7 +104,7 @@ namespace utils::algorithm::for_each
 				const utils::math::vec2s region_resolution{region.size()};
 				const auto indices_range{region_resolution.indices_range()};
 				const auto indices_count{region_resolution.sizes_to_size()};
-				logging::partial_progress inner_progress{partial_progress.split_partial_progress(indices_count)};
+				auto inner_progress{partial_progress.split(indices_count)};
 
 				const auto callback_with_params_wrapper{[&](size_t region_index)
 					{
@@ -110,7 +148,7 @@ namespace utils::algorithm::for_each
 
 		struct in_sizes_scale_progress_t
 			{
-			logging::partial_progress& partial_progress;
+			logging::progress_bar<>& partial_progress;
 			utils::math::vec2s sizes;
 			utils::math::vec2f floating_per_index;
 
@@ -126,7 +164,7 @@ namespace utils::algorithm::for_each
 				const auto indices_range{sizes.indices_range()};
 				const auto indices_count{sizes.sizes_to_size()};
 
-				logging::partial_progress inner_progress{partial_progress.split_partial_progress(indices_count)};
+				auto inner_progress{partial_progress.split(indices_count)};
 
 				const auto callback_with_params_wrapper{[&](const size_t& index)
 					{
@@ -177,7 +215,7 @@ namespace utils::algorithm::for_each
 			utils::math::vec2f floating_per_index;
 			utils::math::rect<size_t> region;
 
-			inline in_region_scale_progress_t partial_progress(utils::logging::partial_progress& value) const noexcept
+			inline in_region_scale_progress_t partial_progress(utils::logging::progress_bar<>& value) const noexcept
 				{
 				return in_region_scale_progress_t{value, sizes, floating_per_index, region};
 				}
@@ -185,9 +223,8 @@ namespace utils::algorithm::for_each
 			template <bool parallel = true>
 			inline void execute(auto callback) const noexcept
 				{
-				utils::logging::progress_bar progress_bar{.01f, 50};
-				utils::logging::partial_progress _partial_progress{progress_bar.partial_progress(1)};
-				partial_progress(_partial_progress).execute<parallel>(callback);
+				utils::logging::progress_bar<> progress_bar{utils::logging::progress_bar<>::create_info{.steps_count{1}}};
+				partial_progress(progress_bar).execute<parallel>(callback);
 				}
 
 			using callback_params = in_region_scale_progress_t::callback_params;
@@ -198,7 +235,7 @@ namespace utils::algorithm::for_each
 			utils::math::vec2s sizes;
 			utils::math::vec2f floating_per_index;
 
-			inline in_sizes_scale_progress_t partial_progress(utils::logging::partial_progress& value) const noexcept
+			inline in_sizes_scale_progress_t partial_progress(utils::logging::progress_bar<>& value) const noexcept
 				{
 				return in_sizes_scale_progress_t{value, sizes, floating_per_index};
 				}
@@ -219,9 +256,8 @@ namespace utils::algorithm::for_each
 			template <bool parallel = true>
 			inline void execute(auto callback) const noexcept
 				{
-				utils::logging::progress_bar progress_bar{.01f, 50};
-				utils::logging::partial_progress _partial_progress{progress_bar.partial_progress(1)};
-				partial_progress(_partial_progress).execute<parallel>(callback);
+				utils::logging::progress_bar<> progress_bar{utils::logging::progress_bar<>::create_info{.steps_count{1}}};
+				partial_progress(progress_bar).execute<parallel>(callback);
 				}
 
 			using callback_params = in_sizes_scale_progress_t::callback_params;
@@ -243,7 +279,7 @@ namespace utils::algorithm::for_each
 				scale({1.f, 1.f}).execute<parallel>(callback);
 				}
 
-			inline in_region_scale_progress_t partial_progress(utils::logging::partial_progress& value) const noexcept
+			inline in_region_scale_progress_t partial_progress(utils::logging::progress_bar<>& value) const noexcept
 				{
 				return scale({1.f, 1.f}).partial_progress(value);
 				}
@@ -271,7 +307,7 @@ namespace utils::algorithm::for_each
 				scale({1.f, 1.f}).execute<parallel>(callback);
 				}
 
-			inline in_sizes_scale_progress_t partial_progress(utils::logging::partial_progress& value) const noexcept
+			inline in_sizes_scale_progress_t partial_progress(utils::logging::progress_bar<>& value) const noexcept
 				{
 				return scale({1.f, 1.f}).partial_progress(value);
 				}
