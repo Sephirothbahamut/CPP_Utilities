@@ -14,7 +14,7 @@
 namespace utils::logging
 	{
 	enum class output_style_t { on_line, tag_as_separator };
-	enum class msg_t { raw, log, dgn, inf, wrn, err, section_enter, section_leave };
+	enum class msg_t { raw, log, dgn, inf, wrn, err, suc, section_enter, section_leave };
 
 	template <output_style_t OUTPUT_STYLE>
 	class message
@@ -33,6 +33,7 @@ namespace utils::logging
 			static constexpr message inf          (const string::concepts::stringlike auto& string = "", size_t indents_count = 0) noexcept { return {msg_t::inf          , string, indents_count}; }
 			static constexpr message wrn          (const string::concepts::stringlike auto& string = "", size_t indents_count = 0) noexcept { return {msg_t::wrn          , string, indents_count}; }
 			static constexpr message err          (const string::concepts::stringlike auto& string = "", size_t indents_count = 0) noexcept { return {msg_t::err          , string, indents_count}; }
+			static constexpr message suc          (const string::concepts::stringlike auto& string = "", size_t indents_count = 0) noexcept { return {msg_t::suc          , string, indents_count}; }
 			static constexpr message section_enter(const string::concepts::stringlike auto& string = "", size_t indents_count = 0) noexcept { return {msg_t::section_enter, string, indents_count}; }
 			static constexpr message section_leave(const string::concepts::stringlike auto& string = "", size_t indents_count = 0) noexcept { return {msg_t::section_leave, string, indents_count}; }
 
@@ -45,6 +46,7 @@ namespace utils::logging
 					case msg_t::inf          : return "[INF]";
 					case msg_t::wrn          : return "[WRN]";
 					case msg_t::err          : return "[ERR]";
+					case msg_t::suc          : return "[SUC]";
 					case msg_t::section_enter: return " >>> ";
 					case msg_t::section_leave: return " <<< ";
 					default: return "[This error code should be impossible to get]";
@@ -59,6 +61,7 @@ namespace utils::logging
 					case msg_t::inf          : return "[INFO]"      ;
 					case msg_t::wrn          : return "[WARNING]"   ;
 					case msg_t::err          : return "[ERROR]"     ;
+					case msg_t::suc          : return "[SUCCEEDED]" ;
 					case msg_t::section_enter: return " >>> ";
 					case msg_t::section_leave: return " <<< ";
 					default: return "[This error code should be impossible to get]";
@@ -73,6 +76,7 @@ namespace utils::logging
 					case msg_t::inf          : return utils::graphics::colour::base::cyan   ;
 					case msg_t::wrn          : return utils::graphics::colour::base::yellow ;
 					case msg_t::err          : return utils::graphics::colour::base::red    ;
+					case msg_t::suc          : return utils::graphics::colour::base::green  ;
 					case msg_t::section_enter: return utils::graphics::colour::base::green  ;
 					case msg_t::section_leave: return utils::graphics::colour::base::green  ;
 					default                  : return utils::graphics::colour::base::red    ;

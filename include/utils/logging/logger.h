@@ -55,6 +55,7 @@ namespace utils::logging
 			constexpr void dgn(const string::concepts::stringlike auto& string) noexcept requires(concepts::message<value_type>) { push(value_type::dgn(string, indents_count)); }
 			constexpr void err(const string::concepts::stringlike auto& string) noexcept requires(concepts::message<value_type>) { push(value_type::err(string, indents_count)); }
 			constexpr void wrn(const string::concepts::stringlike auto& string) noexcept requires(concepts::message<value_type>) { push(value_type::wrn(string, indents_count)); }
+			constexpr void suc(const string::concepts::stringlike auto& string) noexcept requires(concepts::message<value_type>) { push(value_type::suc(string, indents_count)); }
 #pragma endregion Push messages end
 
 #pragma region Indent management begin
