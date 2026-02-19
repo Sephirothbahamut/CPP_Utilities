@@ -310,13 +310,27 @@ namespace utils::math
 			utils_gpu_available constexpr owner_self_t perpendicular_clockwise       () const noexcept requires(storage_type.is_owner() && extent == 2) { return perpendicular_right(); }
 			utils_gpu_available constexpr owner_self_t perpendicular_counterclockwise() const noexcept requires(storage_type.is_owner() && extent == 2) { return perpendicular_left (); }
 
-			utils_gpu_available constexpr vec<float, 3> to_3d_normal() const noexcept  requires(std::convertible_to<value_type, float>&& extent == 2)
+			utils_gpu_available constexpr vec<float, 3> to_3d_normal() const noexcept requires(std::convertible_to<value_type, float> && extent == 2)
 				{
 				const float z = std::clamp(1.f - std::sqrt((x() * x() + y() * y())), 0.f, 1.f);
 				const utils::math::vec<float, 3> ret{x(), y(), z};
 				return ret;
 				}
 		#pragma endregion 2d
+		#pragma region 3d
+			utils_gpu_available static constexpr vec<float, 3> normal_blend_reoriented(const vec<float, 3>& base, const vec<float, 3>& detail) noexcept requires(std::convertible_to<value_type, float> && extent == 3)
+				{
+				const vec<float, 3> tmp_a{base   + vec<float, 3>{+0.f, +0.f, +1.f}};
+				const vec<float, 3> tmp_b{detail * vec<float, 3>{-1.f, -1.f, +1.f}};
+				const vec<float, 3> ret{tmp_a * vec<float, 3>::dot(tmp_a, tmp_b) / tmp_a.z() - tmp_b};
+				return ret;
+				}
+			utils_gpu_available constexpr auto& normal_blend_reoriented_self(this utils::concepts::non_const auto& self, const vec<float, 3>& detail) noexcept requires(std::convertible_to<value_type, float> && extent == 3)
+				{
+				self = normal_blend_reoriented(self, detail);
+				return self;
+				}
+		#pragma endregion 3d
 		#pragma region geometry
 			struct sdf_proxy;
 			utils_gpu_available constexpr sdf_proxy sdf(const vec<float, 2>& point) const noexcept requires(std::convertible_to<value_type, float> && extent == 2);
