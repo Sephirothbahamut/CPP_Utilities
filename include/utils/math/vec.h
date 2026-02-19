@@ -312,7 +312,7 @@ namespace utils::math
 
 			utils_gpu_available constexpr vec<float, 3> to_3d_normal() const noexcept requires(std::convertible_to<value_type, float> && extent == 2)
 				{
-				const float z = std::clamp(1.f - std::sqrt((x() * x() + y() * y())), 0.f, 1.f);
+				const float z{std::clamp(1.f - std::sqrt((x() * x() + y() * y())), 0.f, 1.f)};
 				const utils::math::vec<float, 3> ret{x(), y(), z};
 				return ret;
 				}
