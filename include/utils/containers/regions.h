@@ -22,11 +22,15 @@ namespace utils::containers
 	struct region
 		{
 		size_t begin{0};
-		size_t count{1};
+		size_t count{0};
 		utils_gpu_available inline constexpr size_t end() const noexcept 
 			{
 			assert(!utils::math::will_overflow_sum(begin, count));
 			return begin + count; 
+			}
+		utils_gpu_available inline constexpr bool empty() const noexcept
+			{
+			return count == 0;
 			}
 
 		struct create : utils::oop::non_constructible
