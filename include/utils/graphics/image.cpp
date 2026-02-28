@@ -39,6 +39,8 @@ namespace utils::graphics::image
 				}
 			}
 
+		stbi_image_free(bytes);
+
 		return ret;
 		}
 
@@ -47,7 +49,10 @@ namespace utils::graphics::image
 		{
 		std::filesystem::path directory{path};
 		directory.remove_filename();
-		std::filesystem::create_directories(directory);
+		if (!directory.empty())
+			{
+			std::filesystem::create_directories(directory);
+			}
 		stbi_write_png(path.string().c_str(), static_cast<int>(image.width()), static_cast<int>(image.height()), 4, image.data(), static_cast<int>(image.width() * 4));
 		}
 	
