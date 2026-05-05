@@ -169,8 +169,8 @@ namespace utils::math::geometry::sdf
 		utils_gpu_available constexpr direction_signed_distance  operator-(float value) const noexcept 
 			{
 			const auto new_distance{distance.value - value};
-			//const auto new_direction{std::signbit(distance.value) != std::signbit(new_distance) ? -direction : direction};
-			//return {new_distance, new_direction};
+			const auto new_direction{std::signbit(distance.value) != std::signbit(new_distance) ? -direction : direction};
+			return {new_distance, new_direction};
 			return {new_distance, direction};
 			}
 		utils_gpu_available constexpr direction_signed_distance& operator+=(float value) noexcept { *this = *this + value; return *this; }

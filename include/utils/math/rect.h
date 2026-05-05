@@ -663,8 +663,9 @@ namespace utils::math
 		utils_gpu_available constexpr auto down_left   ()       noexcept { return dl(); }
 		utils_gpu_available constexpr auto bottom_left ()       noexcept { return dl(); }
 
-		utils_gpu_available float horizontal() const noexcept { return ll() + rr(); }
-		utils_gpu_available float vertical  () const noexcept { return up() + dw(); }
+		utils_gpu_available float              horizontal() const noexcept { return ll() + rr(); }
+		utils_gpu_available float              vertical  () const noexcept { return up() + dw(); }
+		utils_gpu_available utils::math::vec2f sizes     () const noexcept { return {horizontal(), vertical()}; }
 		};
 
 
@@ -731,7 +732,7 @@ namespace utils::math
 		}
 
 	template <typename T>
-	utils_gpu_available rect<T> operator-(const vec2<T>& vec, const padding<T>& padding) noexcept
+	utils_gpu_available vec2<T> operator-(const vec2<T>& vec, const padding<T>& padding) noexcept
 		{
 		auto ret{vec};
 		ret.x() -= padding.horizontal();

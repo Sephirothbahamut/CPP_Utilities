@@ -277,7 +277,9 @@ namespace utils::logging
 					assert(current_step < steps_count);
 					current_step++;
 					substep_percent = 0.f;
-					return progress_percent = evaluate_progress_percent();
+					progress_percent = evaluate_progress_percent();
+					assert(progress_percent >= 0.f && progress_percent <= 1.f);
+					return progress_percent;
 					}
 
 				size_t lines_to_clear() const noexcept { return 2 + (label.empty() ? 0 : 1) + (step_label.empty() ? 0 : 1); }
@@ -434,6 +436,7 @@ namespace utils::logging
 			/// <returns></returns>
 			[[nodiscard]] scoped_bar_t scoped_bar(size_t steps_count, const std::string_view& label = "") noexcept
 				{
+				assert(steps_count > 0);
 				elements.push_back(element_t
 					{
 					.steps_count{steps_count},
