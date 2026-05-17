@@ -11,9 +11,9 @@ namespace utils::input_system::device
 		{
 		enum class button_id
 			{
-			left,
-			right,
-			middle,
+			left    ,
+			right   ,
+			middle  ,
 			backward,
 			forward
 			};
@@ -33,6 +33,7 @@ namespace utils::input_system::device
 		using axes_t    = details::mouse::axes_t   ;
 		};
 
-	using maus = mouse;
-	using 🐭  = mouse;
+	//Emojis are no longer supported as valid identifiers 😢
+	//using 🐭  = mouse;
+	//using 🖱️   = mouse;
 	}

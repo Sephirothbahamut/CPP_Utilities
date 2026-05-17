@@ -1,5 +1,6 @@
 #pragma once
 
+#include "math.h"
 #include "vec.h"
 #include "transform2.h"
 #include "../memory.h"
@@ -482,6 +483,7 @@ namespace utils::math
 					return *this;
 					}
 
+				utils_gpu_available constexpr proxy_size_t& scale(const vertex_owner& factor) noexcept requires(!is_const) { return scale(anchor, factor); }
 				utils_gpu_available constexpr proxy_size_t& scale(const utils::alignment& alternative_anchor, const vertex_owner& factor) noexcept
 					requires(!is_const)
 					{
