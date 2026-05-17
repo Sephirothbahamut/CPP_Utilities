@@ -14,12 +14,17 @@ namespace utils::math::geometry::shape::generic
 		// extremes
 		utils::math::vec2f min{utils::math::min(vertices[0], vertices[vertices.size() - 1])};
 		utils::math::vec2f max{utils::math::max(vertices[0], vertices[vertices.size() - 1])};
-
+		
 		if (vertices.size() == 3)
 			{
 			if (vertices[1].x() < min.x() || vertices[1].x() > max.x() || vertices[1].y() < min.y() || vertices[1].y() > max.y())
 				{
-				const vec2 t{clamp((vertices[0] - vertices[1]) / (vertices[0] - (vertices[1] * 2.f) + vertices[2]), 0.f, 1.f)};
+				// With Platform tools v143 utils::math::clamp works without speciifying the template
+				// With Platform tools v145 i get 
+				// > error C2231: '.is_owner': left operand points to 'struct', use '->'
+				// unless I specify the template type.
+				// Can't seemingly reproduce in a minimal example
+				const vec2 t{utils::math::clamp<utils::math::vec2f>((vertices[0] - vertices[1]) / (vertices[0] - (vertices[1] * 2.f) + vertices[2]), 0.f, 1.f)};
 				const vec2 s{-t + 1.f};
 				const vec2 q{s * s * vertices[0] + (s * t * vertices[1] * 2.f) + t * t * vertices[2]};
 				min = utils::math::min(min, q);
@@ -33,7 +38,7 @@ namespace utils::math::geometry::shape::generic
 			const utils::math::vec2f k2{-(vertices[0] * 1.f) + (vertices[1] * 3.f) - (vertices[2] * 3.f) + (vertices[3] * 1.f)};
 			
 			utils::math::vec2f h{k1 * k1 - k0 * k2};
-
+		
 			if (h.x() > 0.f)
 				{
 				h.x() = sqrt(h.x());
@@ -56,7 +61,7 @@ namespace utils::math::geometry::shape::generic
 					max.x() = utils::math::max(max.x(), q);
 					}
 				}
-
+		
 			if (h.y() > 0.f)
 				{
 				h.y() = sqrt(h.y());
@@ -80,7 +85,7 @@ namespace utils::math::geometry::shape::generic
 					}
 				}
 			}
-
+		
 		const auto ret{shape::aabb::create::from_ul_dr(min, max)};
 		return ret;
 		}
