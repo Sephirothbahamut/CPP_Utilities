@@ -19,14 +19,9 @@ namespace utils::math::geometry::shape::generic
 			{
 			if (vertices[1].x() < min.x() || vertices[1].x() > max.x() || vertices[1].y() < min.y() || vertices[1].y() > max.y())
 				{
-				// With Platform tools v143 utils::math::clamp works without speciifying the template
-				// With Platform tools v145 i get 
-				// > error C2231: '.is_owner': left operand points to 'struct', use '->'
-				// unless I specify the template type.
-				// Can't seemingly reproduce in a minimal example
-				const vec2 t{utils::math::clamp<utils::math::vec2f>((vertices[0] - vertices[1]) / (vertices[0] - (vertices[1] * 2.f) + vertices[2]), 0.f, 1.f)};
-				const vec2 s{-t + 1.f};
-				const vec2 q{s * s * vertices[0] + (s * t * vertices[1] * 2.f) + t * t * vertices[2]};
+				const vec2f t{utils::math::clamp<utils::math::vec2f>((vertices[0] - vertices[1]) / (vertices[0] - (vertices[1] * 2.f) + vertices[2]), 0.f, 1.f)};
+				const vec2f s{-t + 1.f};
+				const vec2f q{s * s * vertices[0] + (s * t * vertices[1] * 2.f) + t * t * vertices[2]};
 				min = utils::math::min(min, q);
 				max = utils::math::max(max, q);
 				}
