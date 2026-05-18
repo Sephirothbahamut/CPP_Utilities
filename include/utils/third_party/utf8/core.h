@@ -43,9 +43,12 @@ DEALINGS IN THE SOFTWARE.
 #if UTF_CPP_CPLUSPLUS >= 201103L // C++ 11 or later
     #define UTF_CPP_OVERRIDE override
     #define UTF_CPP_NOEXCEPT noexcept
+    #define UTF_CPP_STATIC_ASSERT(condition) static_assert(condition, "UTFCPP static assert");
 #else // C++ 98/03
     #define UTF_CPP_OVERRIDE
     #define UTF_CPP_NOEXCEPT throw()
+    // Not worth simulating static_assert:
+    #define UTF_CPP_STATIC_ASSERT(condition) (void)(condition);
 #endif // C++ 11 or later
 
 
@@ -83,49 +86,50 @@ namespace internal
     const utfchar32_t CODE_POINT_MAX      = 0x0010ffffu;
 
     template<typename octet_type>
-    inline utfchar8_t mask8(octet_type oc)
+constexpr    inline utfchar8_t mask8(octet_type oc)
     {
         return static_cast<utfchar8_t>(0xff & oc);
     }
+
     template<typename u16_type>
-    inline utfchar16_t mask16(u16_type oc)
+constexpr    inline utfchar16_t mask16(u16_type oc)
     {
         return static_cast<utfchar16_t>(0xffff & oc);
     }
 
     template<typename octet_type>
-    inline bool is_trail(octet_type oc)
+constexpr    inline bool is_trail(octet_type oc)
     {
         return ((utf8::internal::mask8(oc) >> 6) == 0x2);
     }
 
-    inline bool is_lead_surrogate(utfchar32_t cp)
+constexpr    inline bool is_lead_surrogate(utfchar32_t cp)
     {
-        return (cp >= LEAD_SURROGATE_MIN && cp <= LEAD_SURROGATE_MAX);
+        return (cp >= static_cast<utfchar32_t>(LEAD_SURROGATE_MIN) && cp <= static_cast<utfchar32_t>(LEAD_SURROGATE_MAX));
     }
 
-    inline bool is_trail_surrogate(utfchar32_t cp)
+constexpr    inline bool is_trail_surrogate(utfchar32_t cp)
     {
-        return (cp >= TRAIL_SURROGATE_MIN && cp <= TRAIL_SURROGATE_MAX);
+        return (cp >= static_cast<utfchar32_t>(TRAIL_SURROGATE_MIN) && cp <= static_cast<utfchar32_t>(TRAIL_SURROGATE_MAX));
     }
 
-    inline bool is_surrogate(utfchar32_t cp)
+constexpr    inline bool is_surrogate(utfchar32_t cp)
     {
-        return (cp >= LEAD_SURROGATE_MIN && cp <= TRAIL_SURROGATE_MAX);
+        return (cp >= static_cast<utfchar32_t>(LEAD_SURROGATE_MIN) && cp <= static_cast<utfchar32_t>(TRAIL_SURROGATE_MAX));
     }
 
-    inline bool is_code_point_valid(utfchar32_t cp)
+constexpr    inline bool is_code_point_valid(utfchar32_t cp)
     {
         return (cp <= CODE_POINT_MAX && !utf8::internal::is_surrogate(cp));
     }
 
-    inline bool is_in_bmp(utfchar32_t cp)
+constexpr    inline bool is_in_bmp(utfchar32_t cp)
     {
         return cp < utfchar32_t(0x10000);
     }
 
     template <typename octet_iterator>
-    int sequence_length(octet_iterator lead_it)
+constexpr    int sequence_length(octet_iterator lead_it)
     {
         const utfchar8_t lead = utf8::internal::mask8(*lead_it);
         if (lead < 0x80)
@@ -140,18 +144,18 @@ namespace internal
             return 0;
     }
 
-    inline bool is_overlong_sequence(utfchar32_t cp, int length)
+constexpr    inline bool is_overlong_sequence(utfchar32_t cp, int length)
     {
         if (cp < 0x80) {
-            if (length != 1) 
+            if (length != 1)
                 return true;
         }
         else if (cp < 0x800) {
-            if (length != 2) 
+            if (length != 2)
                 return true;
         }
         else if (cp < 0x10000) {
-            if (length != 3) 
+            if (length != 3)
                 return true;
         }
         return false;
@@ -161,7 +165,7 @@ namespace internal
 
     /// Helper for get_sequence_x
     template <typename octet_iterator>
-    utf_error increase_safely(octet_iterator& it, const octet_iterator end)
+constexpr    utf_error increase_safely(octet_iterator& it, const octet_iterator end)
     {
         if (++it == end)
             return NOT_ENOUGH_ROOM;
@@ -176,23 +180,23 @@ namespace internal
 
     /// get_sequence_x functions decode utf-8 sequences of the length x
     template <typename octet_iterator>
-    utf_error get_sequence_1(octet_iterator& it, octet_iterator end, utfchar32_t& code_point)
+constexpr    utf_error get_sequence_1(octet_iterator& it, octet_iterator end, utfchar32_t& code_point)
     {
         if (it == end)
             return NOT_ENOUGH_ROOM;
 
-        code_point = utf8::internal::mask8(*it);
+        code_point = static_cast<utfchar32_t>(utf8::internal::mask8(*it));
 
         return UTF8_OK;
     }
 
     template <typename octet_iterator>
-    utf_error get_sequence_2(octet_iterator& it, octet_iterator end, utfchar32_t& code_point)
+constexpr    utf_error get_sequence_2(octet_iterator& it, octet_iterator end, utfchar32_t& code_point)
     {
-        if (it == end) 
+        if (it == end)
             return NOT_ENOUGH_ROOM;
 
-        code_point = utf8::internal::mask8(*it);
+        code_point = static_cast<utfchar32_t>(utf8::internal::mask8(*it));
 
         UTF8_CPP_INCREASE_AND_RETURN_ON_ERROR(it, end)
 
@@ -202,12 +206,12 @@ namespace internal
     }
 
     template <typename octet_iterator>
-    utf_error get_sequence_3(octet_iterator& it, octet_iterator end, utfchar32_t& code_point)
+constexpr    utf_error get_sequence_3(octet_iterator& it, octet_iterator end, utfchar32_t& code_point)
     {
         if (it == end)
             return NOT_ENOUGH_ROOM;
-            
-        code_point = utf8::internal::mask8(*it);
+
+        code_point = static_cast<utfchar32_t>(utf8::internal::mask8(*it));
 
         UTF8_CPP_INCREASE_AND_RETURN_ON_ERROR(it, end)
 
@@ -221,12 +225,12 @@ namespace internal
     }
 
     template <typename octet_iterator>
-    utf_error get_sequence_4(octet_iterator& it, octet_iterator end, utfchar32_t& code_point)
+constexpr    utf_error get_sequence_4(octet_iterator& it, octet_iterator end, utfchar32_t& code_point)
     {
         if (it == end)
            return NOT_ENOUGH_ROOM;
 
-        code_point = utf8::internal::mask8(*it);
+        code_point = static_cast<utfchar32_t>(utf8::internal::mask8(*it));
 
         UTF8_CPP_INCREASE_AND_RETURN_ON_ERROR(it, end)
 
@@ -246,7 +250,7 @@ namespace internal
     #undef UTF8_CPP_INCREASE_AND_RETURN_ON_ERROR
 
     template <typename octet_iterator>
-    utf_error validate_next(octet_iterator& it, octet_iterator end, utfchar32_t& code_point)
+constexpr    utf_error validate_next(octet_iterator& it, octet_iterator end, utfchar32_t& code_point)
     {
         if (it == end)
             return NOT_ENOUGH_ROOM;
@@ -290,7 +294,7 @@ namespace internal
                 else
                     err = OVERLONG_SEQUENCE;
             }
-            else 
+            else
                 err = INVALID_CODE_POINT;
         }
 
@@ -300,14 +304,115 @@ namespace internal
     }
 
     template <typename octet_iterator>
-    inline utf_error validate_next(octet_iterator& it, octet_iterator end) {
-        utfchar32_t ignored;
-        return utf8::internal::validate_next(it, end, ignored);
-    }
+constexpr    inline utf_error validate_next(octet_iterator& it, octet_iterator end) {
+        if (it == end)
+            return NOT_ENOUGH_ROOM;
+
+        octet_iterator original_it = it;
+        const utfchar8_t lead = utf8::internal::mask8(*it);
+
+        if (lead < 0x80) {
+            ++it;
+            return UTF8_OK;
+        } else if ((lead & 0xE0) == 0xC0) {
+            // two-byte sequence
+            if (lead == 0xC0 || lead == 0xC1) {
+                it = original_it;
+                return OVERLONG_SEQUENCE;
+            }
+            if (++it == end) {
+                it = original_it;
+                return NOT_ENOUGH_ROOM;
+            }
+            const utfchar8_t trail1 = utf8::internal::mask8(*it);
+            if ((trail1 & 0xC0) != 0x80) {
+                it = original_it;
+                return INCOMPLETE_SEQUENCE;
+            }
+            ++it;
+            return UTF8_OK;
+        } else if ((lead & 0xF0) == 0xE0) {
+            // three-byte sequence
+            if (++it == end) {
+                it = original_it;
+                return NOT_ENOUGH_ROOM;
+            }
+            const utfchar8_t trail1 = utf8::internal::mask8(*it);
+            if ((trail1 & 0xC0) != 0x80) {
+                it = original_it;
+                return INCOMPLETE_SEQUENCE;
+            }
+            if (++it == end) {
+                it = original_it;
+                return NOT_ENOUGH_ROOM;
+            }
+            const utfchar8_t trail2 = utf8::internal::mask8(*it);
+            if ((trail2 & 0xC0) != 0x80) {
+                it = original_it;
+                return INCOMPLETE_SEQUENCE;
+            }
+            if (lead == 0xE0 && trail1 < 0xA0) {
+                it = original_it;
+                return OVERLONG_SEQUENCE;
+            }
+            if (lead == 0xED && trail1 > 0x9F) {
+                it = original_it;
+                return INVALID_CODE_POINT;
+            }
+            ++it;
+            return UTF8_OK;
+        } else if ((lead & 0xF8) == 0xF0) {
+            // four-byte sequence
+            if (++it == end) {
+                it = original_it;
+                return NOT_ENOUGH_ROOM;
+            }
+            const utfchar8_t trail1 = utf8::internal::mask8(*it);
+            if ((trail1 & 0xC0) != 0x80) {
+                it = original_it;
+                return INCOMPLETE_SEQUENCE;
+            }
+            if (++it == end) {
+                it = original_it;
+                return NOT_ENOUGH_ROOM;
+            }
+            const utfchar8_t trail2 = utf8::internal::mask8(*it);
+            if ((trail2 & 0xC0) != 0x80) {
+                it = original_it;
+                return INCOMPLETE_SEQUENCE;
+            }
+            if (++it == end) {
+                it = original_it;
+                return NOT_ENOUGH_ROOM;
+            }
+            const utfchar8_t trail3 = utf8::internal::mask8(*it);
+            if ((trail3 & 0xC0) != 0x80) {
+                it = original_it;
+                return INCOMPLETE_SEQUENCE;
+            }
+            if (lead == 0xF0 && trail1 < 0x90) {
+                it = original_it;
+                return OVERLONG_SEQUENCE;
+            }
+            if (lead >= 0xF5) {
+                it = original_it;
+                return INVALID_CODE_POINT;
+            }
+            ++it;
+            return UTF8_OK;
+        } else {
+            it = original_it;
+            return INVALID_LEAD;
+        }
+   }
 
     template <typename word_iterator>
-    utf_error validate_next16(word_iterator& it, word_iterator end, utfchar32_t& code_point)
+constexpr    utf_error validate_next16(word_iterator& it, word_iterator end, utfchar32_t& code_point)
     {
+        // Make sure the iterator dereferences a large enough type
+        typedef typename std::iterator_traits<word_iterator>::value_type word_type;
+        UTF_CPP_STATIC_ASSERT(sizeof(word_type) >= sizeof(utfchar16_t));
+        // Check the edge case:
         if (it == end)
             return NOT_ENOUGH_ROOM;
         // Save the original value of it so we can go back in case of failure
@@ -326,14 +431,14 @@ namespace internal
                 err = NOT_ENOUGH_ROOM;
             else if (is_lead_surrogate(first_word)) {
                 const utfchar16_t second_word = *it++;
-                if (is_trail_surrogate(second_word)) {
-                    code_point = static_cast<utfchar32_t>(first_word << 10) + second_word + SURROGATE_OFFSET;
+                if (is_trail_surrogate(static_cast<utfchar32_t>(second_word))) {
+                    code_point = static_cast<utfchar32_t>(first_word << 10) +  static_cast<utfchar32_t>(second_word) + SURROGATE_OFFSET;
                     return UTF8_OK;
-                } else 
-                    err = INCOMPLETE_SEQUENCE; 
-                
+                } else
+                    err = INCOMPLETE_SEQUENCE;
+
             } else {
-                err = INVALID_LEAD;               
+                err = INVALID_LEAD;
             }
         }
         // error branch
@@ -345,7 +450,7 @@ namespace internal
     // This function will be invoked by the overloads below, as they will know
     // the octet_type.
     template <typename octet_iterator, typename octet_type>
-    octet_iterator append(utfchar32_t cp, octet_iterator result) {
+constexpr    octet_iterator append(utfchar32_t cp, octet_iterator result) {
         if (cp < 0x80)                        // one octet
             *(result++) = static_cast<octet_type>(cp);
         else if (cp < 0x800) {                // two octets
@@ -365,11 +470,11 @@ namespace internal
         }
         return result;
     }
-    
+
     // One of the following overloads will be invoked from the API calls
 
     // A simple (but dangerous) case: the caller appends byte(s) to a char array
-    inline char* append(utfchar32_t cp, char* result) {
+constexpr    inline char* append(utfchar32_t cp, char* result) {
         return append<char*, char>(cp, result);
     }
 
@@ -395,6 +500,7 @@ namespace internal
     // the word_type.
     template <typename word_iterator, typename word_type>
     word_iterator append16(utfchar32_t cp, word_iterator result) {
+        UTF_CPP_STATIC_ASSERT(sizeof(word_type) >= sizeof(utfchar16_t));
         if (is_in_bmp(cp))
             *(result++) = static_cast<word_type>(cp);
         else {
@@ -430,7 +536,7 @@ namespace internal
     const utfchar8_t bom[] = {0xef, 0xbb, 0xbf};
 
     template <typename octet_iterator>
-    octet_iterator find_invalid(octet_iterator start, octet_iterator end)
+constexpr    octet_iterator find_invalid(octet_iterator start, octet_iterator end)
     {
         octet_iterator result = start;
         while (result != end) {
@@ -441,30 +547,30 @@ namespace internal
         return result;
     }
 
-    inline const char* find_invalid(const char* str)
+constexpr    inline const char* find_invalid(const char* str)
     {
         const char* end = str + std::strlen(str);
-        return find_invalid(str, end); 
+        return find_invalid(str, end);
     }
 
-    inline std::size_t find_invalid(const std::string& s)
+constexpr    inline std::size_t find_invalid(const std::string& s)
     {
         std::string::const_iterator invalid = find_invalid(s.begin(), s.end());
         return (invalid == s.end()) ? std::string::npos : static_cast<std::size_t>(invalid - s.begin());
     }
 
     template <typename octet_iterator>
-    inline bool is_valid(octet_iterator start, octet_iterator end)
+constexpr    inline bool is_valid(octet_iterator start, octet_iterator end)
     {
         return (utf8::find_invalid(start, end) == end);
     }
 
-    inline bool is_valid(const char* str)
+constexpr    inline bool is_valid(const char* str)
     {
         return (*(utf8::find_invalid(str)) == '\0');
     }
 
-    inline bool is_valid(const std::string& s)
+constexpr    inline bool is_valid(const std::string& s)
     {
         return is_valid(s.begin(), s.end());
     }
@@ -472,7 +578,7 @@ namespace internal
 
 
     template <typename octet_iterator>
-    inline bool starts_with_bom (octet_iterator it, octet_iterator end)
+constexpr    inline bool starts_with_bom (octet_iterator it, octet_iterator end)
     {
         return (
             ((it != end) && (utf8::internal::mask8(*it++)) == bom[0]) &&
@@ -481,12 +587,11 @@ namespace internal
            );
     }
 
-    inline bool starts_with_bom(const std::string& s)
+constexpr    inline bool starts_with_bom(const std::string& s)
     {
         return starts_with_bom(s.begin(), s.end());
-    } 
+    }
 } // namespace utf8
 
 #endif // header guard
-
 
