@@ -84,6 +84,19 @@ namespace utils::string
 		{
 		return cast<to_char_t, from_char_t>(std::basic_string_view<from_char_t>{in});
 		}
+	
+	/// <summary>
+	/// Converts strings from utf8 to utf16 or utf32 and from utf16 or utf32 to utf8.
+	/// utf8 types: char, char8_t
+	/// utf16 types: char16_t, wchar_t (on Windows)
+	/// utf32 types: char32_t, wchar_t (on non-Windows)
+	/// Can also convert wchar_t strings to their char16/32_t counterpart. This conversion is UGLY (reinterpret cast warning). But Marineshi said it's fine. :) 
+	/// </summary>
+	template <typename to_char_t, typename from_char_t>
+	constexpr std::basic_string<to_char_t> cast(const from_char_t* in, const size_t& count)
+		{
+		return cast<to_char_t, from_char_t>(std::basic_string_view<from_char_t>{in, count});
+		}
 
 
 	/// <summary>
@@ -95,6 +108,11 @@ namespace utils::string
 
 	template <typename to_char_t>
 	constexpr std::basic_string<to_char_t> codepoint_to_string(const char32_t& codepoint);
+
+
+
+
+
 	}
 
 #ifdef utils_implementation
