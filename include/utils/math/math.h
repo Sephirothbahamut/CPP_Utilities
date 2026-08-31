@@ -124,6 +124,39 @@ namespace utils::math
 		requires (concepts::number<from_t>) 
 	utils_gpu_available constexpr to_t cast_clamp(from_t f) noexcept
 		{
+		//If from is signed and to is unsigned, runtime check for negative values and return 0.
+		if constexpr (std::is_unsigned_v<to_t> && std::is_signed_v<from_t>)
+			{
+			if (f < from_t{0}) { return to_t{0}; }
+			}
+
+		//If both are integral and both share the same signedness...
+		if constexpr (std::is_integral_v<to_t> && std::is_integral_v<from_t> && (std::is_signed_v<to_t> == std::is_signed_v<from_t>))
+			{
+			//...if target type is larger, just cast without any runtime check
+			if constexpr (sizeof(to_t) >= sizeof(from_t))
+				{
+				return static_cast<to_t>(f);
+				}
+
+			//otherwise check for bounds
+			if constexpr (sizeof(to_t) < sizeof(from_t))
+				{
+				if (f > static_cast<from_t>(std::numeric_limits<to_t>::max()))
+					{
+					return std::numeric_limits<to_t>::max();
+					}
+				if constexpr (std::is_signed_v<to_t>)
+					{
+					if (f < static_cast<from_t>(std::numeric_limits<to_t>::min()))
+						{
+						return std::numeric_limits<to_t>::min();
+						}
+					}
+				}
+			}
+
+		//TODO better checks for combinations of floating point and integral types
 		if constexpr (std::numeric_limits<from_t>::max() > std::numeric_limits<to_t>::max())
 			{
 			if (f > static_cast<from_t>(std::numeric_limits<to_t>::max())) { return std::numeric_limits<to_t>::max(); }
