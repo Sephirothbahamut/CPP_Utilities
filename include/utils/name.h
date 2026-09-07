@@ -54,6 +54,8 @@ namespace utils
 
 			types::view operator*() const noexcept { return names_database[id]; }
 			types::view as_string() const noexcept { return operator*(); }
+			template <typename T>
+			auto as_string() const noexcept { return utils::string::cast<T>(as_string()); }
 			operator typename types::view() const noexcept { return operator*(); }
 
 			size_t hash() const noexcept { return id; }
