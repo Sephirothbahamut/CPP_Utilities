@@ -8,6 +8,7 @@
 #include <iostream>
 #include <concepts>
 
+#include "../memory.h"
 #include "message.h"
 #include "../containers/multithreading/self_consuming_queue.h"
 
@@ -15,13 +16,10 @@
 
 namespace utils::logging
 	{
-	template <typename T>
 	class logger
 		{
 		public:
-			using value_type = T;
-
-			logger(const std::string& file_name = "log.txt") : file {file_name} {}
+			logger(const std::string& file_name = "log.txt");
 
 			logger           (const logger&  copy)          = delete ; // don't copy threads please, thank you
 			logger& operator=(const logger&  copy)          = delete ; // don't copy threads please, thank you
@@ -30,8 +28,8 @@ namespace utils::logging
 
 #pragma region Push messages begin
 		public:
-			void operator<<(const value_type& message) noexcept { push(message); }
-			void operator()(const value_type& message) noexcept { push(message); }
+			void operator<<(const message& message) noexcept;
+			void operator()(const message& message) noexcept;
 
 			template <typename ...Args>
 			void emplace(Args&&... args) noexcept
@@ -39,23 +37,18 @@ namespace utils::logging
 				message_queue.emplace(std::forward<Args>(args)...);
 				}
 
-			void push(const value_type& message) noexcept
-				{
-				message_queue.push(message);
-				}
+			void push(const message& message) noexcept;
 
-			void flush() noexcept
-				{
-				message_queue.flush();
-				}
+			void flush() noexcept;
 
-			constexpr void raw(const string::concepts::stringlike auto& string) noexcept requires(concepts::message<value_type>) { push(value_type::raw(string, indents_count)); }
-			constexpr void inf(const string::concepts::stringlike auto& string) noexcept requires(concepts::message<value_type>) { push(value_type::inf(string, indents_count)); }
-			constexpr void log(const string::concepts::stringlike auto& string) noexcept requires(concepts::message<value_type>) { push(value_type::log(string, indents_count)); }
-			constexpr void dgn(const string::concepts::stringlike auto& string) noexcept requires(concepts::message<value_type>) { push(value_type::dgn(string, indents_count)); }
-			constexpr void err(const string::concepts::stringlike auto& string) noexcept requires(concepts::message<value_type>) { push(value_type::err(string, indents_count)); }
-			constexpr void wrn(const string::concepts::stringlike auto& string) noexcept requires(concepts::message<value_type>) { push(value_type::wrn(string, indents_count)); }
-			constexpr void suc(const string::concepts::stringlike auto& string) noexcept requires(concepts::message<value_type>) { push(value_type::suc(string, indents_count)); }
+			inline constexpr void raw(const string::concepts::stringlike auto& string) noexcept { push(message::raw(string, indents_count)); }
+			inline constexpr void inf(const string::concepts::stringlike auto& string) noexcept { push(message::inf(string, indents_count)); }
+			inline constexpr void log(const string::concepts::stringlike auto& string) noexcept { push(message::log(string, indents_count)); }
+			inline constexpr void dgn(const string::concepts::stringlike auto& string) noexcept { push(message::dgn(string, indents_count)); }
+			inline constexpr void err(const string::concepts::stringlike auto& string) noexcept { push(message::err(string, indents_count)); }
+			inline constexpr void wrn(const string::concepts::stringlike auto& string) noexcept { push(message::wrn(string, indents_count)); }
+			inline constexpr void suc(const string::concepts::stringlike auto& string) noexcept { push(message::suc(string, indents_count)); }
+
 #pragma endregion Push messages end
 
 #pragma region Indent management begin
@@ -65,59 +58,32 @@ namespace utils::logging
 			class section_marker : utils::oop::non_copyable, utils::oop::non_movable
 				{
 				private:
-					friend class logger<T>;
-					section_marker(logger<T>&logger, const std::string& name)
-						requires(concepts::message<value_type>) : logger_ptr{&logger}, name{name}, time{std::chrono::system_clock::now()}
-						{
-						logger.push(value_type::section_enter(name, logger.indents_count));
-						logger.indents_count++; 
-						}
+					friend class logger;
+					section_marker(logger& logger, const std::string& name);
 
-					logger<T>* logger_ptr{nullptr};
+					utils::observer_ptr<logger> logger_ptr{nullptr};
 					std::string name;
 					std::chrono::time_point<std::chrono::system_clock> time;
 
 				public:
-					~section_marker() noexcept
-						requires(concepts::message<value_type>)
-						{
-						const auto now{std::chrono::system_clock::now()};
-						const auto delta_time{now - time};
+					~section_marker() noexcept;
 
-						logger_ptr->indents_count--;
-						std::stringstream ss;
-						ss << name << ", duration: " << std::format("{:%T}", delta_time);
-						logger_ptr->push(value_type::section_leave(ss.str(), logger_ptr->indents_count));
-						};
-
-					operator bool() const noexcept { return true; }
+					operator bool() const noexcept;
 				};
 		public:
-			[[nodiscard]] section_marker section(const std::string& name) noexcept
-				requires(concepts::message<value_type>)
-				{
-				return section_marker{*this, name};
-				}
+			[[nodiscard]] section_marker section(const std::string& name) noexcept;
+
+			size_t current_indents() const noexcept;
 
 #pragma endregion Indent management end
 		protected:
 			std::ofstream file;
 			size_t indents_count{0};
 
-			utils::containers::multithreading::self_consuming_queue<T, utils::containers::multithreading::operation_flag_bits::pre> message_queue
-				{
-				[this](T& element) -> void
-					{
-					std::cout << element << std::flush;
-					file << element << std::flush;
-					},
-				[this](std::vector<T>& elements)
-					{
-					if constexpr (concepts::message<T>)
-						{
-						std::sort(elements.begin(), elements.end());
-						}
-					}
-				};
+			utils::containers::multithreading::self_consuming_queue<message, utils::containers::multithreading::operation_flag_bits::pre> message_queue;
 		};
 	}
+
+#ifdef utils_implementation
+#include "logger.cpp"
+#endif

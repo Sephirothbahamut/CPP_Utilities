@@ -174,6 +174,12 @@ namespace utils::console::colour
 		return string + to_string<char_t>(colour);
 		}
 
+	template <typename char_t, details::concepts::colour colour_t>
+	inline constexpr std::basic_ostream<char_t>& operator<<(std::basic_fstream<char_t>& stream, const colour_t& colour) noexcept
+		{
+		return stream;
+		}
+
 	inline static constexpr details::restore_defaults_t restore_defaults;
 
 	inline constexpr colour_8 colour_8::black      = {colour_8::bright(utils::graphics::colour::base::black  )};

@@ -27,12 +27,11 @@ namespace utils::logging
 	class progress_bar : utils::oop::non_copyable, utils::oop::non_movable
 		{
 		public:
-			using logger_t = utils::logging::logger<utils::logging::message<utils::logging::output_style_t::tag_as_separator>>;
 			using self_t = progress_bar<bar>;
 		private:
 			struct child_create_info
 				{
-				const utils::observer_ptr<logger_t> logger_ptr{nullptr};
+				const utils::observer_ptr<::utils::logging::logger> logger_ptr{nullptr};
 				const std::string label{};
 				const size_t steps_count{100};
 
@@ -54,12 +53,12 @@ namespace utils::logging
 		public:
 			struct create_info
 				{
-				const utils::observer_ptr<logger_t> logger_ptr{nullptr};
+				const utils::observer_ptr<::utils::logging::logger> logger_ptr{nullptr};
 				const std::string label{};
 				const size_t steps_count{100};
 				};
 
-			const utils::observer_ptr<logger_t> logger_ptr{nullptr};
+			const utils::observer_ptr<::utils::logging::logger> logger_ptr{nullptr};
 			const std::string label{};
 			const size_t steps_count{100};
 
@@ -250,9 +249,6 @@ namespace utils::logging
 	template <bar_parameters bar = bar_parameters{}>
 	class global_progress_bar_stack
 		{
-		public:
-			using logger_t = ::utils::logging::logger<::utils::logging::message<::utils::logging::output_style_t::tag_as_separator>>;
-
 		private:
 			struct element_t
 				{
@@ -309,7 +305,7 @@ namespace utils::logging
 
 			std::vector<element_t> elements;
 			std::mutex multithread_step_mutex;
-			logger_t& logger;
+			::utils::logging::logger& logger;
 
 			const element_t& last() const noexcept { return *elements.rbegin(); }
 			      element_t& last()       noexcept { return *elements.rbegin(); }
@@ -368,7 +364,7 @@ namespace utils::logging
 				}
 
 		public:
-			global_progress_bar_stack(logger_t& logger) : logger{logger} {}
+			global_progress_bar_stack(::utils::logging::logger& logger) : logger{logger} {}
 
 			struct scoped_bar_t
 				{
