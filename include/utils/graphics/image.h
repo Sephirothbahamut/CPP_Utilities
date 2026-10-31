@@ -1,5 +1,13 @@
 #pragma once
 
+//Note:
+// stb doesn't have good compression on saved .png files.
+// For better output files quality:
+// - define `utils_graphics_image_use_libpng` when you define `utils_implementation` before including this header.
+// - add libpng to your project (For the examples it's been included via NuGet)
+
+
+#include <expected>
 #include <algorithm>
 #include <execution>
 #include <filesystem>
@@ -10,15 +18,18 @@
 namespace utils::graphics::image
 	{
 	template <utils::graphics::colour::concepts::colour T>
-	utils::matrix<T> load_from_file(const std::filesystem::path& path);
+	std::expected<utils::matrix<T>, std::string> load_from_file(const std::filesystem::path& path);
 
 	template <>
-	utils::matrix<utils::graphics::colour::rgba_u> load_from_file(const std::filesystem::path& path);
+	std::expected<utils::matrix<utils::graphics::colour::rgba_u>, std::string> load_from_file(const std::filesystem::path& path);
 
 	template <utils::graphics::colour::concepts::colour T>
-	utils::matrix<T> load_from_file(const std::filesystem::path& path)
+	std::expected<utils::matrix<T>, std::string> load_from_file(const std::filesystem::path& path)
 		{
-		const auto rgba_u{load_from_file<utils::graphics::colour::rgba_u>(path)};
+		const auto expected_rgba_u{load_from_file<utils::graphics::colour::rgba_u>(path)};
+		if (!expected_rgba_u.has_value()) { return std::unexpected{expected_rgba_u.error()}; }
+		const auto& rgba_u{*expected_rgba_u};
+
 		utils::matrix<T> ret(rgba_u.sizes());
 
 		const auto indices{std::ranges::iota_view<size_t, size_t>(size_t{0}, rgba_u.sizes().sizes_to_size())};
@@ -29,7 +40,8 @@ namespace utils::graphics::image
 		return ret;
 		}
 
-	void save_to_file(const utils::matrix<utils::graphics::colour::rgba_u>& image, const std::filesystem::path& path);
+	template <utils::graphics::colour::concepts::colour pixel_t>
+	void save_to_file(const utils::matrix<pixel_t>& image, const std::filesystem::path& path);
 
 	//template <utils::concepts::matrix image_t>
 	//	requires(utils::graphics::colour::concepts::colour<typename image_t::value_type>)

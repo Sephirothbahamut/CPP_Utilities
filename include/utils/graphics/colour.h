@@ -33,15 +33,18 @@ namespace utils::graphics::colour
 
 		template <utils::math::concepts::undecorated_floating_point T, size_t extent>
 		struct hsv;
+
+		template <utils::math::concepts::undecorated_number T, size_t extent>
+		struct greyscale;
 		}
 
-	template <utils::math::concepts::undecorated_number T = float>
-	using rgb    = details::additive<T, 3>;
+	template <utils::math::concepts::undecorated_number T = float, bool has_alpha = false>
+	using rgb    = details::additive<T, has_alpha ? 4 : 3>;
 	using rgb_f  = rgb<float  >;
 	using rgb_d  = rgb<double >;
 	using rgb_u  = rgb<uint8_t>;
 	template <utils::math::concepts::undecorated_number T = float>
-	using rgba   = details::additive<T, 4>;
+	using rgba   = rgb<T, true>;
 	using rgba_f = rgba<float  >;
 	using rgba_d = rgba<double >;
 	using rgba_u = rgba<uint8_t>;
@@ -53,6 +56,17 @@ namespace utils::graphics::colour
 	using hsva_f = hsv<float , true >;
 	using hsv_d  = hsv<double, false>;
 	using hsva_d = hsv<double, true >;
+
+	template <utils::math::concepts::undecorated_number T = float, bool has_alpha = false>
+	using greyscale   = details::greyscale<T, has_alpha ? 2 : 1>;
+	using greyscale_f = greyscale<float  >;
+	using greyscale_d = greyscale<double >;
+	using greyscale_u = greyscale<uint8_t>;
+	template <utils::math::concepts::undecorated_number T = float>
+	using greyscale_a   = greyscale<T, true>;
+	using greyscale_a_f = greyscale_a<float  >;
+	using greyscale_a_d = greyscale_a<double >;
+	using greyscale_a_u = greyscale_a<uint8_t>;
 
 	namespace concepts
 		{
@@ -67,6 +81,9 @@ namespace utils::graphics::colour
 		concept hsv = std::same_as<std::remove_cvref_t<T>, details::hsv<typename T::template_type, T::extent>>;
 		template <typename T>
 		concept hsva = hsv<T> && T::static_has_alpha;
+
+		template <typename T>
+		concept greyscale = std::same_as<std::remove_cvref_t<T>, details::greyscale<typename T::template_type, T::extent>>;
 
 		template <typename T, typename source_t>
 		concept compatible_additive =
@@ -87,6 +104,7 @@ namespace utils::graphics::colour
 
 		inline extern constexpr const char name_rgb[]{"rgb"};
 		inline extern constexpr const char name_hsv[]{"hsv"};
+		inline extern constexpr const char name_gry[]{"gry"};
 
 		template<utils::math::concepts::undecorated_number T, size_t SIZE>
 		struct utils_oop_empty_bases additive final : storage::multiple<T, SIZE>
@@ -104,6 +122,15 @@ namespace utils::graphics::colour
 			using range = utils::math::type_based_numeric_range<value_type>;
 			inline static constexpr bool static_has_alpha{extent == 4};
 
+			struct related_types : utils::oop::non_constructible
+				{
+				using with_alpha       = additive<T, 4>;
+				using without_alpha    = additive<T, 3>;
+				using storage_unsigned = additive<uint8_t, extent>;
+				using storage_float    = additive<float  , extent>;
+				using storage_double   = additive<double , extent>;
+				};
+
 			using storage::multiple<T, extent>::multiple;
 
 			utils_gpu_available constexpr additive(colour_cast_flag_t, const concepts::compatible_hsv<additive<T, extent>> auto& hsv) noexcept
@@ -111,21 +138,24 @@ namespace utils::graphics::colour
 			utils_gpu_available constexpr additive(const concepts::compatible_hsv<additive<T, extent>> auto& hsv) noexcept : additive{colour_cast_flag_t{}, hsv} {}
 			utils_gpu_available constexpr additive(      concepts::compatible_hsv<additive<T, extent>> auto& hsv) noexcept : additive{colour_cast_flag_t{}, hsv} {}
 			
-			self_t& operator=(const additive<T, extent>& copy) noexcept
+			self_t& operator=(const concepts::additive auto& other) noexcept
 				{
-				using other_range = std::remove_cvref_t<decltype(copy)>::range;
+				using other_range = std::remove_cvref_t<decltype(other)>::range;
 
-				for (size_t i{0}; i < 3; i++)
+				if constexpr (static_has_alpha && other.static_has_alpha)
 					{
-					(*this)[i] = other_range::template cast_to<range>(copy[i]);
-					}
-				if constexpr (static_has_alpha)
-					{
-					if constexpr (copy.static_has_alpha)
+					for (size_t i{0}; i < extent; i++)
 						{
-						a() = other_range::template cast_to<range>(copy.a());
+						(*this)[i] = other_range::template cast_to<range>(other[i]);
 						}
-					else
+					}
+				else
+					{
+					for (size_t i{0}; i < 3; i++)
+						{
+						(*this)[i] = other_range::template cast_to<range>(other[i]);
+						}
+					if constexpr (static_has_alpha)
 						{
 						a() = range::full_value;
 						}
@@ -139,7 +169,7 @@ namespace utils::graphics::colour
 			utils_gpu_available constexpr       const_aware_value_type& g()       noexcept { return (*this)[1]; }
 			utils_gpu_available constexpr const const_aware_value_type& b() const noexcept { return (*this)[2]; }
 			utils_gpu_available constexpr       const_aware_value_type& b()       noexcept { return (*this)[2]; }
-			utils_gpu_available constexpr const const_aware_value_type& a() const noexcept { if constexpr (extent == 4) { return (*this)[3]; } else { return range::full_value; } }
+			utils_gpu_available constexpr const const_aware_value_type& a() const noexcept { if constexpr (static_has_alpha) { return (*this)[3]; } else { return range::full_value; } }
 			utils_gpu_available constexpr       const_aware_value_type& a()       noexcept requires(static_has_alpha) { return (*this)[3]; }
 			utils_gpu_available constexpr const additive<value_type, 3> rgb() const noexcept { return {r(), g(), b()}; }
 			//utils_gpu_available constexpr const additive<const const_aware_value_type&, 3> rgb() const noexcept { return {r(), g(), b()}; }
@@ -159,17 +189,20 @@ namespace utils::graphics::colour
 				{
 				using other_range = std::remove_cvref_t<decltype(other)>::range;
 
-				for (size_t i = 0; i < 3; i++)
+				if constexpr (static_has_alpha && other.static_has_alpha)
 					{
-					(*this)[i] = other_range::template cast_to<range>(other[i]);
-					}
-				if constexpr (static_has_alpha)
-					{
-					if constexpr (other.static_has_alpha)
+					for (size_t i{0}; i < extent; i++)
 						{
-						a() = other_range::template cast_to<range>(other.a());
+						(*this)[i] = other_range::template cast_to<range>(other[i]);
 						}
-					else
+					}
+				else
+					{
+					for (size_t i{0}; i < 3; i++)
+						{
+						(*this)[i] = other_range::template cast_to<range>(other[i]);
+						}
+					if constexpr (static_has_alpha)
 						{
 						a() = range::full_value;
 						}
@@ -255,7 +288,14 @@ namespace utils::graphics::colour
 
 			using range = utils::math::type_based_numeric_range<T>;
 			inline static constexpr bool static_has_alpha{extent == 4};
-
+			
+			struct related_types : utils::oop::non_constructible
+				{
+				using with_alpha       = hsv<T, 4>;
+				using without_alpha    = hsv<T, 3>;
+				using storage_float    = hsv<float   , extent>;
+				using storage_double   = hsv<double  , extent>;
+				};
 			
 			utils_gpu_available constexpr hsv(colour_cast_flag_t, const concepts::compatible_additive<hsv<T, extent>> auto& rgb) noexcept
 				requires(storage_type.is_owner());
@@ -317,9 +357,122 @@ namespace utils::graphics::colour
 			utils_gpu_available constexpr       const_aware_value_type& s()       noexcept { return (*this)[1]; }
 			utils_gpu_available constexpr const const_aware_value_type& v() const noexcept { return (*this)[2]; }
 			utils_gpu_available constexpr       const_aware_value_type& v()       noexcept { return (*this)[2]; }
-			utils_gpu_available constexpr const const_aware_value_type& a() const noexcept { if constexpr (extent == 4) { return (*this)[3]; } else { return range::full_value; } }
+			utils_gpu_available constexpr const const_aware_value_type& a() const noexcept { if constexpr (static_has_alpha) { return (*this)[3]; } else { return range::full_value; } }
 			utils_gpu_available constexpr       const_aware_value_type& a()       noexcept requires(static_has_alpha) { return (*this)[3]; }
 			};
+
+		template<utils::math::concepts::undecorated_number T, size_t SIZE>
+		struct utils_oop_empty_bases greyscale final : storage::multiple<T, SIZE>
+			{
+			using base_t = storage::multiple<T, SIZE>;
+			using base_t::extent;
+			static_assert(extent == 1 || extent == 2);
+			using base_t::storage_type;
+			using typename base_t::value_type;
+			using typename base_t::const_aware_value_type;
+			using typename base_t::template_type;
+			using self_t       = additive<value_type, extent>;
+			using owner_self_t = additive<value_type, extent>;
+
+			using range = utils::math::type_based_numeric_range<value_type>;
+			inline static constexpr bool static_has_alpha{extent == 2};
+			
+			struct related_types : utils::oop::non_constructible
+				{
+				using with_alpha       = greyscale<T, 2>;
+				using without_alpha    = greyscale<T, 1>;
+				using storage_unsigned = greyscale<uint8_t, extent>;
+				using storage_float    = greyscale<float  , extent>;
+				using storage_double   = greyscale<double , extent>;
+				};
+
+			using storage::multiple<T, extent>::multiple;
+
+			utils_gpu_available constexpr greyscale(colour_cast_flag_t, const concepts::compatible_hsv<greyscale<T, extent>> auto& hsv) noexcept
+				requires(storage_type.is_owner());
+			utils_gpu_available constexpr greyscale(const concepts::compatible_hsv<greyscale<T, extent>> auto& hsv) noexcept : greyscale{colour_cast_flag_t{}, hsv} {}
+			utils_gpu_available constexpr greyscale(concepts::compatible_hsv<greyscale<T, extent>> auto& hsv) noexcept : greyscale{colour_cast_flag_t{}, hsv} {}
+
+			utils_gpu_available constexpr greyscale(colour_cast_flag_t, const concepts::compatible_additive<greyscale<T, extent>> auto& rgb) noexcept
+				requires(storage_type.is_owner());
+			utils_gpu_available constexpr greyscale(const concepts::compatible_additive<greyscale<T, extent>> auto& rgb) noexcept : greyscale{colour_cast_flag_t{}, rgb} {}
+			utils_gpu_available constexpr greyscale(      concepts::compatible_additive<greyscale<T, extent>> auto& rgb) noexcept : greyscale{colour_cast_flag_t{}, rgb} {}
+			
+			self_t& operator=(const concepts::greyscale auto& other) noexcept
+				{
+				using other_range = std::remove_cvref_t<decltype(other)>::range;
+
+				if constexpr (static_has_alpha && other.static_has_alpha)
+					{
+					for (size_t i{0}; i < extent; i++)
+						{
+						(*this)[i] = other_range::template cast_to<range>(other[i]);
+						}
+					}
+				else
+					{
+					(*this)[0] = other_range::template cast_to<range>(other[0]);
+					if constexpr (static_has_alpha)
+						{
+						a() = range::full_value;
+						}
+					}
+				return *this;
+				}
+
+			utils_gpu_available constexpr const const_aware_value_type& w() const noexcept { return (*this)[0]; }
+			utils_gpu_available constexpr       const_aware_value_type& w()       noexcept { return (*this)[0]; }
+			utils_gpu_available constexpr const const_aware_value_type& a() const noexcept { if constexpr (static_has_alpha) { return (*this)[1]; } else { return range::full_value; } }
+			utils_gpu_available constexpr       const_aware_value_type& a()       noexcept requires(static_has_alpha) { return (*this)[1]; }
+
+			utils_gpu_available constexpr greyscale(enum base base, value_type components_multiplier = range::full_value, value_type alpha = range::full_value) noexcept
+				requires(storage_type.is_owner())
+				{
+				w() = components_multiplier * (base != base::black);
+				if constexpr (static_has_alpha) { a() = alpha; }
+				}
+
+			utils_gpu_available constexpr greyscale(const concepts::greyscale auto& other) noexcept
+				requires(storage_type.is_owner())
+				{
+				using other_range = std::remove_cvref_t<decltype(other)>::range;
+
+				if constexpr (static_has_alpha && other.static_has_alpha)
+					{
+					for (size_t i{0}; i < extent; i++)
+						{
+						(*this)[i] = other_range::template cast_to<range>(other[i]);
+						}
+					}
+				else
+					{
+					(*this)[0] = other_range::template cast_to<range>(other[0]);
+					if constexpr (static_has_alpha)
+						{
+						a() = range::full_value;
+						}
+					}
+				}
+
+			utils_gpu_available constexpr greyscale(const concepts::greyscale auto& other, float alpha) noexcept
+				requires(storage_type.is_owner() && static_has_alpha)
+				{
+				using other_range = std::remove_cvref_t<decltype(other)>::range;
+
+				w() = other_range::template cast_to<range>(other.w());
+				a() = alpha;
+				}
+
+			utils_gpu_available constexpr owner_self_t blend(const concepts::colour auto& foreground) const noexcept
+				requires(std::remove_cvref_t<decltype(foreground)>::static_has_alpha)
+				{
+				//TODO
+				assert(false);
+				return {};
+				}
+			};
+
+
 
 		template<utils::math::concepts::undecorated_number T, size_t extent>
 		utils_gpu_available constexpr additive<T, extent>::additive(colour_cast_flag_t, const concepts::compatible_hsv<additive<T, extent>> auto& hsv) noexcept

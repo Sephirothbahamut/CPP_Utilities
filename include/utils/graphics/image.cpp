@@ -4,22 +4,29 @@
 #include <algorithm>
 #include <execution>
 
-#define STB_IMAGE_IMPLEMENTATION
-#define STB_IMAGE_WRITE_IMPLEMENTATION
-
 #define _CRT_SECURE_NO_WARNINGS
 #pragma warning(disable: 4996)
 
 #include "../third_party/stb_image.h"
 #include "../third_party/stb_image_write.h"
 
+#ifdef utils_graphics_image_use_libpng
+#include <libpng16/png.h>
+#include "../third_party/png++/png.hpp"
+#endif 
+
 namespace utils::graphics::image
 	{
 	template <>
-	utils::matrix<utils::graphics::colour::rgba_u> load_from_file(const std::filesystem::path& path)
+	std::expected<utils::matrix<utils::graphics::colour::rgba_u>, std::string> load_from_file(const std::filesystem::path& path)
 		{
 		int width, height, channels;
 		unsigned char* bytes{stbi_load(path.string().c_str(), &width, &height, &channels, 0)};
+
+		if (!bytes)
+			{
+			return std::unexpected{stbi_failure_reason()};
+			}
 
 		utils::matrix<utils::graphics::colour::rgba_u> ret{utils::math::vec2s{static_cast<size_t>(width), static_cast<size_t>(height)}};
 
@@ -45,7 +52,8 @@ namespace utils::graphics::image
 		}
 
 
-	void save_to_file(const utils::matrix<utils::graphics::colour::rgba_u>& image, const std::filesystem::path& path)
+	template <utils::graphics::colour::concepts::colour pixel_t>
+	void save_to_file(const utils::matrix<pixel_t>& image, const std::filesystem::path& path)
 		{
 		std::filesystem::path directory{path};
 		directory.remove_filename();
@@ -53,7 +61,106 @@ namespace utils::graphics::image
 			{
 			std::filesystem::create_directories(directory);
 			}
-		stbi_write_png(path.string().c_str(), static_cast<int>(image.width()), static_cast<int>(image.height()), 4, image.data(), static_cast<int>(image.width() * 4));
+
+		#ifdef utils_graphics_image_use_libpng
+
+		using png_pixel_type = std::conditional_t
+			<
+			std::same_as<pixel_t, utils::graphics::colour::rgb_u>,
+			png::rgb_pixel,
+			std::conditional_t
+				<
+				std::same_as<pixel_t, utils::graphics::colour::rgba_u>,
+				png::rgba_pixel,
+				std::conditional_t
+					<
+					std::same_as<pixel_t, utils::graphics::colour::greyscale_u>,
+					png::gray_pixel,
+					std::conditional_t
+						<
+						std::same_as<pixel_t, utils::graphics::colour::greyscale_a_u>,
+						png::ga_pixel,
+						void
+						>
+					>
+				>
+			>;
+
+		if constexpr(std::same_as<png_pixel_type, void>)
+			{
+			png::image<png_pixel_type> png_image{static_cast<uint32_t>(image.width()), static_cast<uint32_t>(image.height())};
+			
+			for (size_t y = 0; y < image.height(); y++)
+				{
+				for (size_t x = 0; x < image.width(); x++)
+					{
+					const auto& source_pixel{image[{x, y}]};
+					auto& png_pixel{png_image[y][x]};
+
+					if constexpr (utils::graphics::colour::concepts::additive<pixel_t>)
+						{
+						png_pixel.red   = source_pixel.r();
+						png_pixel.green = source_pixel.g();
+						png_pixel.blue  = source_pixel.b();
+						}
+					else if constexpr (std::same_as<pixel_t, utils::graphics::colour::greyscale_a_u>)
+						{
+						png_pixel.value = source_pixel.w();
+						}
+					else if constexpr (std::same_as<pixel_t, utils::graphics::colour::greyscale_u>)
+						{
+						png_pixel = source_pixel.w();;
+						}
+
+					if (pixel_t::static_has_alpha)
+						{
+						png_pixel.alpha = source_pixel.a();
+						}
+					}
+				}
+
+			png_image.write(path.string().c_str());
+			return;
+			}
+
+		
+		#else
+		if constexpr (std::same_as<pixel_t, utils::graphics::colour::rgba_u>)
+			{
+			stbi_write_png(path.string().c_str(), static_cast<int>(image.width()), static_cast<int>(image.height()), 4, image.data(), static_cast<int>(image.width() * 4));
+			return;
+			}
+		else if constexpr (std::same_as<pixel_t, utils::graphics::colour::rgb_u>)
+			{
+			stbi_write_png(path.string().c_str(), static_cast<int>(image.width()), static_cast<int>(image.height()), 4, image.data(), static_cast<int>(image.width() * 3));
+			return;
+			}
+		else if constexpr (std::same_as<pixel_t, utils::graphics::colour::greyscale_a_u>)
+			{
+			stbi_write_png(path.string().c_str(), static_cast<int>(image.width()), static_cast<int>(image.height()), 4, image.data(), static_cast<int>(image.width() * 2));
+			return;
+			}
+		else if constexpr (std::same_as<pixel_t, utils::graphics::colour::greyscale_u>)
+			{
+			stbi_write_png(path.string().c_str(), static_cast<int>(image.width()), static_cast<int>(image.height()), 4, image.data(), static_cast<int>(image.width() * 1));
+			return;
+			}
+		#endif
+
+		using unsigned_pixel_type = std::conditional
+			<
+			utils::graphics::colour::concepts::hsv<pixel_t>, //?
+			utils::graphics::colour::rgb<uint8_t, pixel_t::static_has_alpha>, //:
+			typename pixel_t::related_types::storage_unsigned
+			>::type;
+		
+		utils::matrix<unsigned_pixel_type>image_unsigned{image.sizes()};
+		image.for_each_to_other(image_unsigned, [](const pixel_t& source_pixel)
+			{
+			return unsigned_pixel_type{source_pixel};
+			});
+
+		save_to_file(image_unsigned, path);
 		}
 	
 	void save_to_file(const utils::matrix<utils::graphics::colour::rgba_f>& image, const std::filesystem::path& path)
@@ -77,3 +184,11 @@ namespace utils::graphics::image
 		save_to_file(image_u, path);
 		}
 	}
+
+
+
+#define STB_IMAGE_IMPLEMENTATION
+#define STB_IMAGE_WRITE_IMPLEMENTATION
+
+#include "../third_party/stb_image.h"
+#include "../third_party/stb_image_write.h"
