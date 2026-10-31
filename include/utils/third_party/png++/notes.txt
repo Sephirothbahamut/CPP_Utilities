@@ -1,0 +1,3 @@
+Not available on NuGet
+Downloaded from: https://svn.sv.nongnu.org/svn/pngpp/trunk/
+Requires libpng (available on NuGet)
