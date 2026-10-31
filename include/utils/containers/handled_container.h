@@ -56,6 +56,8 @@ namespace utils::containers
 					using pointer         =       value_type*;
 					using const_pointer   = const value_type* const;
 
+					using handle_raw_t = handle_raw;
+
 					handle_wrapper() = default;
 
 					      reference operator* ()       noexcept { return container_ptr->operator[](*this); }
@@ -97,6 +99,8 @@ namespace utils::containers
 					using const_reference = const value_type&;
 					using pointer         =       value_type*;
 					using const_pointer   = const value_type* const;
+
+					using handle_wrapper_t = handle_wrapper;
 
 					handle_unique() = default;
 
@@ -146,14 +150,10 @@ namespace utils::containers
 				return create_new_handle(inner_container.size() - 1);
 				}
 	
-			      T& operator[](handle_raw& handle)       noexcept
-				{
-				return inner_container[handle_to_container_index[handle.index]];
-				}
-			const T& operator[](const handle_raw& handle) const noexcept
-				{
-				return inner_container[handle_to_container_index[handle.index]];
-				}
+			      T& operator[](      handle_raw& handle)       noexcept { return inner_container[handle_to_container_index[handle.index]]; }
+			const T& operator[](const handle_raw& handle) const noexcept { return inner_container[handle_to_container_index[handle.index]]; }
+			      T& operator[](      size_t    & index )       noexcept { return inner_container[                                 index ]; }
+			const T& operator[](const size_t    & index ) const noexcept { return inner_container[                                 index ]; }
 			
 			void erase(handle_raw& handle)
 				{
