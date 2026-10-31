@@ -444,11 +444,35 @@ namespace utils::storage
 		utils_gpu_available constexpr auto for_each_to_new(this self_t& self, auto callback) noexcept
 			{
 			typename self_t::owner_self_t ret;
-			for (size_t i{0}; i < extent; i++)
+			const size_t indices{self.multiple::size()};
+			for (size_t i{0}; i < indices; i++)
 				{
 				ret[i] = callback(self[i]);
 				}
 			return ret;
+			}
+
+		/// <summary> 
+		/// Use to populate another container with custom conversion and potentially completely different classes.
+		/// Requires the containers to share the same size.
+		/// Example: a vec4f and matrix<greyscale> of size 2*2
+		/// </summary>
+		/// <typeparam name="self_t"></typeparam>
+		/// <typeparam name="new_t"></typeparam>
+		/// <param name="self"></param>
+		/// <param name=""></param>
+		/// <param name="callback">other_t::value_type (const [self_t::value_type]& value)</param>
+		/// <returns></returns>
+		template <typename self_t, concepts::multiple other_t>
+		utils_gpu_available constexpr void for_each_to_other(this self_t& self, other_t& other, auto callback) noexcept
+			requires ((other_t::extent == self_t::extent) && (other_t::storage_type.is_owner()))
+			{
+			assert(self.multiple::size() == other.multiple::size());
+			const size_t indices{self.multiple::size()};
+			for (size_t i{0}; i < indices; i++)
+				{
+				other[i] = callback(self[i]);
+				}
 			}
 
 		template <typename self_t>
