@@ -6,6 +6,12 @@
 
 #include <sstream>
 
+#ifdef utils_compilation_os_windows
+#define NOMINMAX
+#include <shlwapi.h>
+#pragma comment(lib, "shlwapi.lib")
+#endif
+
 namespace utils::string
 	{
 	namespace details
@@ -37,31 +43,31 @@ namespace utils::string
 			std::basic_string<from_char_t> in_string_own{in};
 			return cast<to_char_t, from_char_t>(in_string_own);
 			}
+		else
+			{
+			std::basic_string<to_char_t> ret;
 
-
-
-		std::basic_string<to_char_t> ret;
-
-		using input_utf  = details::utf_check<from_char_t>;
-		using output_utf = details::utf_check<  to_char_t>;
+			using input_utf  = details::utf_check<from_char_t>;
+			using output_utf = details::utf_check<  to_char_t>;
 		
-		if constexpr (input_utf::utf8 && output_utf::utf16)
-			{
-			utf8::utf8to16(in.begin(), in.end(), std::back_inserter(ret));
+			if constexpr (input_utf::utf8 && output_utf::utf16)
+				{
+				utf8::utf8to16(in.begin(), in.end(), std::back_inserter(ret));
+				}
+			else if constexpr (input_utf::utf16 && output_utf::utf8)
+				{
+				utf8::utf16to8(in.begin(), in.end(), std::back_inserter(ret));
+				}
+			else if constexpr (input_utf::utf8 && output_utf::utf32)
+				{
+				utf8::utf8to32(in.begin(), in.end(), std::back_inserter(ret));
+				}
+			else if constexpr (input_utf::utf32 && output_utf::utf8)
+				{
+				utf8::utf32to8(in.begin(), in.end(), std::back_inserter(ret));
+				}
+			return ret;
 			}
-		else if constexpr (input_utf::utf16 && output_utf::utf8)
-			{
-			utf8::utf16to8(in.begin(), in.end(), std::back_inserter(ret));
-			}
-		else if constexpr (input_utf::utf8 && output_utf::utf32)
-			{
-			utf8::utf8to32(in.begin(), in.end(), std::back_inserter(ret));
-			}
-		else if constexpr (input_utf::utf32 && output_utf::utf8)
-			{
-			utf8::utf32to8(in.begin(), in.end(), std::back_inserter(ret));
-			}
-		return ret;
 		}
 	
 	template std::basic_string<char    > cast<char    , char    >(const std::basic_string_view<char    > in);
@@ -150,6 +156,61 @@ namespace utils::string
 	template std::basic_string<char16_t> codepoint_to_string(const char32_t& codepoint);
 	template std::basic_string<char32_t> codepoint_to_string(const char32_t& codepoint);
 	template std::basic_string<wchar_t > codepoint_to_string(const char32_t& codepoint);
+
+	
+
+	#ifdef utils_compilation_os_windows
+	template <>
+	constexpr bool natural_sort_compare(const std::basic_string_view<wchar_t>& a, const std::basic_string_view<wchar_t>& b)
+		{
+		return StrCmpLogicalW(a.data(), b.data());
+		}
+	template <typename char_t>
+	constexpr bool natural_sort_compare(const std::basic_string_view<char_t>& a, const std::basic_string_view<char_t>& b)
+		{
+		const std::basic_string<wchar_t> wchar_t_a{cast<wchar_t>(a)};
+		const std::basic_string<wchar_t> wchar_t_b{cast<wchar_t>(b)};
+		return natural_sort_compare(std::basic_string_view<wchar_t>{wchar_t_a}, std::basic_string_view<wchar_t>{wchar_t_b});
+		}
+	#else
+	template <typename char_t>
+	constexpr bool natural_sort_compare(const std::basic_string_view<char_t>& a, const std::basic_string_view<char_t>& b)
+		{
+		static_assert(false, "natural_sort_compare relies on Windows's implementation. Unavailable on other OSs. You'll need boost or other libraries for this, I'm not ready to deal with Unicode encodings enouch to handwrite this myself.");
+		return a < b;
+		}
+	#endif
+
+	template bool natural_sort_compare(const std::basic_string_view<char    >& a, const std::basic_string_view<char    >& b);
+	template bool natural_sort_compare(const std::basic_string_view<char8_t >& a, const std::basic_string_view<char8_t >& b);
+	template bool natural_sort_compare(const std::basic_string_view<char16_t>& a, const std::basic_string_view<char16_t>& b);
+	template bool natural_sort_compare(const std::basic_string_view<char32_t>& a, const std::basic_string_view<char32_t>& b);
+	template bool natural_sort_compare(const std::basic_string_view<wchar_t >& a, const std::basic_string_view<wchar_t >& b);
+
+	template <typename char_t>
+	std::vector<std::basic_string_view<char_t>> split_string(const std::basic_string_view<char_t>& string, const std::basic_string_view<char_t>& delimiter)
+		{//https://stackoverflow.com/questions/13172158/c-split-string-by-line
+		std::vector<std::basic_string_view<char_t>> strings;
+
+		std::string::size_type position{0};
+		std::string::size_type previous{0};
+		while ((position = string.find(delimiter, previous)) != std::string::npos)
+			{
+			strings.push_back(string.substr(previous, position - previous));
+			previous = position + delimiter.size();
+			}
+
+			// To get the last substring (or only, if delimiter is not found)
+		strings.push_back(string.substr(previous));
+
+		return strings;
+		}
+
+	template std::vector<std::basic_string_view<char    >> split_string(const std::basic_string_view<char    >& string, const std::basic_string_view<char    >& delimiter);
+	template std::vector<std::basic_string_view<char8_t >> split_string(const std::basic_string_view<char8_t >& string, const std::basic_string_view<char8_t >& delimiter);
+	template std::vector<std::basic_string_view<char16_t>> split_string(const std::basic_string_view<char16_t>& string, const std::basic_string_view<char16_t>& delimiter);
+	template std::vector<std::basic_string_view<char32_t>> split_string(const std::basic_string_view<char32_t>& string, const std::basic_string_view<char32_t>& delimiter);
+	template std::vector<std::basic_string_view<wchar_t >> split_string(const std::basic_string_view<wchar_t >& string, const std::basic_string_view<wchar_t >& delimiter);
 	}
 
 
