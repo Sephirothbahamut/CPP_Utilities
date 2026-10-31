@@ -1,4 +1,5 @@
 #pragma once
+
 #include <chrono>
 #include <string>
 #include <iostream>
@@ -21,10 +22,10 @@ namespace utils::logging
 		public:
 			static output_style_t output_style;
 
-			constexpr message           (const message&  copy);
-			constexpr message& operator=(const message&  copy);
-			constexpr message           (      message&& move);
-			constexpr message& operator=(      message&& move);
+			constexpr message           (const message&  copy) = default;
+			constexpr message& operator=(const message&  copy) = default;
+			constexpr message           (      message&& move) = default;
+			constexpr message& operator=(      message&& move) = default;
 
 			inline static constexpr message raw          (const string::concepts::stringlike auto& string, size_t indents_count) noexcept { return {msg_t::raw          , string, indents_count}; }
 			inline static constexpr message log          (const string::concepts::stringlike auto& string, size_t indents_count) noexcept { return {msg_t::log          , string, indents_count}; }

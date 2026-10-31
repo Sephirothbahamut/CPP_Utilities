@@ -7,6 +7,7 @@
 #include <fstream>
 #include <iostream>
 #include <concepts>
+#include <filesystem>
 
 #include "../memory.h"
 #include "message.h"
@@ -19,7 +20,7 @@ namespace utils::logging
 	class logger
 		{
 		public:
-			logger(const std::string& file_name = "log.txt");
+			logger(const std::filesystem::path& file_path = std::filesystem::path{"log.txt"});
 
 			logger           (const logger&  copy)          = delete ; // don't copy threads please, thank you
 			logger& operator=(const logger&  copy)          = delete ; // don't copy threads please, thank you

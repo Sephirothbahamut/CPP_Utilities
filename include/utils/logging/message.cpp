@@ -10,11 +10,6 @@
 namespace utils::logging
 	{
 	output_style_t message::output_style{output_style_t::on_line};
-
-	constexpr          message::message  (const message&  copy) = default;
-	constexpr message& message::operator=(const message&  copy) = default;
-	constexpr          message::message  (      message&& move) = default;
-	constexpr message& message::operator=(      message&& move) = default;
 			
 
 	constexpr std::string_view message::out_type() const noexcept

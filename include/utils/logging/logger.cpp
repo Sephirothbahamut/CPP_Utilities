@@ -1,11 +1,11 @@
-#pragma once
-
 #include "logger.h"
+
+#include "message.h"
 
 namespace utils::logging
 	{
-	logger::logger(const std::string& file_name) : 
-		file {file_name}, 
+	logger::logger(const std::filesystem::path& file_path) : 
+		file {file_path},
 		message_queue
 			{
 			[this](message& element) -> void
