@@ -23,6 +23,42 @@ namespace utils::math
 		concept rect = std::derived_from<T, math::rect<typename T::value_type>>;
 		}
 
+	template <typename T>
+	using rectref = rect<T&>;
+
+	using rect_i      = rect   <int          >;
+	using rect_i8     = rect   <int8_t       >;
+	using rect_i16    = rect   <int16_t      >;
+	using rect_i32    = rect   <int32_t      >;
+	using rect_i64    = rect   <int64_t      >;
+	using rect_u      = rect   <unsigned     >;
+	using rect_u8     = rect   <uint8_t      >;
+	using rect_u16    = rect   <uint16_t     >;
+	using rect_u32    = rect   <uint32_t     >;
+	using rect_u64    = rect   <uint64_t     >;
+	using rect_s      = rect   <size_t       >;
+	using rect_ss     = rect   <ssize_t      >;
+	using rect_f      = rect   <float        >;
+	using rect_d      = rect   <double       >;
+	using rect_l      = rect   <long         >;
+	using rect_ul     = rect   <unsigned long>;
+	using rectref_i   = rectref<int          >;
+	using rectref_i8  = rectref<int8_t       >;
+	using rectref_i16 = rectref<int16_t      >;
+	using rectref_i32 = rectref<int32_t      >;
+	using rectref_i64 = rectref<int64_t      >;
+	using rectref_u   = rectref<unsigned     >;
+	using rectref_u8  = rectref<uint8_t      >;
+	using rectref_u16 = rectref<uint16_t     >;
+	using rectref_u32 = rectref<uint32_t     >;
+	using rectref_u64 = rectref<uint64_t     >;
+	using rectref_s   = rectref<size_t       >;
+	using rectref_ss  = rectref<ssize_t      >;
+	using rectref_f   = rectref<float        >;
+	using rectref_d   = rectref<double       >;
+	using rectref_l   = rectref<long         >;
+	using rectref_ul  = rectref<unsigned long>;
+
 
 	template <typename T = float>
 	struct utils_oop_empty_bases rect final : utils::storage::multiple<T, 4, false>, utils::math::geometry::shape_flag
@@ -630,6 +666,21 @@ namespace utils::math
 		      observer_self_t create_observer()       noexcept { return {*this}; }
 
 		using utils::storage::multiple<T, 4, false>::multiple;
+
+		struct create : ::utils::oop::non_constructible
+			{
+			utils_gpu_available static constexpr padding<value_type> rect_difference(const rect<value_type>& a, const rect<value_type>& b)
+				{
+				const padding<value_type> ret
+					{
+					a.ll() - b.ll(),
+					a.up() - b.up(),
+					a.rr() - b.rr(),
+					a.dw() - b.dw()
+					};
+				return ret;
+				}
+			};
 
 		utils_gpu_available constexpr const T& ll() const noexcept { return (*this)[0]; }
 		utils_gpu_available constexpr       T& ll()       noexcept { return (*this)[0]; }
