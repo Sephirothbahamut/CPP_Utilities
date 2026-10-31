@@ -4,6 +4,8 @@
 
 #ifdef utils_compilation_os_windows
 //	{
+	#define WINDOWS_LEAN_AND_MEAN
+	#define NOMINMAX
 	#include <Windows.h>
 //	}
 #elif defined(utils_compilation_os_linux)
@@ -16,12 +18,14 @@ namespace utils::console
 	initializer::initializer() noexcept
 		{
 		#ifdef utils_compilation_os_windows
-		const auto hConsole = GetStdHandle(STD_OUTPUT_HANDLE);
-		DWORD mode;
-		GetConsoleMode(hConsole, &mode);
-		SetConsoleMode(hConsole, mode | ENABLE_VIRTUAL_TERMINAL_PROCESSING);
+		//	{
+			const auto hConsole = GetStdHandle(STD_OUTPUT_HANDLE);
+			DWORD mode;
+			GetConsoleMode(hConsole, &mode);
+			SetConsoleMode(hConsole, mode | ENABLE_VIRTUAL_TERMINAL_PROCESSING);
 
-		SetConsoleOutputCP(65001); //utf-8 console
+			SetConsoleOutputCP(65001); //utf-8 console
+		//	}
 		#endif
 		}
 	}
